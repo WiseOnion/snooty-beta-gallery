@@ -212,6 +212,7 @@ body.framed .cta-bar { position: absolute; }
 
 <script src="shared/seed.js"></script>
 <script src="shared/snooty.js"></script>
+<script src="shared/sync.js"></script>
 <script>
 (function () {
   'use strict';
@@ -221,6 +222,7 @@ body.framed .cta-bar { position: absolute; }
 
   SN.frameOnDesktop();
   SN.markSeen('booking');
+  if (params.has('session')) SN.walkthroughProgress(2); /* Stop 2: Booking, in progress */
 
   const idx = Math.max(0, Math.min(SEED.feed.length - 1, parseInt(params.get('i'), 10) || 0));
   const look = SEED.feed[idx];
@@ -395,6 +397,33 @@ body.framed .cta-bar { position: absolute; }
   });
 
   SN.hydrateImages(document);
+
+  /* Stop 2 of the guided walkthrough (tail end): arriving with ?step=3
+     means Look already chose "Book" for the phone. Fill in a real day/
+     slot so the deposit summary has real numbers instead of blanks,
+     jump straight past the service and calendar steps, then (if
+     scripted) let it sit on the deposit screen for the presenter's
+     line before auto-paying and handing off to Stop 3. */
+  if (params.get('step') === '3') {
+    const firstDay = daysEl.querySelector('.day:not(.off)');
+    if (firstDay) firstDay.click();
+    renderSlots(selDay);
+    const firstOpenSlot = slotsEl.querySelector('.slot:not(.taken)');
+    if (firstOpenSlot) firstOpenSlot.click();
+    goto(3);
+
+    if (params.has('script')) {
+      setTimeout(() => {
+        cta.classList.add('is-loading');
+        ctaLbl.textContent = 'Securing your slot';
+        setTimeout(() => {
+          cta.classList.remove('is-loading');
+          goto(4);
+          setTimeout(() => { location.href = 'dashboard.html?script=1&session=1'; }, 2600);
+        }, 1400);
+      }, 3400);
+    }
+  }
 })();
 </script>
 </body>

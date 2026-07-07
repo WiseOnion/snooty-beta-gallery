@@ -173,7 +173,7 @@ body { background: var(--color-bg-dark); color: var(--color-text-inverse); }
      on their own mid-presentation. */
   const params = new URLSearchParams(location.search);
   if (params.has('session')) {
-    const SLIDE_MAP = { 3: 'day-in-the-life.html?session=1' };
+    const SLIDE_MAP = { 3: 'discover.html?script=1&session=1' };
     const wait = document.getElementById('session-wait');
     wait.style.display = 'flex';
     document.querySelectorAll('.wrap, .footer-cta').forEach((el) => { el.style.display = 'none'; });

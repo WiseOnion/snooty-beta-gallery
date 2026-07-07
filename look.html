@@ -148,6 +148,7 @@ body.framed .cta-bar { position: absolute; }
 
 <script src="shared/seed.js"></script>
 <script src="shared/snooty.js"></script>
+<script src="shared/sync.js"></script>
 <script>
 (function () {
   'use strict';
@@ -158,6 +159,7 @@ body.framed .cta-bar { position: absolute; }
 
   SN.frameOnDesktop();
   SN.markSeen('look');
+  if (params.has('session')) SN.walkthroughProgress(2); /* Stop 2: Booking, in progress (Look is the lead-in) */
 
   const idx = Math.max(0, Math.min(SEED.feed.length - 1, parseInt(params.get('i'), 10) || 0));
   const look = SEED.feed[idx];
@@ -257,6 +259,19 @@ body.framed .cta-bar { position: absolute; }
     'booking.html?i=' + idx + suffix;
 
   SN.hydrateImages(document);
+
+  /* Stop 2 of the guided walkthrough: hold on the look (angles, reviews,
+     price, similar work) long enough to actually look at it, then the
+     phone taps Book itself and carries straight into the deposit step. */
+  if (params.has('script')) {
+    const bookBtn = document.getElementById('book');
+    bookBtn.href += '&script=1&step=3'; /* booking.html jumps straight to Step 3: Deposit */
+    setTimeout(() => {
+      bookBtn.style.transition = 'transform 180ms var(--ease-out)';
+      bookBtn.style.transform = 'scale(0.96)';
+      setTimeout(() => { location.href = bookBtn.href; }, 200);
+    }, 3200);
+  }
 })();
 </script>
 </body>

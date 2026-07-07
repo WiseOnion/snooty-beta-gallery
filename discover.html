@@ -94,6 +94,7 @@
 
 <script src="shared/seed.js"></script>
 <script src="shared/snooty.js"></script>
+<script src="shared/sync.js"></script>
 <script>
 (function () {
   'use strict';
@@ -104,8 +105,9 @@
 
   SN.frameOnDesktop();
   SN.markSeen('discover');
+  if (params.has('session')) SN.walkthroughProgress(1); /* Stop 1: Discover, in progress */
 
-  if (!inDemo) {
+  if (!inDemo && !params.has('script')) {
     SN.purposeCard({
       title: 'This is what your future client sees.',
       body: 'A feed of finished work, not business listings. Scroll it, search it, tap a look you would post.',
@@ -239,6 +241,42 @@
   }
 
   render(true);
+
+  /* Stop 1 of the guided walkthrough: the feed holds still on arrival,
+     then plays itself. Nobody types or taps; the phone acts on its own
+     so every connected phone shows the identical beat at the identical
+     moment. Search box, phone camera, and typing driven with :focus/
+     value so it visually reads as being typed, not just appearing. */
+  if (params.has('script')) {
+    const type = (el, text, ms) => new Promise((resolve) => {
+      let i = 0;
+      const t = setInterval(() => {
+        el.value = text.slice(0, ++i);
+        el.dispatchEvent(new Event('input'));
+        if (i >= text.length) { clearInterval(t); setTimeout(resolve, ms); }
+      }, 90);
+    });
+    const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+
+    (async () => {
+      await wait(1600); /* settle on the untouched feed first */
+      qEl.focus();
+      await type(qEl, 'knotless', 500); /* render() debounces on 'input', same as a real visitor typing */
+      await wait(650);
+      /* find Jordyn Ellis's top knotless look (lk1, seed's highest-liked
+         result for this search) and highlight it like a finger landing,
+         then carry the whole phone into the Look page for Stop 2 */
+      const cards = [...feedEl.querySelectorAll('.look-card')];
+      const target = cards.find((a) => a.href.includes('i=' + SEED.feed.findIndex((l) => l.stylist === 'Jordyn Ellis' && l.slug === 'knotless-braids' && l.likes === 2800)));
+      const card = target || cards[0];
+      if (card) {
+        card.style.transition = 'transform 220ms var(--ease-out)';
+        card.style.transform = 'scale(0.96)';
+        await wait(260);
+        location.href = card.getAttribute('href') + '&script=1';
+      }
+    })();
+  }
 })();
 </script>
 </body>
