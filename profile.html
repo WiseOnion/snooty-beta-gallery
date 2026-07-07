@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Snooty · Roots & Ritual</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@1,400;1,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared/snooty.css">
+<style>
+.topbar {
+  position: sticky; top: 0; z-index: 100; display: flex; align-items: center; gap: 8px;
+  background: rgba(252,250,249,0.92); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--color-border);
+  padding: calc(8px + env(safe-area-inset-top)) 10px 8px;
+}
+.icon-btn { width: 44px; height: 44px; border-radius: var(--radius-full); display: flex; align-items: center; justify-content: center; -webkit-tap-highlight-color: transparent; }
+.icon-btn:active { transform: scale(0.92); }
+.icon-btn svg { width: 20px; height: 20px; stroke: var(--color-text); fill: none; stroke-width: 2; }
+.topbar .t { font-family: var(--font-display); font-weight: 600; font-size: 15px; }
+
+.hero { text-align: center; padding: 22px 18px 6px; }
+.hero img.av { width: 88px; height: 88px; border-radius: 50%; object-fit: cover; margin: 0 auto; box-shadow: 0 0 0 4px var(--color-bg), 0 0 0 6px var(--color-accent); }
+.hero h1 { font-family: var(--font-display); font-weight: 600; font-size: 22px; margin-top: 12px; }
+.hero .sub { font-size: 13px; color: var(--color-text-muted); margin-top: 3px; }
+.hero .bio { font-size: 13.5px; line-height: 1.55; color: #4c4741; max-width: 340px; margin: 12px auto 0; }
+.trust-strip { display: flex; justify-content: center; gap: 22px; margin-top: 16px; }
+.trust-strip > div { text-align: center; }
+.trust-strip .n { font-family: var(--font-display); font-weight: 700; font-size: 17px; }
+.trust-strip .n .star { color: var(--color-accent); }
+.trust-strip .l { font-size: 10.5px; color: var(--color-text-muted); letter-spacing: 0.06em; text-transform: uppercase; font-family: var(--font-display); font-weight: 600; margin-top: 2px; }
+
+.tabs { display: flex; gap: 4px; margin: 20px 16px 0; background: var(--color-bg-alt); border: 1px solid var(--color-border); border-radius: var(--radius-full); padding: 4px; }
+.tab { flex: 1; min-height: 40px; border-radius: var(--radius-full); font-family: var(--font-display); font-weight: 600; font-size: 13.5px; color: var(--color-text-muted); transition: all 200ms var(--ease-out); }
+.tab.on { background: var(--color-bg-dark); color: var(--color-text-inverse); box-shadow: var(--shadow-sm); }
+
+.pane { padding: 16px 16px calc(110px + env(safe-area-inset-bottom)); display: none; }
+.pane.on { display: block; animation: rise 380ms var(--ease-out); }
+
+.pgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.pgrid .p-item { border-radius: 14px; overflow: hidden; position: relative; -webkit-tap-highlight-color: transparent; }
+.pgrid .ph { aspect-ratio: 4/5; }
+.pgrid .p-cap {
+  position: absolute; left: 0; right: 0; bottom: 0; padding: 22px 10px 8px;
+  background: linear-gradient(transparent, rgba(0,0,0,0.65)); color: #fff; font-size: 11px; font-weight: 500;
+}
+.pgrid .p-item:active { transform: scale(0.98); }
+
+.svc-line { display: flex; align-items: center; gap: 12px; padding: 14px; margin-bottom: 9px; }
+.svc-line .s-n { font-weight: 600; font-size: 14px; }
+.svc-line .s-d { font-size: 12px; color: var(--color-text-muted); margin-top: 2px; }
+.svc-line .s-p { margin-left: auto; font-family: var(--font-display); font-weight: 700; color: var(--color-primary); }
+
+.review { padding: 14px; margin-bottom: 10px; }
+.review .r-head { display: flex; align-items: center; gap: 10px; }
+.review .r-head img { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; }
+.review .r-name { font-weight: 600; font-size: 13.5px; }
+.review .r-sub { font-size: 11.5px; color: var(--color-text-muted); }
+.review .stars { margin-left: auto; color: var(--color-accent); font-size: 12px; letter-spacing: 2px; }
+.review p { font-size: 13.5px; line-height: 1.55; margin-top: 10px; color: #3d3a36; }
+.review .r-photo { margin-top: 10px; border-radius: 10px; overflow: hidden; width: 84px; }
+.review .r-photo .ph { aspect-ratio: 1; }
+.verified { display: inline-flex; align-items: center; gap: 4px; margin-top: 10px; font-family: var(--font-display); font-size: 10.5px; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; color: var(--color-success); }
+
+.avail { margin-top: 14px; padding: 13px 15px; display: flex; gap: 9px; align-items: center; font-size: 12.5px; color: var(--color-text-muted); }
+.avail .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--color-success); animation: hotspot-pulse 2s infinite; }
+
+.cta-bar {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 200;
+  background: rgba(252,250,249,0.95); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  border-top: 1px solid var(--color-border);
+  padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+}
+body.framed .cta-bar { position: absolute; }
+.cta-bar .btn { width: 100%; }
+</style>
+</head>
+<body>
+<div class="phone-wrap"><div class="scroll-root" style="position:relative;">
+
+  <header class="topbar">
+    <button class="icon-btn" id="back" type="button" aria-label="Back">
+      <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
+    </button>
+    <span class="t">Stylist profile</span>
+  </header>
+
+  <div class="hero">
+    <img class="av" id="av" src="" alt="Jordyn Ellis">
+    <h1 id="biz"></h1>
+    <div class="sub" id="sub"></div>
+    <p class="bio" id="bio"></p>
+    <div class="trust-strip">
+      <div><div class="n"><span class="star">★</span> <span id="t-rate"></span></div><div class="l">rating</div></div>
+      <div><div class="n" id="t-rev"></div><div class="l">verified reviews</div></div>
+      <div><div class="n" id="t-yrs"></div><div class="l">years in</div></div>
+    </div>
+    <div class="card avail"><span class="dot"></span><span id="hours"></span></div>
+  </div>
+
+  <div class="tabs" role="tablist">
+    <button class="tab on" data-pane="work" role="tab" type="button">Work</button>
+    <button class="tab" data-pane="services" role="tab" type="button">Services</button>
+    <button class="tab" data-pane="reviews" role="tab" type="button">Reviews</button>
+  </div>
+
+  <section class="pane on" id="pane-work"><div class="pgrid stagger" id="pgrid"></div></section>
+  <section class="pane" id="pane-services"><div id="svcs"></div></section>
+  <section class="pane" id="pane-reviews"><div id="revs"></div></section>
+
+  <div class="cta-bar">
+    <a class="btn btn-primary" id="book" href="#">Book with Jordyn</a>
+  </div>
+
+</div></div>
+
+<script src="shared/seed.js"></script>
+<script src="shared/snooty.js"></script>
+<script>
+(function () {
+  'use strict';
+  const SEED = window.SNOOTY_SEED;
+  const params = new URLSearchParams(location.search);
+  const inDemo = params.has('demo');
+  const H = SEED.hero;
+
+  SN.frameOnDesktop();
+  SN.markSeen('profile');
+
+  if (!inDemo && !params.has('from')) {
+    SN.purposeCard({
+      title: 'What a stranger sees.',
+      body: 'When your work stops the scroll, this page closes the deal: real looks, real prices, reviews tied to real appointments.',
+      cta: 'See it their way',
+    });
+  }
+
+  document.getElementById('back').addEventListener('click', () => {
+    if (history.length > 1) history.back();
+    else location.href = 'discover.html' + (inDemo ? '?demo=1' : '');
+  });
+
+  document.getElementById('av').src = H.avatar;
+  document.getElementById('biz').textContent = H.business;
+  document.getElementById('sub').textContent = H.name + ' · ' + H.city;
+  document.getElementById('bio').textContent = H.bio;
+  document.getElementById('t-rate').textContent = H.rating;
+  document.getElementById('t-rev').textContent = H.reviewCount;
+  document.getElementById('t-yrs').textContent = H.years;
+  document.getElementById('hours').textContent = H.hours + ' · usually replies within an hour';
+
+  /* Work grid links into the booking chain */
+  const grid = document.getElementById('pgrid');
+  H.looks.forEach((l) => {
+    const feedIdx = SEED.feed.findIndex((f) => f.heroLook === l.id);
+    const a = document.createElement('a');
+    a.className = 'p-item';
+    a.href = feedIdx >= 0 ? 'look.html?i=' + feedIdx + (inDemo ? '&demo=1' : '') : '#';
+    a.innerHTML = '<div class="ph"><img data-src="' + l.img + '" alt=""></div><div class="p-cap"></div>';
+    a.querySelector('.p-cap').textContent = l.caption + ' · ' + SN.compact(l.likes) + ' saves';
+    grid.appendChild(a);
+  });
+
+  /* Services */
+  const svcs = document.getElementById('svcs');
+  H.services.forEach((s) => {
+    const d = document.createElement('div');
+    d.className = 'card svc-line';
+    d.innerHTML = '<div><div class="s-n"></div><div class="s-d"></div></div><span class="s-p"></span>';
+    d.querySelector('.s-n').textContent = s.name;
+    d.querySelector('.s-d').textContent = SN.mins(s.mins) + (s.slug ? '' : ' · add-on');
+    d.querySelector('.s-p').textContent = SN.money(s.cents);
+    svcs.appendChild(d);
+  });
+
+  /* Reviews */
+  const revs = document.getElementById('revs');
+  SEED.reviews.forEach((r) => {
+    const d = document.createElement('div');
+    d.className = 'card review';
+    d.innerHTML =
+      '<div class="r-head"><img src="' + r.avatar + '" alt="">' +
+      '<div><div class="r-name"></div><div class="r-sub"></div></div>' +
+      '<div class="stars">' + '★'.repeat(r.stars) + '☆'.repeat(5 - r.stars) + '</div></div>' +
+      '<p></p>' +
+      (r.photo ? '<div class="r-photo"><div class="ph"><img data-src="' + r.photo + '" alt="Client photo of the finished look"></div></div>' : '') +
+      '<span class="verified">✓ Verified completed appointment</span>';
+    d.querySelector('.r-name').textContent = r.client;
+    d.querySelector('.r-sub').textContent = r.service + ' · ' + r.when;
+    d.querySelector('p').textContent = r.text;
+    revs.appendChild(d);
+  });
+
+  /* Tabs */
+  document.querySelectorAll('.tab').forEach((t) => {
+    t.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach((x) => x.classList.remove('on'));
+      document.querySelectorAll('.pane').forEach((x) => x.classList.remove('on'));
+      t.classList.add('on');
+      document.getElementById('pane-' + t.dataset.pane).classList.add('on');
+      SN.hydrateImages(document.getElementById('pane-' + t.dataset.pane));
+    });
+  });
+
+  /* Book CTA: her signature look's booking flow */
+  const sigIdx = SEED.feed.findIndex((f) => f.heroLook === 'lk1');
+  document.getElementById('book').href = 'booking.html?i=' + (sigIdx >= 0 ? sigIdx : 0) + (inDemo ? '&demo=1' : '');
+
+  SN.hydrateImages(document);
+})();
+</script>
+</body>
+</html>

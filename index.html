@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Snooty · Beta Gallery</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@1,400;1,500;1,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared/snooty.css">
+<style>
+body { background: var(--color-bg-dark); color: var(--color-text-inverse); }
+.wrap { max-width: 560px; margin: 0 auto; padding: calc(26px + env(safe-area-inset-top)) 20px calc(120px + env(safe-area-inset-bottom)); }
+
+.brand { font-family: var(--font-display); font-weight: 700; font-size: 30px; color: var(--color-accent); letter-spacing: 0.03em; }
+.hero-line { font-family: var(--font-editorial); font-style: italic; font-size: 30px; line-height: 1.25; margin-top: 14px; }
+.hero-sub { font-size: 14px; color: var(--color-text-muted-inverse); margin-top: 10px; line-height: 1.6; max-width: 40ch; }
+
+.sound-row { display: flex; align-items: center; gap: 10px; margin-top: 18px; }
+.sound-toggle {
+  display: inline-flex; align-items: center; gap: 8px; min-height: 38px; padding: 0 14px;
+  border: 1px solid var(--color-border-dark); border-radius: var(--radius-full);
+  font-family: var(--font-display); font-weight: 600; font-size: 12.5px; color: var(--color-text-muted-inverse);
+  transition: all 180ms var(--ease-out);
+}
+.sound-toggle.on { border-color: var(--color-accent); color: var(--color-accent); }
+
+.shelf { margin-top: 26px; display: flex; flex-direction: column; gap: 12px; }
+.exp {
+  display: flex; align-items: center; gap: 15px; padding: 17px 16px;
+  background: var(--color-bg-dark-raised); border: 1px solid var(--color-border-dark); border-radius: 18px;
+  transition: transform 200ms var(--ease-out), border-color 200ms var(--ease-out);
+  -webkit-tap-highlight-color: transparent; position: relative;
+}
+.exp:active { transform: scale(0.98); }
+@media (hover:hover) { .exp:hover { transform: translateY(-2px); border-color: #4a4238; } }
+.exp .e-icon {
+  width: 46px; height: 46px; flex: 0 0 46px; border-radius: 13px; display: flex; align-items: center; justify-content: center;
+  font-size: 21px; background: var(--color-accent-soft); border: 1px solid rgba(201,154,74,0.25);
+}
+.exp .e-t { font-family: var(--font-display); font-weight: 600; font-size: 15.5px; display: flex; align-items: center; gap: 8px; }
+.exp .e-s { font-size: 12.5px; color: var(--color-text-muted-inverse); margin-top: 3px; line-height: 1.45; }
+.exp .e-go { margin-left: auto; flex: 0 0 auto; color: var(--color-text-muted-inverse); }
+.exp .e-go svg { width: 17px; height: 17px; stroke: currentColor; fill: none; stroke-width: 2; }
+.pill {
+  font-family: var(--font-display); font-size: 9.5px; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase;
+  padding: 3px 8px; border-radius: var(--radius-full);
+}
+.pill.start { background: var(--color-accent); color: #241505; }
+.pill.seen { background: rgba(31,122,77,0.22); color: #7BC49A; }
+.exp.visited { border-color: rgba(31,122,77,0.4); }
+
+.footer-cta {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 100;
+  background: rgba(24,24,24,0.92); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  border-top: 1px solid var(--color-border-dark);
+  padding: 14px 20px calc(14px + env(safe-area-inset-bottom));
+  text-align: center;
+}
+.footer-cta .f-t { font-family: var(--font-display); font-weight: 600; font-size: 14px; color: var(--color-accent); }
+.footer-cta .f-s { font-size: 12px; color: var(--color-text-muted-inverse); margin-top: 3px; }
+
+.progress-note { margin-top: 18px; font-size: 12px; color: var(--color-text-muted-inverse); text-align: center; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="brand">snooty</div>
+  <div class="hero-line">Meet the app<br>that fills your chair.</div>
+  <p class="hero-sub">Six small experiences, five minutes each. Everything is simulated, nothing is saved, and you can't break anything. Go rough on it.</p>
+
+  <div class="sound-row">
+    <button class="sound-toggle" id="sound" type="button" aria-pressed="false">🔇 Sound off</button>
+  </div>
+
+  <div class="shelf stagger">
+    <a class="exp" href="day-in-the-life.html" data-id="day">
+      <span class="e-icon">🌅</span>
+      <span><span class="e-t">A Day in the Life <span class="pill start">start here</span></span>
+      <span class="e-s">One Tuesday as a Snooty stylist, 8 AM to midnight. You do nothing. It books anyway.</span></span>
+      <span class="e-go"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></span>
+    </a>
+    <a class="exp" href="calculator.html" data-id="calculator">
+      <span class="e-icon">🧮</span>
+      <span><span class="e-t">What would Snooty make you? <span class="pill start">then this</span></span>
+      <span class="e-s">Move five sliders, see your year: no-shows refilled, deposits kept, and our whole cut in dollars.</span></span>
+      <span class="e-go"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></span>
+    </a>
+    <a class="exp" href="discover.html" data-id="discover">
+      <span class="e-icon">🔍</span>
+      <span><span class="e-t">The Discover feed</span>
+      <span class="e-s">What your future client scrolls: looks, not logos. Search "knotless" and watch.</span></span>
+      <span class="e-go"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></span>
+    </a>
+    <a class="exp" href="booking.html?i=0" data-id="booking">
+      <span class="e-icon">📅</span>
+      <span><span class="e-t">Book yourself</span>
+      <span class="e-s">The whole client booking, deposit and all. Do it with your own thumbs.</span></span>
+      <span class="e-go"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></span>
+    </a>
+    <a class="exp" href="profile.html" data-id="profile">
+      <span class="e-icon">💇🏾‍♀️</span>
+      <span><span class="e-t">A stylist profile</span>
+      <span class="e-s">The page a stranger lands on when your work stops her scroll.</span></span>
+      <span class="e-go"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></span>
+    </a>
+    <a class="exp" href="dashboard.html" data-id="dashboard">
+      <span class="e-icon">🏠</span>
+      <span><span class="e-t">Your dashboard</span>
+      <span class="e-s">Home base: today's chair, this week's money, and a booking request waiting on you.</span></span>
+      <span class="e-go"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></span>
+    </a>
+  </div>
+
+  <p class="progress-note" id="progress-note"></p>
+</div>
+
+<div class="footer-cta">
+  <div class="f-t">Ready for the real thing?</div>
+  <div class="f-s">Beta invites land tomorrow morning. Watch your texts.</div>
+</div>
+
+<script src="shared/seed.js"></script>
+<script src="shared/snooty.js"></script>
+<script>
+(function () {
+  'use strict';
+  /* Sound toggle (shared with every experience via localStorage) */
+  const btn = document.getElementById('sound');
+  const paint = () => {
+    const on = SN.soundOn();
+    btn.textContent = on ? '🔔 Sound on' : '🔇 Sound off';
+    btn.classList.toggle('on', on);
+    btn.setAttribute('aria-pressed', String(on));
+  };
+  btn.addEventListener('click', () => { SN.setSound(!SN.soundOn()); paint(); if (SN.soundOn()) SN.chime(); });
+  paint();
+
+  /* Progress dots */
+  const seen = SN.seen();
+  let n = 0;
+  document.querySelectorAll('.exp').forEach((a) => {
+    if (seen.includes(a.dataset.id)) {
+      n++;
+      a.classList.add('visited');
+      const t = a.querySelector('.e-t');
+      const pill = document.createElement('span');
+      pill.className = 'pill seen';
+      pill.textContent = 'explored';
+      t.appendChild(pill);
+    }
+  });
+  const note = document.getElementById('progress-note');
+  const total = document.querySelectorAll('.exp').length;
+  note.textContent = n === 0 ? '' : n >= total
+    ? 'You touched all of it. You know this app better than any tutorial could teach it.'
+    : 'Explored ' + n + ' of ' + total + '. The rest is waiting.';
+})();
+</script>
+</body>
+</html>

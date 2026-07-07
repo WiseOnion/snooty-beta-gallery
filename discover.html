@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Snooty · Discover</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@1,400;1,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared/snooty.css">
+<style>
+.hdr {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(252,250,249,0.92); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--color-border);
+  padding: calc(10px + env(safe-area-inset-top)) 16px 10px;
+}
+.brand { font-family: var(--font-display); font-weight: 700; font-size: 21px; color: var(--color-primary); letter-spacing: 0.02em; }
+.loc { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--color-text-muted); }
+.loc svg { width: 12px; height: 12px; }
+.search {
+  display: flex; align-items: center; gap: 10px; margin-top: 10px;
+  background: var(--color-bg-alt); border: 1px solid var(--color-border); border-radius: var(--radius-full);
+  padding: 0 16px; height: 44px;
+  transition: border-color 180ms var(--ease-out), box-shadow 180ms var(--ease-out);
+}
+.search:focus-within { border-color: var(--color-accent); box-shadow: 0 0 0 3px var(--color-accent-soft); }
+.search svg { width: 17px; height: 17px; stroke: var(--color-text-muted); flex: 0 0 auto; }
+.search input { flex: 1; border: 0; background: none; outline: none; font-size: 15px; min-width: 0; }
+.search input::placeholder { color: var(--color-text-muted); }
+.search .clear { color: var(--color-text-muted); font-size: 13px; padding: 8px; margin-right: -8px; }
+.chips { margin: 10px -16px 0; padding: 2px 16px 8px; }
+
+.feed-head { display: flex; align-items: baseline; justify-content: space-between; padding: 16px 16px 4px; }
+.feed-head h2 { font-family: var(--font-display); font-weight: 600; font-size: 16px; }
+.feed-head .n { font-size: 12px; color: var(--color-text-muted); }
+
+.masonry { columns: 2; column-gap: 10px; padding: 8px 16px calc(24px + env(safe-area-inset-bottom)); }
+@media (min-width: 700px) { body:not(.framed) .masonry { columns: 4; max-width: 1100px; margin: 0 auto; } }
+.look-card {
+  break-inside: avoid; margin-bottom: 10px; border-radius: 16px; overflow: hidden; position: relative;
+  background: var(--color-bg-card); border: 1px solid var(--color-border); box-shadow: var(--shadow-sm);
+  transition: transform 200ms var(--ease-out), box-shadow 200ms var(--ease-out);
+  display: block; -webkit-tap-highlight-color: transparent;
+}
+.look-card:active { transform: scale(0.98); }
+@media (hover:hover) { .look-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); } }
+.look-card .ph { aspect-ratio: var(--ar, 4/5); }
+.look-card .heart-btn { position: absolute; top: 8px; right: 8px; width: 38px; height: 38px; }
+.look-meta { padding: 10px 12px 12px; }
+.look-meta .cap { font-size: 13px; font-weight: 500; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.look-meta .by { display: flex; align-items: center; gap: 6px; margin-top: 7px; font-size: 11.5px; color: var(--color-text-muted); }
+.look-meta .by img { width: 18px; height: 18px; border-radius: 50%; object-fit: cover; }
+.look-meta .rowline { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; }
+.price-pill { font-family: var(--font-display); font-weight: 600; font-size: 13px; color: var(--color-primary); }
+.likes { display: flex; align-items: center; gap: 4px; font-size: 11.5px; color: var(--color-text-muted); }
+.likes svg { width: 12px; height: 12px; fill: var(--color-text-muted); }
+
+.skel-card { break-inside: avoid; margin-bottom: 10px; border-radius: 16px; overflow: hidden; }
+.skel-card .skel { border-radius: 0; }
+
+.empty { text-align: center; padding: 60px 32px; }
+.empty h3 { font-family: var(--font-display); font-weight: 600; font-size: 17px; margin-top: 14px; }
+.empty p { font-size: 13.5px; color: var(--color-text-muted); margin-top: 6px; }
+
+.fallback-note {
+  margin: 4px 16px 12px; padding: 10px 14px; border-radius: 12px;
+  background: var(--color-accent-soft); border: 1px solid rgba(201,154,74,0.3);
+  font-size: 12.5px; color: #6b5426; display: none;
+}
+.fallback-note.is-on { display: block; animation: rise 400ms var(--ease-out); }
+</style>
+</head>
+<body>
+<div class="phone-wrap"><div class="scroll-root" id="scroll-root">
+
+  <header class="hdr">
+    <div class="row" style="justify-content: space-between;">
+      <div class="brand">snooty</div>
+      <div class="loc"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.1 2 5 5.1 5 9c0 5.2 7 13 7 13s7-7.8 7-13c0-3.9-3.1-7-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z"/></svg> Charlotte, NC</div>
+    </div>
+    <div class="search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input id="q" type="search" placeholder='Try "knotless" or "silk press"' autocomplete="off" aria-label="Search looks">
+      <button class="clear hidden" id="clear" type="button" aria-label="Clear search">Clear</button>
+    </div>
+    <div class="chips snap-row" id="chips"></div>
+  </header>
+
+  <div class="feed-head"><h2 id="feed-title">Looks near you</h2><span class="n" id="feed-n"></span></div>
+  <div class="fallback-note" id="fallback-note">Not much within 50 miles for that one, so here are the best looks from everywhere. Snooty never shows you an empty page.</div>
+  <main class="masonry" id="feed" aria-live="polite"></main>
+
+</div></div>
+
+<script src="shared/seed.js"></script>
+<script src="shared/snooty.js"></script>
+<script>
+(function () {
+  'use strict';
+  const SEED = window.SNOOTY_SEED;
+  const params = new URLSearchParams(location.search);
+  const inDemo = params.has('demo');
+  const suffix = inDemo ? '?demo=1' : '';
+
+  SN.frameOnDesktop();
+  SN.markSeen('discover');
+
+  if (!inDemo) {
+    SN.purposeCard({
+      title: 'This is what your future client sees.',
+      body: 'A feed of finished work, not business listings. Scroll it, search it, tap a look you would post.',
+      cta: 'Start scrolling',
+    });
+  }
+
+  /* Aspect ratios cycle so the masonry feels editorial, like the real feed */
+  const ARS = ['4/5', '3/4', '4/5', '1/1', '3/4', '4/5', '1/1', '3/4'];
+
+  const chipsEl = document.getElementById('chips');
+  const feedEl = document.getElementById('feed');
+  const titleEl = document.getElementById('feed-title');
+  const nEl = document.getElementById('feed-n');
+  const fbEl = document.getElementById('fallback-note');
+  const qEl = document.getElementById('q');
+  const clearEl = document.getElementById('clear');
+
+  let activeCat = 'all';
+  let query = '';
+
+  /* Category chips */
+  SEED.categories.forEach((c) => {
+    const b = document.createElement('button');
+    b.className = 'chip' + (c.slug === 'all' ? ' is-active' : '');
+    b.type = 'button';
+    b.textContent = c.name;
+    b.addEventListener('click', () => {
+      activeCat = c.slug;
+      chipsEl.querySelectorAll('.chip').forEach((x) => x.classList.remove('is-active'));
+      b.classList.add('is-active');
+      render(true);
+    });
+    chipsEl.appendChild(b);
+  });
+
+  /* Search with a convincing debounce + skeleton beat */
+  let debounce;
+  qEl.addEventListener('input', () => {
+    clearEl.classList.toggle('hidden', !qEl.value);
+    clearTimeout(debounce);
+    debounce = setTimeout(() => { query = qEl.value.trim().toLowerCase(); render(true); }, 350);
+  });
+  clearEl.addEventListener('click', () => { qEl.value = ''; query = ''; clearEl.classList.add('hidden'); render(true); qEl.focus(); });
+
+  function matches(l) {
+    const inCat = activeCat === 'all' || l.slug === activeCat;
+    if (!query) return { hit: inCat, near: true };
+    const hay = (l.caption + ' ' + l.stylist + ' ' + l.business + ' ' + l.slug.replace(/-/g, ' ')).toLowerCase();
+    return { hit: inCat && hay.includes(query), near: l.city.includes('NC') };
+  }
+
+  function skeletons(n) {
+    feedEl.innerHTML = '';
+    for (let i = 0; i < n; i++) {
+      const d = document.createElement('div');
+      d.className = 'skel-card';
+      d.innerHTML = '<div class="skel" style="height:' + (150 + (i % 4) * 40) + 'px"></div>';
+      feedEl.appendChild(d);
+    }
+  }
+
+  function cardHTML(l, i) {
+    const liked = false;
+    return (
+      '<div class="ph" style="--ar:' + ARS[i % ARS.length] + '">' +
+      '<img data-src="' + l.img + '" alt="' + l.caption.replace(/"/g, '&quot;') + '">' +
+      '</div>' +
+      '<button class="heart-btn' + (liked ? ' is-saved' : '') + '" type="button" aria-label="Save this look" data-like>' +
+      '<svg viewBox="0 0 24 24"><path d="M12 21s-7.5-4.9-9.7-9.2C.7 8.6 2.8 5 6.2 5c2 0 3.4 1.1 4.3 2.4h3c.9-1.3 2.3-2.4 4.3-2.4 3.4 0 5.5 3.6 3.9 6.8C19.5 16.1 12 21 12 21z" transform="scale(0.92) translate(1,0.5)"/></svg>' +
+      '</button>' +
+      '<div class="look-meta">' +
+      '<div class="cap"></div>' +
+      '<div class="by"><img src="' + (l.stylist === SEED.hero.name ? SEED.hero.avatar : SEED.av.client) + '" alt=""><span></span></div>' +
+      '<div class="rowline"><span class="price-pill">from ' + SN.money(l.cents) + '</span>' +
+      '<span class="likes"><svg viewBox="0 0 24 24"><path d="M12 21s-7.5-4.9-9.7-9.2C.7 8.6 2.8 5 6.2 5c2 0 3.4 1.1 4.3 2.4h3c.9-1.3 2.3-2.4 4.3-2.4 3.4 0 5.5 3.6 3.9 6.8C19.5 16.1 12 21 12 21z"/></svg>' + SN.compact(l.likes) + '</span></div>' +
+      '</div>'
+    );
+  }
+
+  function render(withSkeleton) {
+    const local = [], everywhere = [];
+    SEED.feed.forEach((l, idx) => {
+      const m = matches(l);
+      if (m.hit) (m.near || !query ? local : everywhere).push([l, idx]);
+    });
+    /* Location-free fallback: sparse local results get topped up, like the real app */
+    let rows = local, fellBack = false;
+    if (query && local.length < 4) {
+      const seen = new Set(local.map(([l]) => l.img));
+      SEED.feed.forEach((l, idx) => {
+        const hay = (l.caption + ' ' + l.stylist + ' ' + l.slug.replace(/-/g, ' ')).toLowerCase();
+        if (!seen.has(l.img) && hay.includes(query) && (activeCat === 'all' || l.slug === activeCat)) { rows.push([l, idx]); fellBack = true; }
+      });
+    }
+
+    const finish = () => {
+      fbEl.classList.toggle('is-on', fellBack);
+      titleEl.textContent = query ? 'Results for "' + query + '"' : (activeCat === 'all' ? 'Looks near you' : SEED.categories.find((c) => c.slug === activeCat).name + ' near you');
+      nEl.textContent = rows.length ? rows.length + (rows.length === 1 ? ' look' : ' looks') : '';
+      feedEl.innerHTML = '';
+      if (!rows.length) {
+        feedEl.innerHTML =
+          '<div class="empty" style="column-span: all;">' +
+          '<div style="font-size:34px;">🔍</div><h3>Nothing for that yet</h3>' +
+          '<p>Try "knotless", "locs", "silk press", or a stylist\'s name.</p></div>';
+        return;
+      }
+      feedEl.classList.add('stagger');
+      rows.forEach(([l, idx], i) => {
+        const a = document.createElement('a');
+        a.className = 'look-card';
+        a.href = 'look.html?i=' + idx + (inDemo ? '&demo=1' : '');
+        a.innerHTML = cardHTML(l, idx);
+        a.querySelector('.cap').textContent = l.caption;
+        a.querySelector('.by span').textContent = l.business + ' · ' + l.city;
+        a.querySelector('[data-like]').addEventListener('click', (e) => {
+          e.preventDefault(); e.stopPropagation();
+          const btn = e.currentTarget;
+          btn.classList.toggle('is-saved');
+          if (btn.classList.contains('is-saved')) SN.toast('Saved to your looks', l.caption, { icon: '❤' });
+        });
+        feedEl.appendChild(a);
+      });
+      SN.hydrateImages(feedEl);
+      setTimeout(() => feedEl.classList.remove('stagger'), 900);
+    };
+
+    if (withSkeleton) { skeletons(8); setTimeout(finish, query ? 550 : 700); }
+    else finish();
+  }
+
+  render(true);
+})();
+</script>
+</body>
+</html>

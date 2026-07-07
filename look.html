@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Snooty · Look</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@1,400;1,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared/snooty.css">
+<style>
+.topbar {
+  position: sticky; top: 0; z-index: 100; display: flex; align-items: center; gap: 8px;
+  background: rgba(252,250,249,0.92); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--color-border);
+  padding: calc(8px + env(safe-area-inset-top)) 10px 8px;
+}
+.icon-btn {
+  width: 44px; height: 44px; border-radius: var(--radius-full); display: flex; align-items: center; justify-content: center;
+  transition: background 160ms var(--ease-out), transform 160ms var(--ease-out);
+  -webkit-tap-highlight-color: transparent;
+}
+.icon-btn:hover { background: var(--color-bg-alt); }
+.icon-btn:active { transform: scale(0.92); }
+.icon-btn svg { width: 20px; height: 20px; stroke: var(--color-text); fill: none; stroke-width: 2; }
+.topbar .t { font-family: var(--font-display); font-weight: 600; font-size: 15px; }
+
+.hero-carousel { position: relative; }
+.hero-carousel .snap-row { gap: 0; padding: 0; }
+.hero-slide { width: 100%; }
+.hero-slide .ph { aspect-ratio: 4/5; }
+.hero-dots { position: absolute; bottom: 12px; left: 0; right: 0; display: flex; justify-content: center; gap: 6px; z-index: 3; }
+.hero-dots i { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.55); transition: all 200ms var(--ease-out); }
+.hero-dots i.on { background: #fff; width: 18px; border-radius: 3px; }
+.hero-carousel .heart-btn { position: absolute; top: 12px; right: 12px; z-index: 3; }
+.angle-hint {
+  position: absolute; bottom: 12px; right: 12px; z-index: 3;
+  font-family: var(--font-display); font-size: 11px; font-weight: 600; letter-spacing: 0.06em;
+  background: rgba(24,24,24,0.62); color: #fff; padding: 5px 10px; border-radius: var(--radius-full);
+  backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+}
+
+.body-pad { padding: 16px 16px calc(110px + env(safe-area-inset-bottom)); max-width: 720px; margin: 0 auto; }
+h1.cap { font-family: var(--font-display); font-weight: 600; font-size: 21px; line-height: 1.25; }
+.meta-row { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+.meta-pill {
+  display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 500;
+  background: var(--color-bg-alt); border: 1px solid var(--color-border); border-radius: var(--radius-full);
+  padding: 7px 13px;
+}
+.meta-pill b { font-family: var(--font-display); color: var(--color-primary); }
+
+.stylist-card { display: flex; align-items: center; gap: 12px; margin-top: 18px; padding: 14px; }
+.stylist-card img.av { width: 52px; height: 52px; border-radius: 50%; object-fit: cover; }
+.stylist-card .s-name { font-family: var(--font-display); font-weight: 600; font-size: 15.5px; }
+.stylist-card .s-sub { font-size: 12.5px; color: var(--color-text-muted); margin-top: 2px; }
+.stylist-card .rating { display: flex; align-items: center; gap: 4px; font-size: 12.5px; font-weight: 600; margin-top: 3px; }
+.stylist-card .rating svg { width: 13px; height: 13px; fill: var(--color-accent); }
+
+.sec-title { font-family: var(--font-display); font-weight: 600; font-size: 15px; margin: 26px 0 12px; display: flex; justify-content: space-between; align-items: baseline; }
+.sec-title .more { font-size: 12.5px; color: var(--color-primary); font-weight: 500; }
+
+.review { padding: 14px; margin-bottom: 10px; }
+.review .r-head { display: flex; align-items: center; gap: 10px; }
+.review .r-head img { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; }
+.review .r-name { font-weight: 600; font-size: 13.5px; }
+.review .r-sub { font-size: 11.5px; color: var(--color-text-muted); }
+.review .stars { margin-left: auto; color: var(--color-accent); font-size: 12px; letter-spacing: 2px; }
+.review p { font-size: 13.5px; line-height: 1.55; margin-top: 10px; color: #3d3a36; }
+.verified {
+  display: inline-flex; align-items: center; gap: 4px; margin-top: 10px;
+  font-family: var(--font-display); font-size: 10.5px; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase;
+  color: var(--color-success);
+}
+
+.talent-row { margin: 0 -16px; padding: 0 16px; }
+.talent { width: 150px; padding: 12px; text-align: center; }
+.talent img { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; margin: 0 auto 8px; }
+.talent .t-n { font-family: var(--font-display); font-weight: 600; font-size: 13px; }
+.talent .t-s { font-size: 11px; color: var(--color-text-muted); margin-top: 2px; }
+
+.cta-bar {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 200;
+  background: rgba(252,250,249,0.95); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  border-top: 1px solid var(--color-border);
+  padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+  display: flex; align-items: center; gap: 14px;
+}
+body.framed .cta-bar { position: absolute; }
+.cta-bar .price { line-height: 1.15; }
+.cta-bar .price .p { font-family: var(--font-display); font-weight: 700; font-size: 19px; color: var(--color-primary); }
+.cta-bar .price .d { font-size: 11.5px; color: var(--color-text-muted); }
+.cta-bar .btn { flex: 1; }
+</style>
+</head>
+<body>
+<div class="phone-wrap"><div class="scroll-root" style="position:relative;">
+
+  <header class="topbar">
+    <button class="icon-btn" id="back" type="button" aria-label="Back to Discover">
+      <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
+    </button>
+    <span class="t">The Look</span>
+  </header>
+
+  <div class="hero-carousel">
+    <div class="snap-row" id="hero-track"></div>
+    <button class="heart-btn" id="save" type="button" aria-label="Save this look">
+      <svg viewBox="0 0 24 24"><path d="M12 21s-7.5-4.9-9.7-9.2C.7 8.6 2.8 5 6.2 5c2 0 3.4 1.1 4.3 2.4h3c.9-1.3 2.3-2.4 4.3-2.4 3.4 0 5.5 3.6 3.9 6.8C19.5 16.1 12 21 12 21z"/></svg>
+    </button>
+    <div class="hero-dots" id="dots"></div>
+    <div class="angle-hint" id="angle-hint">swipe for angles</div>
+  </div>
+
+  <div class="body-pad">
+    <h1 class="cap" id="cap"></h1>
+    <div class="meta-row">
+      <span class="meta-pill"><b id="m-price"></b></span>
+      <span class="meta-pill" id="m-mins"></span>
+      <span class="meta-pill" id="m-cat"></span>
+    </div>
+
+    <a class="card card-lift stylist-card" id="stylist-link">
+      <img class="av" id="s-av" src="" alt="">
+      <div class="grow">
+        <div class="s-name" id="s-name"></div>
+        <div class="s-sub" id="s-sub"></div>
+        <div class="rating"><svg viewBox="0 0 24 24"><path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.2 5.9 20.6l1.4-6.8L2.2 9.1l6.9-.8z"/></svg><span id="s-rate"></span></div>
+      </div>
+      <svg style="width:18px;height:18px;stroke:var(--color-text-muted);fill:none;stroke-width:2;" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
+    </a>
+
+    <div class="sec-title">What clients said <span class="more" id="rev-count"></span></div>
+    <div id="reviews"></div>
+
+    <div class="sec-title">Top talent nearby</div>
+    <div class="snap-row talent-row" id="talent"></div>
+  </div>
+
+  <div class="cta-bar">
+    <div class="price">
+      <div class="p" id="cta-price"></div>
+      <div class="d" id="cta-dep"></div>
+    </div>
+    <a class="btn btn-primary" id="book" href="#">Book this look</a>
+  </div>
+
+</div></div>
+
+<script src="shared/seed.js"></script>
+<script src="shared/snooty.js"></script>
+<script>
+(function () {
+  'use strict';
+  const SEED = window.SNOOTY_SEED;
+  const params = new URLSearchParams(location.search);
+  const inDemo = params.has('demo');
+  const suffix = inDemo ? '&demo=1' : '';
+
+  SN.frameOnDesktop();
+  SN.markSeen('look');
+
+  const idx = Math.max(0, Math.min(SEED.feed.length - 1, parseInt(params.get('i'), 10) || 0));
+  const look = SEED.feed[idx];
+  const isHero = !!look.heroLook;
+  const heroLook = isHero ? SEED.hero.looks.find((l) => l.id === look.heroLook) : null;
+  const angles = heroLook ? heroLook.angles : [look.img];
+  const service = heroLook ? SEED.hero.services.find((s) => s.id === heroLook.serviceId) : null;
+  const mins = service ? service.mins : 240;
+  const cents = service ? service.cents : look.cents;
+  const catName = (SEED.categories.find((c) => c.slug === look.slug) || {}).name || 'Signature style';
+  const dep = Math.round(cents * SEED.platform.depositPct / 100);
+
+  document.getElementById('back').addEventListener('click', () => {
+    if (history.length > 1) history.back();
+    else location.href = 'discover.html' + (inDemo ? '?demo=1' : '');
+  });
+
+  /* Hero carousel with multi-angle photos (Phase 4b feature) */
+  const track = document.getElementById('hero-track');
+  const dots = document.getElementById('dots');
+  angles.forEach((src, i) => {
+    const d = document.createElement('div');
+    d.className = 'hero-slide';
+    d.innerHTML = '<div class="ph"><img data-src="' + src + '" alt="Angle ' + (i + 1) + ' of this look"></div>';
+    track.appendChild(d);
+    const dot = document.createElement('i');
+    if (i === 0) dot.className = 'on';
+    dots.appendChild(dot);
+  });
+  if (angles.length < 2) {
+    dots.classList.add('hidden');
+    document.getElementById('angle-hint').classList.add('hidden');
+  }
+  track.addEventListener('scroll', () => {
+    const i = Math.round(track.scrollLeft / track.clientWidth);
+    dots.querySelectorAll('i').forEach((d, j) => d.classList.toggle('on', j === i));
+  }, { passive: true });
+
+  /* Save */
+  const save = document.getElementById('save');
+  save.addEventListener('click', () => {
+    save.classList.toggle('is-saved');
+    if (save.classList.contains('is-saved')) SN.toast('Saved to your looks', look.caption, { icon: '❤' });
+  });
+
+  /* Copy */
+  document.title = 'Snooty · ' + look.caption;
+  document.getElementById('cap').textContent = look.caption;
+  document.getElementById('m-price').textContent = SN.money(cents);
+  document.getElementById('m-mins').textContent = SN.mins(mins);
+  document.getElementById('m-cat').textContent = catName;
+
+  const sLink = document.getElementById('stylist-link');
+  document.getElementById('s-av').src = isHero ? SEED.hero.avatar : SEED.av.client;
+  document.getElementById('s-name').textContent = look.business;
+  document.getElementById('s-sub').textContent = look.stylist + ' · ' + look.city;
+  document.getElementById('s-rate').textContent = isHero
+    ? SEED.hero.rating + ' · ' + SEED.hero.reviewCount + ' reviews'
+    : '4.8 · verified reviews';
+  sLink.href = 'profile.html?from=look' + suffix;
+
+  /* Reviews (appointment-tied) */
+  const revEl = document.getElementById('reviews');
+  const revs = SEED.reviews.slice(0, 2);
+  document.getElementById('rev-count').textContent = 'See all ' + (isHero ? SEED.hero.reviewCount : 87);
+  revs.forEach((r) => {
+    const d = document.createElement('div');
+    d.className = 'card review';
+    d.innerHTML =
+      '<div class="r-head"><img src="' + r.avatar + '" alt="">' +
+      '<div><div class="r-name"></div><div class="r-sub"></div></div>' +
+      '<div class="stars">' + '★'.repeat(r.stars) + '</div></div>' +
+      '<p></p>' +
+      '<span class="verified">✓ Verified completed appointment</span>';
+    d.querySelector('.r-name').textContent = r.client;
+    d.querySelector('.r-sub').textContent = r.service + ' · ' + r.when;
+    d.querySelector('p').textContent = r.text;
+    revEl.appendChild(d);
+  });
+
+  /* Top talent */
+  const talent = document.getElementById('talent');
+  SEED.stylists.slice(0, 5).forEach((s) => {
+    const a = document.createElement('a');
+    a.className = 'card card-lift talent';
+    a.href = 'profile.html?from=talent' + suffix;
+    a.innerHTML = '<img src="' + s.avatar + '" alt=""><div class="t-n"></div><div class="t-s"></div>';
+    a.querySelector('.t-n').textContent = s.name;
+    a.querySelector('.t-s').textContent = '★ ' + s.rating + ' · ' + s.city.split(',')[0];
+    talent.appendChild(a);
+  });
+
+  /* CTA */
+  document.getElementById('cta-price').textContent = SN.money(cents);
+  document.getElementById('cta-dep').textContent = SN.money(dep) + ' deposit holds it';
+  document.getElementById('book').href =
+    'booking.html?i=' + idx + suffix;
+
+  SN.hydrateImages(document);
+})();
+</script>
+</body>
+</html>
