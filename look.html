@@ -265,7 +265,7 @@ body.framed .cta-bar { position: absolute; }
      phone taps Book itself and carries straight into the deposit step. */
   if (params.has('script')) {
     const bookBtn = document.getElementById('book');
-    bookBtn.href += '&script=1&step=3'; /* booking.html jumps straight to Step 3: Deposit */
+    bookBtn.href += '&script=1&step=3&session=1'; /* booking.html jumps straight to Step 3: Deposit */
     setTimeout(() => {
       bookBtn.style.transition = 'transform 180ms var(--ease-out)';
       bookBtn.style.transform = 'scale(0.96)';

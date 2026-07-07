@@ -257,23 +257,35 @@
       }, 90);
     });
     const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+    /* render()'s own debounce (350ms) plus its skeleton-to-finish delay
+       (550ms) means real cards don't exist until ~900ms after the last
+       keystroke. Poll for them instead of guessing a fixed wait, so a
+       slower device/network can't leave the phone stuck on Discover
+       with "knotless" typed and nothing ever tapped. */
+    const waitForCards = () => new Promise((resolve) => {
+      const check = () => {
+        const cards = feedEl.querySelectorAll('.look-card');
+        if (cards.length) resolve([...cards]);
+        else setTimeout(check, 100);
+      };
+      check();
+    });
 
     (async () => {
       await wait(1600); /* settle on the untouched feed first */
       qEl.focus();
-      await type(qEl, 'knotless', 500); /* render() debounces on 'input', same as a real visitor typing */
-      await wait(650);
+      await type(qEl, 'knotless', 0);
+      const cards = await waitForCards();
       /* find Jordyn Ellis's top knotless look (lk1, seed's highest-liked
          result for this search) and highlight it like a finger landing,
          then carry the whole phone into the Look page for Stop 2 */
-      const cards = [...feedEl.querySelectorAll('.look-card')];
       const target = cards.find((a) => a.href.includes('i=' + SEED.feed.findIndex((l) => l.stylist === 'Jordyn Ellis' && l.slug === 'knotless-braids' && l.likes === 2800)));
       const card = target || cards[0];
       if (card) {
         card.style.transition = 'transform 220ms var(--ease-out)';
         card.style.transform = 'scale(0.96)';
-        await wait(260);
-        location.href = card.getAttribute('href') + '&script=1';
+        await wait(500); /* let the room actually read the result before it navigates away */
+        location.href = card.getAttribute('href') + '&script=1&session=1';
       }
     })();
   }
