@@ -60,6 +60,19 @@ body { background: var(--color-bg-dark); color: var(--color-text-inverse); }
 .footer-cta .f-s { font-size: 12px; color: var(--color-text-muted-inverse); margin-top: 3px; }
 
 .progress-note { margin-top: 18px; font-size: 12px; color: var(--color-text-muted-inverse); text-align: center; }
+
+/* Follower mode: reached via the deck's QR code (?session=1). Blocks
+   free exploration and shows a holding screen until the presenter's
+   slide reaches one with a mapped live page (see SLIDE_MAP below). */
+.session-wait {
+  position: fixed; inset: 0; z-index: 500; background: var(--color-bg-dark);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px;
+  padding: 24px; text-align: center;
+}
+.session-wait .sw-word { font-family: var(--font-display); font-weight: 700; font-size: 32px; color: var(--color-accent); letter-spacing: 0.03em; }
+.session-wait .sw-line { font-size: 15px; color: var(--color-text-muted-inverse); max-width: 32ch; line-height: 1.6; }
+.session-wait .sw-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--color-accent); animation: sw-pulse 1.4s ease-in-out infinite; }
+@keyframes sw-pulse { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
 </style>
 </head>
 <body>
@@ -120,11 +133,36 @@ body { background: var(--color-bg-dark); color: var(--color-text-inverse); }
   <div class="f-s">Beta invites land tomorrow morning. Watch your texts.</div>
 </div>
 
+<div class="session-wait" id="session-wait" style="display:none;">
+  <div class="sw-word">snooty</div>
+  <div class="sw-line">You're all set. Wait for the presenter to bring up the next screen.</div>
+  <div class="sw-dot"></div>
+</div>
+
 <script src="shared/seed.js"></script>
 <script src="shared/snooty.js"></script>
+<script src="shared/sync.js"></script>
 <script>
 (function () {
   'use strict';
+  /* Follower mode: reached via the deck's QR code (?session=1). Every
+     slide the presenter advances to gets pushed here over SN.sync; a
+     mapped slide navigates this phone to the matching live page, and
+     everything else holds on the waiting screen so nobody wanders off
+     on their own mid-presentation. */
+  const params = new URLSearchParams(location.search);
+  if (params.has('session')) {
+    const SLIDE_MAP = { 3: 'day-in-the-life.html?session=1' };
+    const wait = document.getElementById('session-wait');
+    wait.style.display = 'flex';
+    document.querySelectorAll('.wrap, .footer-cta').forEach((el) => { el.style.display = 'none'; });
+    SN.sync.watchSlide((slide) => {
+      const target = SLIDE_MAP[slide];
+      if (target) location.href = target;
+    });
+    return; /* skip the rest of this page's normal (free-exploration) setup entirely */
+  }
+
   /* Sound toggle (shared with every experience via localStorage) */
   const btn = document.getElementById('sound');
   const paint = () => {

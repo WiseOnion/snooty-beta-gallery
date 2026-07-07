@@ -424,10 +424,17 @@ body.notes-mode #notes-panel {
     </div>
   </section>
 
+  <!-- 3 ▸ Send them to A Day in the Life -->
+  <section class="slide light" data-title="A Day in the Life (pushes phones)">
+    <div class="kicker">On their phones now</div>
+    <h1 class="headline">A Day in the Life.</h1>
+    <p class="sub">One Tuesday as a Snooty stylist, 8 AM to midnight. Their screen just changed to match.</p>
+  </section>
+
 </div>
 
 <div id="progress"></div>
-<div id="hud">1 / 2</div>
+<div id="hud">1 / 3</div>
 
 <div id="notes-panel">
   <div class="np-head"><span class="np-slide">1</span><span class="np-timer">00:00</span></div>
@@ -439,6 +446,7 @@ body.notes-mode #notes-panel {
 <script src="shared/seed.js"></script>
 <script src="shared/snooty.js"></script>
 <script src="shared/qrcode.js"></script>
+<script src="shared/sync.js"></script>
 <script>
 (function () {
   'use strict';
@@ -455,7 +463,7 @@ body.notes-mode #notes-panel {
   (function renderQR() {
     const el = document.getElementById('qr-real');
     if (!el || !window.qrcodegen) return;
-    const url = location.origin + location.pathname.replace(/deck-preview\.html$/, 'index.html');
+    const url = location.origin + location.pathname.replace(/deck-preview\.html$/, 'index.html') + '?session=1';
     const qr = qrcodegen.QrCode.encodeText(url, qrcodegen.QrCode.Ecc.MEDIUM);
     const n = qr.size;
     let cells = '';
@@ -473,6 +481,7 @@ body.notes-mode #notes-panel {
   const NOTES = [
 'Say NOTHING for the entire sequence, about 6.5 seconds. Opens punched in close on one photo alone, holds a beat, then the camera pulls back WHILE the rest of the wall fades in one tile at a time, spreading outward in waves, so the zoom and the reveal finish together. The wall then blurs and the wordmark fades in on top. Once it settles, say: "This is Snooty." Then advance to the QR slide.',
     'Hold here. "Scan that now, you\'ll follow along on your own phone for the rest of this." Give the room 15-20 seconds to actually scan before advancing.',
+    'The moment you land here, every connected phone jumps to A Day in the Life on its own. Say: "Take a look, you\'re seeing this live."',
   ];
 
   /* ---------- Engine ---------- */
@@ -505,6 +514,7 @@ body.notes-mode #notes-panel {
     bar.style.width = ((i + 1) / slides.length * 100) + '%';
     if (!fromHash) history.replaceState(null, '', '#' + (i + 1));
     try { localStorage.setItem('snooty-deck-slide', String(i)); } catch (e) {}
+    if (window.SN && SN.sync) SN.sync.setSlide(i + 1); /* 1-indexed, pushed to every phone that scanned the QR */
     renderNotes(i);
   }
 
