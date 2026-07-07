@@ -63,16 +63,36 @@ body { background: var(--color-bg-dark); color: var(--color-text-inverse); }
 
 /* Follower mode: reached via the deck's QR code (?session=1). Blocks
    free exploration and shows a holding screen until the presenter's
-   slide reaches one with a mapped live page (see SLIDE_MAP below). */
+   slide reaches one with a mapped live page (see SLIDE_MAP below).
+   Wordmark treatment matches the brand spec: all caps, Jost Book (400),
+   0.32em tracking, ivory on the dark surface (hisisnooty/src/styles/
+   tokens.css, "Nameplate" direction). */
 .session-wait {
-  position: fixed; inset: 0; z-index: 500; background: var(--color-bg-dark);
-  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px;
+  position: fixed; inset: 0; z-index: 500;
+  background: radial-gradient(circle at 50% 32%, var(--color-bg-dark-raised) 0%, var(--color-bg-dark) 70%);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 22px;
   padding: 24px; text-align: center;
 }
-.session-wait .sw-word { font-family: var(--font-display); font-weight: 700; font-size: 32px; color: var(--color-accent); letter-spacing: 0.03em; }
-.session-wait .sw-line { font-size: 15px; color: var(--color-text-muted-inverse); max-width: 32ch; line-height: 1.6; }
-.session-wait .sw-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--color-accent); animation: sw-pulse 1.4s ease-in-out infinite; }
-@keyframes sw-pulse { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
+.session-wait .sw-word {
+  font-family: var(--font-display); font-weight: 400; font-size: clamp(32px, 9vw, 48px);
+  color: var(--color-text-inverse); letter-spacing: 0.32em; text-transform: uppercase;
+  padding-left: 0.32em; /* the trailing tracking overhangs past the last glyph; nudge back to true-center */
+}
+.session-wait .sw-status {
+  display: flex; align-items: center; gap: 9px;
+  font-family: var(--font-display); font-weight: 600; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--color-accent);
+}
+.session-wait .sw-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--color-accent); animation: sw-pulse 1.6s ease-in-out infinite; }
+@keyframes sw-pulse { 0%, 100% { opacity: 0.35; transform: scale(0.85); } 50% { opacity: 1; transform: scale(1); } }
+.session-wait .sw-line {
+  font-family: var(--font-editorial); font-style: italic; font-weight: 500;
+  font-size: clamp(17px, 2.4vw, 21px); color: var(--color-text-muted-inverse);
+  max-width: 30ch; line-height: 1.5;
+}
+.session-wait .sw-hint {
+  font-size: 12.5px; color: rgba(216,207,194,0.45); max-width: 34ch; line-height: 1.6; margin-top: 4px;
+}
 </style>
 </head>
 <body>
@@ -135,8 +155,9 @@ body { background: var(--color-bg-dark); color: var(--color-text-inverse); }
 
 <div class="session-wait" id="session-wait" style="display:none;">
   <div class="sw-word">snooty</div>
-  <div class="sw-line">You're all set. Wait for the presenter to bring up the next screen.</div>
-  <div class="sw-dot"></div>
+  <div class="sw-status"><span class="sw-dot"></span>You're connected</div>
+  <div class="sw-line">Sit tight, we're following the room.</div>
+  <div class="sw-hint">Your screen will change on its own the moment the presenter gets there.</div>
 </div>
 
 <script src="shared/seed.js"></script>
