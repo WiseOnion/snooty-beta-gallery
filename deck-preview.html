@@ -803,9 +803,16 @@ body.notes-mode #notes-panel {
         const eased = frac * frac;
         return TICK_START_MS + (TICK_END_MS - TICK_START_MS) * eased;
       }
-      let totalRevealMs = 0;
-      for (let i = 1; i <= queue.length; i++) totalRevealMs += gapAt(i);
-
+      /* Blur, drift and the wordmark fire off the reveal loop's own
+         completion (qi reaching queue.length) rather than a precomputed
+         timestamp. The drip loop runs on requestAnimationFrame, which
+         is tied to the browser's actual paint rate: under load (slower
+         hardware, many images decoding at once, a backgrounded tab)
+         rAF can fall behind wall-clock time, so a setTimeout scheduled
+         against the ideal total would fire the finale while tiles are
+         still mid-reveal. Triggering from the loop itself means the
+         finale always waits for the real last tile, whatever the
+         actual pace turned out to be. */
       let qi = 0;
       let lastTick = 0;
       let nextGap = TICK_START_MS;
@@ -815,6 +822,12 @@ body.notes-mode #notes-panel {
           queue[qi].img.classList.add('wall-in');
           qi++;
           lastTick = now;
+          if (qi >= queue.length) {
+            field.classList.add('blurred'); scrim.classList.add('show');
+            setTimeout(() => { field.classList.add('drift'); }, 250);
+            setTimeout(() => { word.classList.add('show'); }, 550);
+            return;
+          }
           nextGap = gapAt(qi);
         }
         requestAnimationFrame(drip);
@@ -822,15 +835,6 @@ body.notes-mode #notes-panel {
       setTimeout(() => requestAnimationFrame((t) => { lastTick = t - nextGap; drip(t); }), REVEAL_START - HOLD_MS);
 
       hero.classList.add('wall-in'); /* let the hero start breathing too, right as the pull-back begins */
-
-      /* Blur, drift and the wordmark wait for the reveal to actually
-         finish (computed above from the real eased schedule) rather
-         than a fixed point tied to the zoom's own duration, so the
-         wall never gets cut off mid-spread. */
-      const wallDoneAt = REVEAL_START + totalRevealMs;
-      setTimeout(() => { field.classList.add('blurred'); scrim.classList.add('show'); }, wallDoneAt);
-      setTimeout(() => { field.classList.add('drift'); }, wallDoneAt + 250);
-      setTimeout(() => { word.classList.add('show'); }, wallDoneAt + 550);
     });
   }
 
