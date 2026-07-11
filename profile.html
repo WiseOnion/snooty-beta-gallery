@@ -18,6 +18,12 @@
 .icon-btn:active { transform: scale(0.92); }
 .icon-btn svg { width: 20px; height: 20px; stroke: var(--color-text); fill: none; stroke-width: 2; }
 .topbar .t { font-family: var(--font-display); font-weight: 600; font-size: 15px; }
+.topbar .badge {
+  margin-left: auto; display: inline-flex; align-items: center; gap: 4px;
+  font-family: var(--font-display); font-size: 9.5px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+  color: #6b5426; background: var(--color-accent-soft); border: 1px solid rgba(201,154,74,0.4);
+  padding: 4px 9px; border-radius: var(--radius-full);
+}
 
 .hero { text-align: center; padding: 22px 18px 6px; }
 .hero img.av { width: 88px; height: 88px; border-radius: 50%; object-fit: cover; margin: 0 auto; box-shadow: 0 0 0 4px var(--color-bg), 0 0 0 6px var(--color-accent); }
@@ -29,6 +35,16 @@
 .trust-strip .n { font-family: var(--font-display); font-weight: 700; font-size: 17px; }
 .trust-strip .n .star { color: var(--color-accent); }
 .trust-strip .l { font-size: 10.5px; color: var(--color-text-muted); letter-spacing: 0.06em; text-transform: uppercase; font-family: var(--font-display); font-weight: 600; margin-top: 2px; }
+
+/* Hours: its own card, set apart from the trust strip above it. Two
+   short centered lines (open hours, then response time) instead of one
+   run-on sentence that wraps awkwardly. */
+.hours-block {
+  margin: 18px 16px 0; padding: 12px 16px; text-align: center;
+  background: var(--color-bg-card); border: 1px solid var(--color-border); border-radius: 14px;
+}
+.hours-line { font-size: 12.5px; font-weight: 500; color: var(--color-text); }
+.hours-reply { margin-top: 2px; font-size: 11px; color: var(--color-text-muted); }
 
 .tabs { display: flex; gap: 4px; margin: 20px 16px 0; background: var(--color-bg-alt); border: 1px solid var(--color-border); border-radius: var(--radius-full); padding: 4px; }
 .tab { flex: 1; min-height: 40px; border-radius: var(--radius-full); font-family: var(--font-display); font-weight: 600; font-size: 13.5px; color: var(--color-text-muted); transition: all 200ms var(--ease-out); }
@@ -44,7 +60,6 @@
   position: absolute; left: 0; right: 0; bottom: 0; padding: 22px 10px 8px;
   background: linear-gradient(transparent, rgba(0,0,0,0.65)); color: #fff; font-size: 11px; font-weight: 500;
 }
-.pgrid .p-item:active { transform: scale(0.98); }
 
 .svc-line { display: flex; align-items: center; gap: 12px; padding: 14px; margin-bottom: 9px; }
 .svc-line .s-n { font-weight: 600; font-size: 14px; }
@@ -62,16 +77,17 @@
 .review .r-photo .ph { aspect-ratio: 1; }
 .verified { display: inline-flex; align-items: center; gap: 4px; margin-top: 10px; font-family: var(--font-display); font-size: 10.5px; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; color: var(--color-success); }
 
-.avail { margin-top: 14px; padding: 13px 15px; display: flex; gap: 9px; align-items: center; font-size: 12.5px; color: var(--color-text-muted); }
-.avail .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--color-success); animation: hotspot-pulse 2s infinite; }
-
+/* sticky, not fixed: .cta-bar lives inside .scroll-root, which is the
+   real scrolling element in BOTH modes (the page on mobile, an
+   overflow-y box in the desktop phone-frame preview). fixed would
+   escape the phone frame entirely in framed mode; sticky-to-bottom
+   keeps the bar pinned to the visible bottom edge in either. */
 .cta-bar {
-  position: fixed; left: 0; right: 0; bottom: 0; z-index: 200;
+  position: sticky; left: 0; right: 0; bottom: 0; z-index: 200;
   background: rgba(252,250,249,0.95); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
   border-top: 1px solid var(--color-border);
   padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
 }
-body.framed .cta-bar { position: absolute; }
 .cta-bar .btn { width: 100%; }
 </style>
 </head>
@@ -83,6 +99,7 @@ body.framed .cta-bar { position: absolute; }
       <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
     </button>
     <span class="t">Stylist profile</span>
+    <span class="badge">★ Founding #4</span>
   </header>
 
   <div class="hero">
@@ -95,7 +112,10 @@ body.framed .cta-bar { position: absolute; }
       <div><div class="n" id="t-rev"></div><div class="l">verified reviews</div></div>
       <div><div class="n" id="t-yrs"></div><div class="l">years in</div></div>
     </div>
-    <div class="card avail"><span class="dot"></span><span id="hours"></span></div>
+    <div class="hours-block">
+      <div class="hours-line" id="hours"></div>
+      <div class="hours-reply">Usually replies within an hour</div>
+    </div>
   </div>
 
   <div class="tabs" role="tablist">
@@ -109,36 +129,36 @@ body.framed .cta-bar { position: absolute; }
   <section class="pane" id="pane-reviews"><div id="revs"></div></section>
 
   <div class="cta-bar">
-    <a class="btn btn-primary" id="book" href="#">Book with Jordyn</a>
+    <button class="btn btn-primary" id="book" type="button">Book with Jordyn</button>
   </div>
 
 </div></div>
 
 <script src="shared/seed.js"></script>
 <script src="shared/snooty.js"></script>
+<script src="shared/sync.js"></script>
 <script>
 (function () {
   'use strict';
   const SEED = window.SNOOTY_SEED;
   const params = new URLSearchParams(location.search);
   const inDemo = params.has('demo');
+  const scripted = params.has('script');
   const H = SEED.hero;
 
   SN.frameOnDesktop();
   SN.markSeen('profile');
+  if (params.has('session')) SN.walkthroughProgress(3); /* Stop 3: Your Business (this is a toolkit page) */
 
-  if (!inDemo && !params.has('from')) {
+  if (!inDemo && !scripted) {
     SN.purposeCard({
-      title: 'What a stranger sees.',
-      body: 'When your work stops the scroll, this page closes the deal: real looks, real prices, reviews tied to real appointments.',
+      title: 'What a stranger sees. What you build.',
+      body: 'When your work stops the scroll, this page closes the deal, and every piece of it is yours to fill: photos, services, prices.',
       cta: 'See it their way',
     });
   }
 
-  document.getElementById('back').addEventListener('click', () => {
-    if (history.length > 1) history.back();
-    else location.href = 'discover.html' + (inDemo ? '?demo=1' : '');
-  });
+  /* Back arrow is decorative only: nothing leaves this page. */
 
   document.getElementById('av').src = H.avatar;
   document.getElementById('biz').textContent = H.business;
@@ -147,18 +167,18 @@ body.framed .cta-bar { position: absolute; }
   document.getElementById('t-rate').textContent = H.rating;
   document.getElementById('t-rev').textContent = H.reviewCount;
   document.getElementById('t-yrs').textContent = H.years;
-  document.getElementById('hours').textContent = H.hours + ' · usually replies within an hour';
+  document.getElementById('hours').textContent = H.hours;
 
-  /* Work grid links into the booking chain */
+  /* Work grid: the promo tool, shown as static display only. Every look
+     used to link into the booking chain; this page now never navigates
+     away from itself, so tiles are plain, non-interactive divs. */
   const grid = document.getElementById('pgrid');
   H.looks.forEach((l) => {
-    const feedIdx = SEED.feed.findIndex((f) => f.heroLook === l.id);
-    const a = document.createElement('a');
-    a.className = 'p-item';
-    a.href = feedIdx >= 0 ? 'look.html?i=' + feedIdx + (inDemo ? '&demo=1' : '') : '#';
-    a.innerHTML = '<div class="ph"><img data-src="' + l.img + '" alt=""></div><div class="p-cap"></div>';
-    a.querySelector('.p-cap').textContent = l.caption + ' · ' + SN.compact(l.likes) + ' saves';
-    grid.appendChild(a);
+    const d = document.createElement('div');
+    d.className = 'p-item';
+    d.innerHTML = '<div class="ph"><img data-src="' + l.img + '" alt=""></div><div class="p-cap"></div>';
+    d.querySelector('.p-cap').textContent = l.caption + ' · ' + SN.compact(l.likes) + ' saves';
+    grid.appendChild(d);
   });
 
   /* Services */
@@ -202,9 +222,28 @@ body.framed .cta-bar { position: absolute; }
     });
   });
 
-  /* Book CTA: her signature look's booking flow */
-  const sigIdx = SEED.feed.findIndex((f) => f.heroLook === 'lk1');
-  document.getElementById('book').href = 'booking.html?i=' + (sigIdx >= 0 ? sigIdx : 0) + (inDemo ? '&demo=1' : '');
+  /* Book CTA: stays on this page. Confirms the tap with a toast instead
+     of navigating into the booking flow. */
+  document.getElementById('book').addEventListener('click', () => {
+    SN.toast('This is where booking starts', 'In the real app, this opens the deposit flow for ' + H.business + '.', { icon: '✓' });
+  });
+
+  /* ---------- Scripted autoplay: toolkit tour beat inside Stop 3 ----------
+     Flip through Work -> Services -> Reviews on its own, pausing on each
+     long enough to read, so the room sees the whole promo surface without
+     anyone tapping a tab. */
+  if (scripted) {
+    const order = ['work', 'services', 'reviews'];
+    let oi = 0;
+    function nextTab() {
+      oi++;
+      if (oi >= order.length) return;
+      const tab = document.querySelector('.tab[data-pane="' + order[oi] + '"]');
+      if (tab) tab.click();
+      setTimeout(nextTab, 2600);
+    }
+    setTimeout(nextTab, 2600);
+  }
 
   SN.hydrateImages(document);
 })();

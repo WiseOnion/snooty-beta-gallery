@@ -3,125 +3,72 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Snooty · Book the look</title>
+<title>Snooty · Book</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@1,400;1,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="shared/snooty.css">
 <style>
 .topbar {
-  position: sticky; top: 0; z-index: 100; display: flex; align-items: center; gap: 8px;
-  background: rgba(252,250,249,0.92); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  position: sticky; top: 0; z-index: 100; display: flex; align-items: center; gap: 10px;
+  background: rgba(252,250,249,0.95); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--color-border);
-  padding: calc(8px + env(safe-area-inset-top)) 10px 8px;
+  padding: calc(10px + env(safe-area-inset-top)) 12px 10px;
 }
-.icon-btn { width: 44px; height: 44px; border-radius: var(--radius-full); display: flex; align-items: center; justify-content: center; -webkit-tap-highlight-color: transparent; }
-.icon-btn:active { transform: scale(0.92); }
-.icon-btn svg { width: 20px; height: 20px; stroke: var(--color-text); fill: none; stroke-width: 2; }
+.icon-btn { width: 40px; height: 40px; border-radius: var(--radius-full); display: flex; align-items: center; justify-content: center; -webkit-tap-highlight-color: transparent; }
+.icon-btn svg { width: 19px; height: 19px; stroke: var(--color-text); fill: none; stroke-width: 2; }
 .topbar .t { font-family: var(--font-display); font-weight: 600; font-size: 15px; }
 
-/* Gold progress shimmer */
-.steps-bar { display: flex; gap: 6px; padding: 12px 16px 4px; }
-.steps-bar i { flex: 1; height: 4px; border-radius: 2px; background: var(--color-border); overflow: hidden; position: relative; }
-.steps-bar i.done { background: var(--color-accent); }
-.steps-bar i.now::after {
-  content: ""; position: absolute; inset: 0; border-radius: 2px;
-  background: linear-gradient(90deg, var(--color-accent) 0%, #E7C787 50%, var(--color-accent) 100%);
-  background-size: 200% 100%; animation: shim 1.6s linear infinite;
-}
-@keyframes shim { to { background-position: -200% 0; } }
-.step-label { padding: 6px 16px 0; font-family: var(--font-display); font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--color-text-muted); }
+.step-track { display: flex; gap: 6px; padding: 12px 16px 0; }
+.step-track i { flex: 1; height: 3px; border-radius: 2px; background: var(--color-border); }
+.step-track i.done, .step-track i.on { background: var(--color-accent); }
 
-.pane { padding: 12px 16px calc(110px + env(safe-area-inset-bottom)); max-width: 560px; margin: 0 auto; display: none; }
-.pane.is-on { display: block; animation: pane-in 380ms var(--ease-out); }
-@keyframes pane-in { from { opacity: 0; transform: translateX(26px); } to { opacity: 1; transform: none; } }
-.pane h2 { font-family: var(--font-display); font-weight: 600; font-size: 20px; margin: 8px 0 14px; }
+.wrap { max-width: 480px; margin: 0 auto; padding: 18px 18px calc(110px + env(safe-area-inset-bottom)); }
+.step { display: none; }
+.step.on { display: block; animation: rise 380ms var(--ease-out); }
+.step-h { font-family: var(--font-display); font-weight: 600; font-size: 19px; margin-bottom: 4px; }
+.step-sub { font-size: 13px; color: var(--color-text-muted); margin-bottom: 18px; }
 
-/* Booked look summary chip */
-.look-chip { display: flex; gap: 12px; align-items: center; padding: 10px; margin-bottom: 14px; }
-.look-chip .ph { width: 58px; height: 58px; border-radius: 12px; flex: 0 0 58px; }
-.look-chip .lc-t { font-weight: 600; font-size: 13.5px; line-height: 1.3; }
-.look-chip .lc-s { font-size: 12px; color: var(--color-text-muted); margin-top: 3px; }
+/* Step 1: service */
+.svc-opt { display: flex; align-items: center; gap: 12px; padding: 14px; margin-bottom: 9px; -webkit-tap-highlight-color: transparent; }
+.svc-opt .s-n { font-weight: 600; font-size: 14px; }
+.svc-opt .s-d { font-size: 12px; color: var(--color-text-muted); margin-top: 2px; }
+.svc-opt .s-p { margin-left: auto; font-family: var(--font-display); font-weight: 700; color: var(--color-primary); }
+.svc-opt.picked { box-shadow: 0 0 0 2px var(--color-primary); }
 
-/* Services */
-.svc { display: flex; align-items: center; gap: 12px; padding: 15px 14px; margin-bottom: 10px; cursor: pointer; }
-.svc .radio { width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--color-border); flex: 0 0 20px; transition: all 180ms var(--ease-out); position: relative; }
-.svc.sel { border-color: var(--color-primary); box-shadow: 0 0 0 1px var(--color-primary); }
-.svc.sel .radio { border-color: var(--color-primary); }
-.svc.sel .radio::after { content: ""; position: absolute; inset: 3px; border-radius: 50%; background: var(--color-primary); animation: pop-in 220ms var(--ease-brand); }
-@keyframes pop-in { from { transform: scale(0); } to { transform: scale(1); } }
-.svc .sv-n { font-weight: 600; font-size: 14.5px; }
-.svc .sv-d { font-size: 12px; color: var(--color-text-muted); margin-top: 2px; }
-.svc .sv-p { font-family: var(--font-display); font-weight: 700; font-size: 15px; color: var(--color-primary); margin-left: auto; }
+/* Step 2: time */
+.day-row { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 16px; }
+.day-row button {
+  flex: 0 0 auto; width: 56px; padding: 10px 0; border-radius: 14px; border: 1px solid var(--color-border);
+  text-align: center; background: var(--color-bg-card);
+}
+.day-row button .dn { font-size: 10px; color: var(--color-text-muted); text-transform: uppercase; }
+.day-row button .dd { font-family: var(--font-display); font-weight: 700; font-size: 16px; margin-top: 2px; }
+.day-row button.on { background: var(--color-bg-dark); border-color: var(--color-bg-dark); }
+.day-row button.on .dn, .day-row button.on .dd { color: var(--color-text-inverse); }
+.time-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.time-grid button { padding: 12px 0; border-radius: 12px; border: 1px solid var(--color-border); font-family: var(--font-display); font-weight: 600; font-size: 13.5px; background: var(--color-bg-card); }
+.time-grid button.on { background: var(--color-primary); border-color: var(--color-primary); color: #fff; }
 
-/* Date strip + slots */
-.day-strip { margin: 0 -16px; padding: 4px 16px 8px; }
-.day {
-  width: 62px; padding: 10px 0 12px; text-align: center; border-radius: 14px; border: 1px solid var(--color-border);
-  background: var(--color-bg-card); cursor: pointer; transition: all 180ms var(--ease-out);
-}
-.day .dw { font-family: var(--font-display); font-size: 10.5px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--color-text-muted); }
-.day .dn { font-family: var(--font-display); font-weight: 700; font-size: 19px; margin-top: 3px; }
-.day.off { opacity: 0.35; pointer-events: none; }
-.day.sel { background: var(--color-bg-dark); border-color: var(--color-bg-dark); color: var(--color-text-inverse); }
-.day.sel .dw { color: var(--color-text-muted-inverse); }
-.hours-note { display: flex; align-items: center; gap: 7px; font-size: 12px; color: var(--color-text-muted); margin: 8px 2px 14px; }
-.hours-note svg { width: 13px; height: 13px; stroke: var(--color-success); fill: none; stroke-width: 2.4; }
-.slots { display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px; }
-.slot {
-  min-height: 44px; border-radius: 12px; border: 1px solid var(--color-border); background: var(--color-bg-card);
-  font-family: var(--font-display); font-weight: 500; font-size: 13.5px; cursor: pointer; transition: all 160ms var(--ease-out);
-}
-.slot:hover { border-color: var(--color-text-muted); }
-.slot:active { transform: scale(0.96); }
-.slot.taken { opacity: 0.32; text-decoration: line-through; pointer-events: none; }
-.slot.sel { background: var(--color-primary); border-color: var(--color-primary); color: var(--color-text-inverse); }
+/* Step 3: deposit */
+.dep-card { padding: 20px; text-align: center; }
+.dep-card .d-svc { font-family: var(--font-display); font-weight: 600; font-size: 15px; }
+.dep-card .d-when { font-size: 12.5px; color: var(--color-text-muted); margin-top: 3px; }
+.dep-split { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; text-align: left; }
+.dep-line { display: flex; justify-content: space-between; font-size: 13.5px; padding: 9px 0; border-bottom: 1px dashed var(--color-border); }
+.dep-line b { font-family: var(--font-display); }
+.dep-line.due-now { color: var(--color-primary); }
+.dep-line.due-now b { color: var(--color-primary); font-size: 16px; }
+.dep-note { margin-top: 16px; padding: 12px; text-align: left; background: var(--color-accent-soft); border-radius: 12px; font-size: 12px; line-height: 1.5; color: #6b5426; }
 
-/* Deposit / payment */
-.summary { padding: 16px; margin-bottom: 14px; }
-.sum-line { display: flex; justify-content: space-between; font-size: 13.5px; padding: 6px 0; }
-.sum-line.total { border-top: 1px dashed var(--color-border); margin-top: 6px; padding-top: 12px; font-weight: 600; }
-.sum-line .a { font-family: var(--font-display); font-weight: 600; }
-.dep-callout {
-  background: var(--color-accent-soft); border: 1px solid rgba(201,154,74,0.35); border-radius: 14px;
-  padding: 13px 15px; font-size: 12.5px; line-height: 1.55; color: #6b5426; margin-bottom: 14px;
-}
-.dep-callout b { color: #4d3b17; }
-.paysheet { padding: 16px; }
-.paysheet .ps-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-.paysheet .ps-brand { font-family: var(--font-display); font-weight: 700; font-size: 14px; letter-spacing: 0.02em; }
-.paysheet .ps-secure { display: flex; gap: 5px; align-items: center; font-size: 11px; color: var(--color-text-muted); }
-.field { margin-bottom: 10px; }
-.field label { display: block; font-family: var(--font-display); font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--color-text-muted); margin-bottom: 6px; }
-.field input {
-  width: 100%; height: 46px; border: 1px solid var(--color-border); border-radius: 12px; padding: 0 14px;
-  font-size: 15px; background: #fff; outline: none; transition: border-color 160ms, box-shadow 160ms;
-}
-.field input:focus { border-color: var(--color-accent); box-shadow: 0 0 0 3px var(--color-accent-soft); }
-.field-row { display: flex; gap: 10px; }
-.field-row .field { flex: 1; }
-
-/* Confirmation */
-.confirm-hero { text-align: center; padding: 34px 0 10px; position: relative; overflow: hidden; }
-.check-ring {
-  width: 84px; height: 84px; margin: 0 auto; border-radius: 50%; background: var(--color-success);
-  display: flex; align-items: center; justify-content: center;
-  animation: ring-pop 600ms var(--ease-brand);
-}
-.check-ring svg { width: 38px; height: 38px; stroke: #fff; stroke-width: 3; fill: none; stroke-dasharray: 40; stroke-dashoffset: 40; animation: check-draw 500ms var(--ease-out) 350ms forwards; }
-@keyframes ring-pop { 0% { transform: scale(0.4); opacity: 0; } 70% { transform: scale(1.12); } 100% { transform: scale(1); opacity: 1; } }
-@keyframes check-draw { to { stroke-dashoffset: 0; } }
-.gold-shimmer { position: absolute; inset: 0; pointer-events: none; }
-.gold-shimmer i { position: absolute; width: 5px; height: 5px; border-radius: 50%; background: var(--color-accent); opacity: 0; animation: sparkle 1.5s var(--ease-out) forwards; }
-@keyframes sparkle {
-  0% { opacity: 0; transform: translateY(0) scale(0.4); }
-  25% { opacity: 0.9; }
-  100% { opacity: 0; transform: translateY(-70px) scale(1); }
-}
-.confirm-hero h2 { margin-top: 18px; font-family: var(--font-display); font-weight: 600; font-size: 22px; }
-.confirm-hero p { color: var(--color-text-muted); font-size: 13.5px; margin-top: 6px; }
-.next-steps { margin-top: 18px; }
-.next-steps li { list-style: none; display: flex; gap: 12px; padding: 11px 0; font-size: 13.5px; line-height: 1.5; align-items: baseline; }
-.next-steps li b { font-family: var(--font-display); color: var(--color-primary); white-space: nowrap; }
+/* Step 4: confirmed */
+.confirmed { text-align: center; padding: 30px 10px; }
+.confirmed .c-check { width: 66px; height: 66px; border-radius: 50%; background: var(--color-success); display: flex; align-items: center; justify-content: center; margin: 0 auto 18px; }
+.confirmed .c-check svg { width: 30px; height: 30px; stroke: #fff; fill: none; stroke-width: 3; }
+.confirmed h2 { font-family: var(--font-display); font-weight: 600; font-size: 21px; }
+.confirmed p { font-size: 13.5px; color: var(--color-text-muted); margin-top: 8px; max-width: 30ch; margin-left: auto; margin-right: auto; }
+.confirmed .c-receipt { margin-top: 22px; padding: 16px; text-align: left; }
+.confirmed .c-receipt .r-line { display: flex; justify-content: space-between; font-size: 13px; padding: 6px 0; }
+.confirmed .c-receipt .r-line b { font-family: var(--font-display); }
 
 .cta-bar {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 200;
@@ -131,81 +78,65 @@
 }
 body.framed .cta-bar { position: absolute; }
 .cta-bar .btn { width: 100%; }
-.btn .spinner { width: 18px; height: 18px; border: 2.5px solid rgba(255,255,255,0.35); border-top-color: #fff; border-radius: 50%; animation: spin 700ms linear infinite; display: none; }
-@keyframes spin { to { transform: rotate(360deg); } }
-.btn.is-loading .spinner { display: block; }
-.btn.is-loading .lbl { opacity: 0.75; }
 </style>
 </head>
 <body>
-<div class="phone-wrap"><div class="scroll-root" style="position:relative;">
+<div class="phone-wrap"><div class="scroll-root">
 
   <header class="topbar">
-    <button class="icon-btn" id="back" type="button" aria-label="Back">
-      <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
-    </button>
-    <span class="t" id="bar-title">Book the look</span>
+    <button class="icon-btn" id="back" type="button" aria-label="Back"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
+    <span class="t" id="topt">Choose your service</span>
   </header>
+  <div class="step-track" id="track"><i></i><i></i><i></i><i></i></div>
 
-  <div class="steps-bar" aria-hidden="true"><i class="now"></i><i></i><i></i><i></i></div>
-  <div class="step-label" id="step-label">Step 1 of 4 · Service</div>
+  <div class="wrap">
 
-  <!-- Step 1: service -->
-  <section class="pane is-on" id="p1">
-    <div class="card look-chip">
-      <div class="ph"><img id="chip-img" data-src="" alt=""></div>
-      <div><div class="lc-t" id="chip-cap"></div><div class="lc-s" id="chip-by"></div></div>
-    </div>
-    <h2>Confirm the service</h2>
-    <div id="svc-list"></div>
-  </section>
+    <section class="step" id="step1">
+      <div class="step-h">Choose your service</div>
+      <div class="step-sub">Same list, same prices, that Jordyn sets herself.</div>
+      <div id="svc-list"></div>
+    </section>
 
-  <!-- Step 2: date & time -->
-  <section class="pane" id="p2">
-    <h2>Pick your day</h2>
-    <div class="snap-row day-strip" id="days"></div>
-    <div class="hours-note"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg><span id="hours-note-txt"></span></div>
-    <div class="slots" id="slots"></div>
-  </section>
+    <section class="step" id="step2">
+      <div class="step-h">Pick a real opening</div>
+      <div class="step-sub">Only times actually free on her calendar. Nobody double-books.</div>
+      <div class="day-row" id="days"></div>
+      <div class="time-grid" id="times"></div>
+    </section>
 
-  <!-- Step 3: deposit -->
-  <section class="pane" id="p3">
-    <h2>Hold it with a deposit</h2>
-    <div class="card summary" id="summary"></div>
-    <div class="dep-callout" id="dep-callout"></div>
-    <div class="card paysheet">
-      <div class="ps-head">
-        <span class="ps-brand">Secure checkout</span>
-        <span class="ps-secure">🔒 Powered by Stripe</span>
+    <section class="step" id="step3">
+      <div class="step-h">Secure it with a deposit</div>
+      <div class="step-sub">This is what stops the ghosting, for both of you.</div>
+      <div class="card dep-card">
+        <div class="d-svc" id="d-svc"></div>
+        <div class="d-when" id="d-when"></div>
+        <div class="dep-split">
+          <div class="dep-line"><span>Full service price</span><b id="d-full"></b></div>
+          <div class="dep-line"><span>Deposit required today (<span id="d-pct"></span>)</span><b id="d-dep"></b></div>
+          <div class="dep-line due-now"><span>Due now</span><b id="d-due"></b></div>
+          <div class="dep-line"><span>Remaining, paid at the chair</span><b id="d-rest"></b></div>
+        </div>
+        <div class="dep-note">Deposits are enforced by Snooty, not you. If she cancels, it's refunded automatically. If a client no-shows, you keep it.</div>
       </div>
-      <div class="field"><label for="cc">Card number</label><input id="cc" inputmode="numeric" placeholder="4242 4242 4242 4242" autocomplete="off"></div>
-      <div class="field-row">
-        <div class="field"><label for="exp">Expiry</label><input id="exp" inputmode="numeric" placeholder="08 / 29" autocomplete="off"></div>
-        <div class="field"><label for="cvc">CVC</label><input id="cvc" inputmode="numeric" placeholder="424" autocomplete="off"></div>
-      </div>
-    </div>
-  </section>
+    </section>
 
-  <!-- Step 4: confirmed -->
-  <section class="pane" id="p4">
-    <div class="confirm-hero">
-      <div class="gold-shimmer" id="shimmer"></div>
-      <div class="check-ring"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg></div>
-      <h2>You're booked.</h2>
-      <p id="confirm-sub"></p>
-    </div>
-    <div class="card summary" id="confirm-summary"></div>
-    <div class="next-steps card" style="padding: 6px 16px;">
-      <li><b>Right now</b><span id="ns-stylist"></span></li>
-      <li><b>24h before</b><span>You get a reminder. So does she. Nobody has to text "we still on?"</span></li>
-      <li><b>After</b><span>You'll be asked for a review, attached to this exact appointment.</span></li>
-    </div>
-  </section>
+    <section class="step" id="step4">
+      <div class="confirmed">
+        <div class="c-check"><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg></div>
+        <h2>Booked. Deposit paid.</h2>
+        <p>Jordyn just got a notification. Your calendar and hers both updated themselves.</p>
+        <div class="card c-receipt">
+          <div class="r-line"><span id="r-svc"></span><b id="r-price"></b></div>
+          <div class="r-line"><span id="r-when"></span></div>
+          <div class="r-line"><span>Paid today</span><b id="r-dep"></b></div>
+        </div>
+      </div>
+    </section>
+
+  </div>
 
   <div class="cta-bar">
-    <button class="btn btn-primary" id="cta" type="button">
-      <span class="spinner" aria-hidden="true"></span><span class="lbl">Continue</span>
-    </button>
+    <button class="btn btn-primary" id="cta" type="button">Continue</button>
   </div>
 
 </div></div>
@@ -219,210 +150,135 @@ body.framed .cta-bar { position: absolute; }
   const SEED = window.SNOOTY_SEED;
   const params = new URLSearchParams(location.search);
   const inDemo = params.has('demo');
+  const scripted = params.has('script');
+  const H = SEED.hero;
 
   SN.frameOnDesktop();
   SN.markSeen('booking');
   if (params.has('session')) SN.walkthroughProgress(2); /* Stop 2: Booking, in progress */
 
-  const idx = Math.max(0, Math.min(SEED.feed.length - 1, parseInt(params.get('i'), 10) || 0));
-  const look = SEED.feed[idx];
-  const isHero = !!look.heroLook;
-  const heroLook = isHero ? SEED.hero.looks.find((l) => l.id === look.heroLook) : null;
-  const stylistName = look.stylist.split(' ')[0];
-  const P = SEED.platform;
+  const i = parseInt(params.get('i'), 10);
+  const feedLook = SEED.feed[!isNaN(i) ? i : 0] || SEED.feed[0];
+  const heroLook = H.looks.find((l) => l.id === feedLook.heroLook) || H.looks[0];
+  let service = H.services.find((s) => s.id === heroLook.serviceId) || H.services[0];
 
-  /* Bookable services: hero gets her real menu, others get a derived single service */
-  const services = isHero
-    ? SEED.hero.services.filter((s) => s.slug)
-    : [{ id: 'x1', name: look.caption, cents: look.cents, mins: 240 }];
-  let sel = heroLook ? services.find((s) => s.id === heroLook.serviceId) || services[0] : services[0];
-  let selDay = null, selSlot = null;
-  let step = 1;
-
-  /* Look chip */
-  document.getElementById('chip-img').dataset.src = look.img;
-  document.getElementById('chip-cap').textContent = look.caption;
-  document.getElementById('chip-by').textContent = look.business + ' · ' + look.city;
-
-  /* Step 1: services */
-  const svcList = document.getElementById('svc-list');
-  services.forEach((s) => {
-    const d = document.createElement('div');
-    d.className = 'card svc' + (s === sel ? ' sel' : '');
-    d.setAttribute('role', 'radio');
-    d.setAttribute('aria-checked', s === sel ? 'true' : 'false');
-    d.tabIndex = 0;
-    d.innerHTML = '<span class="radio"></span><div><div class="sv-n"></div><div class="sv-d"></div></div><span class="sv-p"></span>';
-    d.querySelector('.sv-n').textContent = s.name;
-    d.querySelector('.sv-d').textContent = SN.mins(s.mins);
-    d.querySelector('.sv-p').textContent = SN.money(s.cents);
-    const pick = () => {
-      sel = s;
-      svcList.querySelectorAll('.svc').forEach((x) => { x.classList.remove('sel'); x.setAttribute('aria-checked', 'false'); });
-      d.classList.add('sel'); d.setAttribute('aria-checked', 'true');
-    };
-    d.addEventListener('click', pick);
-    d.addEventListener('keydown', (e) => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); pick(); } });
-    svcList.appendChild(d);
-  });
-
-  /* Step 2: days honor working hours (Mon to Sat; Sunday is protected) */
-  const daysEl = document.getElementById('days');
-  const slotsEl = document.getElementById('slots');
-  document.getElementById('hours-note-txt').textContent =
-    stylistName + "'s hours: Mon to Sat. Sunday is hers. Snooty won't let anyone book it.";
-  const DOW = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-  const today = new Date();
-  for (let o = 1; o <= 10; o++) {
-    const d = new Date(today); d.setDate(d.getDate() + o);
-    const off = d.getDay() === 0;
-    const el = document.createElement('button');
-    el.type = 'button';
-    el.className = 'day' + (off ? ' off' : '');
-    el.innerHTML = '<div class="dw">' + DOW[d.getDay()] + '</div><div class="dn">' + d.getDate() + '</div>';
-    el.setAttribute('aria-label', d.toDateString() + (off ? ', unavailable' : ''));
-    el.addEventListener('click', () => {
-      selDay = d; selSlot = null;
-      daysEl.querySelectorAll('.day').forEach((x) => x.classList.remove('sel'));
-      el.classList.add('sel');
-      renderSlots(d);
+  if (!inDemo && !scripted) {
+    SN.purposeCard({
+      title: 'This is the moment you stop chasing deposits.',
+      body: 'Service, time, deposit, confirmed. No DM back-and-forth, no "can I pay Friday."',
+      cta: 'Book it',
     });
-    daysEl.appendChild(el);
   }
-  function renderSlots(d) {
-    slotsEl.innerHTML = '';
-    slotsEl.classList.add('stagger');
-    const times = ['9:00 AM', '10:30 AM', '12:00 PM', '1:30 PM', '3:00 PM', '4:30 PM'];
-    /* deterministic "taken" slots so the calendar feels alive */
-    const takenSeed = d.getDate() % 3;
-    times.forEach((t, i) => {
-      const taken = (i + takenSeed) % 4 === 1;
-      const b = document.createElement('button');
-      b.type = 'button';
-      b.className = 'slot' + (taken ? ' taken' : '');
-      b.textContent = t;
-      if (taken) b.setAttribute('aria-label', t + ', already booked');
-      b.addEventListener('click', () => {
-        selSlot = t;
-        slotsEl.querySelectorAll('.slot').forEach((x) => x.classList.remove('sel'));
-        b.classList.add('sel');
-      });
-      slotsEl.appendChild(b);
-    });
-    setTimeout(() => slotsEl.classList.remove('stagger'), 800);
-  }
-
-  /* Deposit math */
-  const dep = () => Math.round(sel.cents * P.depositPct / 100);
-  const fee = () => Math.round(dep() * P.commissionPct / 100);
-
-  function fillSummary(el) {
-    const when = selDay ? DOW[selDay.getDay()] + ' ' + selDay.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ' · ' + selSlot : '';
-    el.innerHTML =
-      '<div class="sum-line"><span>' + sel.name + '</span><span class="a">' + SN.money(sel.cents) + '</span></div>' +
-      '<div class="sum-line"><span>' + look.business + (when ? ' · ' + when : '') + '</span><span></span></div>' +
-      '<div class="sum-line"><span>Snooty booking fee (you)</span><span class="a" style="color:var(--color-success);">$0.00</span></div>' +
-      '<div class="sum-line total"><span>Due now: ' + P.depositPct + '% deposit</span><span class="a">' + SN.money(dep(), { forceCents: true }) + '</span></div>' +
-      '<div class="sum-line"><span style="color:var(--color-text-muted); font-size:12.5px;">Remaining ' + SN.money(sel.cents - dep()) + ' due at the appointment</span><span></span></div>';
-  }
-
-  /* Step engine */
-  const panes = ['p1', 'p2', 'p3', 'p4'].map((id) => document.getElementById(id));
-  const bars = document.querySelectorAll('.steps-bar i');
-  const stepLabel = document.getElementById('step-label');
-  const cta = document.getElementById('cta');
-  const ctaLbl = cta.querySelector('.lbl');
-  const LABELS = ['Service', 'Date & time', 'Deposit', 'Confirmed'];
-
-  function goto(n) {
-    step = n;
-    panes.forEach((p, i) => p.classList.toggle('is-on', i === n - 1));
-    bars.forEach((b, i) => { b.className = i < n - 1 ? 'done' : (i === n - 1 ? 'now' : ''); });
-    stepLabel.textContent = 'Step ' + n + ' of 4 · ' + LABELS[n - 1];
-    document.querySelector('.scroll-root').scrollTo({ top: 0, behavior: 'smooth' });
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-    if (n === 2) ctaLbl.textContent = 'Continue';
-    if (n === 3) {
-      fillSummary(document.getElementById('summary'));
-      document.getElementById('dep-callout').innerHTML =
-        'The deposit protects both of you. <b>' + stylistName + ' receives ' +
-        SN.money(dep() - fee(), { forceCents: true }) + '</b> of this ' + SN.money(dep(), { forceCents: true }) +
-        ' deposit. Snooty\'s cut is ' + SN.money(fee(), { forceCents: true }) + '. That\'s the whole fee.';
-      ctaLbl.textContent = 'Pay ' + SN.money(dep(), { forceCents: true }) + ' deposit';
-    }
-    if (n === 4) {
-      document.getElementById('bar-title').textContent = 'Booked';
-      document.getElementById('confirm-sub').textContent =
-        sel.name + ' with ' + look.stylist + ', ' +
-        DOW[selDay.getDay()] + ' ' + selDay.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ' at ' + selSlot + '.';
-      fillSummary(document.getElementById('confirm-summary'));
-      document.getElementById('ns-stylist').textContent =
-        stylistName + ' just got the notification, calendar already updated. No DM required.';
-      ctaLbl.textContent = inDemo ? 'Replay the demo' : 'Back to the gallery';
-      shimmer();
-      SN.toast('Deposit received', SN.money(dep(), { forceCents: true }) + ' secured your slot', { icon: '✓' });
-    }
-  }
-
-  function shimmer() {
-    const holder = document.getElementById('shimmer');
-    for (let i = 0; i < 14; i++) {
-      const s = document.createElement('i');
-      s.style.left = (8 + Math.random() * 84) + '%';
-      s.style.top = (35 + Math.random() * 45) + '%';
-      s.style.animationDelay = (Math.random() * 700) + 'ms';
-      holder.appendChild(s);
-    }
-  }
-
-  cta.addEventListener('click', () => {
-    if (step === 1) { goto(2); return; }
-    if (step === 2) {
-      if (!selDay || !selSlot) { SN.toast('Almost there', 'Pick a day and a time to continue', { icon: '📅' }); return; }
-      goto(3); return;
-    }
-    if (step === 3) {
-      cta.classList.add('is-loading');
-      ctaLbl.textContent = 'Securing your slot';
-      setTimeout(() => { cta.classList.remove('is-loading'); goto(4); }, 1400);
-      return;
-    }
-    location.href = inDemo ? 'discover.html?demo=1' : 'index.html';
-  });
 
   document.getElementById('back').addEventListener('click', () => {
-    if (step > 1 && step < 4) goto(step - 1);
-    else if (history.length > 1) history.back();
+    if (history.length > 1) history.back();
     else location.href = 'discover.html' + (inDemo ? '?demo=1' : '');
   });
 
-  SN.hydrateImages(document);
+  /* ---------- Step 1: service list ---------- */
+  const svcList = document.getElementById('svc-list');
+  H.services.forEach((s) => {
+    const d = document.createElement('div');
+    d.className = 'card svc-opt' + (s.id === service.id ? ' picked' : '');
+    d.innerHTML = '<div><div class="s-n"></div><div class="s-d"></div></div><span class="s-p"></span>';
+    d.querySelector('.s-n').textContent = s.name;
+    d.querySelector('.s-d').textContent = SN.mins(s.mins);
+    d.querySelector('.s-p').textContent = SN.money(s.cents);
+    d.addEventListener('click', () => {
+      service = s;
+      svcList.querySelectorAll('.svc-opt').forEach((x) => x.classList.remove('picked'));
+      d.classList.add('picked');
+      paintDeposit();
+    });
+    svcList.appendChild(d);
+  });
 
-  /* Stop 2 of the guided walkthrough (tail end): arriving with ?step=3
-     means Look already chose "Book" for the phone. Fill in a real day/
-     slot so the deposit summary has real numbers instead of blanks,
-     jump straight past the service and calendar steps, then (if
-     scripted) let it sit on the deposit screen for the presenter's
-     line before auto-paying and handing off to Stop 3. */
-  if (params.get('step') === '3') {
-    const firstDay = daysEl.querySelector('.day:not(.off)');
-    if (firstDay) firstDay.click();
-    renderSlots(selDay);
-    const firstOpenSlot = slotsEl.querySelector('.slot:not(.taken)');
-    if (firstOpenSlot) firstOpenSlot.click();
-    goto(3);
+  /* ---------- Step 2: day/time ---------- */
+  const DAYS = ['Thu', 'Fri', 'Sat', 'Sun', 'Mon'];
+  const NUMS = [11, 12, 13, 14, 15];
+  const TIMES = ['9:00 AM', '11:00 AM', '1:30 PM', '3:00 PM', '4:30 PM', '6:00 PM'];
+  let pickedDay = 2; /* Sat */
+  let pickedTime = '11:00 AM';
+  const daysWrap = document.getElementById('days');
+  const timesWrap = document.getElementById('times');
+  DAYS.forEach((d, j) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = j === pickedDay ? 'on' : '';
+    b.innerHTML = '<div class="dn">' + d + '</div><div class="dd">' + NUMS[j] + '</div>';
+    b.addEventListener('click', () => { pickedDay = j; daysWrap.querySelectorAll('button').forEach((x) => x.classList.remove('on')); b.classList.add('on'); });
+    daysWrap.appendChild(b);
+  });
+  TIMES.forEach((t, j) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = t;
+    b.className = t === pickedTime ? 'on' : '';
+    b.addEventListener('click', () => { pickedTime = t; timesWrap.querySelectorAll('button').forEach((x) => x.classList.remove('on')); b.classList.add('on'); });
+    timesWrap.appendChild(b);
+  });
+  function whenLabel() { return DAYS[pickedDay] + ', ' + pickedTime; }
 
-    if (params.has('script')) {
-      setTimeout(() => {
-        cta.classList.add('is-loading');
-        ctaLbl.textContent = 'Securing your slot';
-        setTimeout(() => {
-          cta.classList.remove('is-loading');
-          goto(4);
-          setTimeout(() => { location.href = 'dashboard.html?script=1&session=1'; }, 2600);
-        }, 1400);
-      }, 3400);
-    }
+  /* ---------- Step 3: deposit ---------- */
+  function paintDeposit() {
+    const pct = SEED.platform.depositPct;
+    const dep = Math.round(service.cents * pct / 100);
+    document.getElementById('d-svc').textContent = service.name;
+    document.getElementById('d-when').textContent = whenLabel();
+    document.getElementById('d-full').textContent = SN.money(service.cents);
+    document.getElementById('d-pct').textContent = pct + '%';
+    document.getElementById('d-dep').textContent = SN.money(dep);
+    document.getElementById('d-due').textContent = SN.money(dep);
+    document.getElementById('d-rest').textContent = SN.money(service.cents - dep);
+  }
+
+  /* ---------- Step 4: confirmation ---------- */
+  function paintConfirm() {
+    const pct = SEED.platform.depositPct;
+    const dep = Math.round(service.cents * pct / 100);
+    document.getElementById('r-svc').textContent = service.name;
+    document.getElementById('r-price').textContent = SN.money(service.cents);
+    document.getElementById('r-when').textContent = whenLabel();
+    document.getElementById('r-dep').textContent = SN.money(dep);
+  }
+
+  /* ---------- Step engine ---------- */
+  const steps = [1, 2, 3, 4];
+  const track = document.getElementById('track').children;
+  const topt = document.getElementById('topt');
+  const cta = document.getElementById('cta');
+  const TITLES = ['Choose your service', 'Pick a real opening', 'Secure it with a deposit', 'Booked'];
+  const CTAS = ['Continue', 'Continue', 'Pay deposit & book', 'Done'];
+  let cur = 1;
+
+  function go(n) {
+    cur = n;
+    document.querySelectorAll('.step').forEach((s) => s.classList.remove('on'));
+    document.getElementById('step' + n).classList.add('on');
+    Array.from(track).forEach((t, j) => { t.classList.toggle('done', j < n - 1); t.classList.toggle('on', j === n - 1); });
+    topt.textContent = TITLES[n - 1];
+    cta.textContent = CTAS[n - 1];
+    if (n === 3) paintDeposit();
+    if (n === 4) paintConfirm();
+  }
+
+  cta.addEventListener('click', () => {
+    if (cur < 4) go(cur + 1);
+    /* cur === 4: "Done" is a terminal state, not a link. It never navigates. */
+  });
+
+  /* Deep-link straight to a step (Stop 2 lands directly on the deposit,
+     scripted) so the presenter's audience doesn't sit through service
+     and time selection they already implicitly picked via the look. */
+  const startStep = parseInt(params.get('step'), 10);
+  go(!isNaN(startStep) && startStep >= 1 && startStep <= 4 ? startStep : 1);
+
+  /* ---------- Scripted autoplay ----------
+     Land on the deposit screen, let it sit for the presenter's line,
+     then auto-advance through payment and confirmation, then carry the
+     phone into the dashboard for Stop 3. */
+  if (scripted) {
+    setTimeout(() => { if (cur === 3) { go(4); setTimeout(() => { location.href = 'dashboard.html?script=1&session=1'; }, 2600); } }, 3400);
   }
 })();
 </script>

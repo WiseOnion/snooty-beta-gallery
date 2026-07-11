@@ -5,20 +5,20 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Snooty · Discover</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@1,400;1,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@1,400;1,500&family=Inter:wght@400;500;600&family=Space+Mono:wght@700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="shared/snooty.css">
 <style>
 .hdr {
   position: sticky; top: 0; z-index: 100;
   background: rgba(252,250,249,0.92); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--color-border);
-  padding: calc(10px + env(safe-area-inset-top)) 16px 10px;
+  padding: calc(16px + env(safe-area-inset-top)) 16px 14px;
 }
-.brand { font-family: var(--font-display); font-weight: 700; font-size: 21px; color: var(--color-primary); letter-spacing: 0.02em; }
+.brand { font-family: var(--font-display); font-weight: 400; font-size: 17px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--color-primary); padding-left: 0.22em; }
 .loc { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--color-text-muted); }
 .loc svg { width: 12px; height: 12px; }
 .search {
-  display: flex; align-items: center; gap: 10px; margin-top: 10px;
+  display: flex; align-items: center; gap: 10px; margin-top: 14px;
   background: var(--color-bg-alt); border: 1px solid var(--color-border); border-radius: var(--radius-full);
   padding: 0 16px; height: 44px;
   transition: border-color 180ms var(--ease-out), box-shadow 180ms var(--ease-out);
@@ -28,46 +28,96 @@
 .search input { flex: 1; border: 0; background: none; outline: none; font-size: 15px; min-width: 0; }
 .search input::placeholder { color: var(--color-text-muted); }
 .search .clear { color: var(--color-text-muted); font-size: 13px; padding: 8px; margin-right: -8px; }
-.chips { margin: 10px -16px 0; padding: 2px 16px 8px; }
+.chips {
+  margin: 18px -16px 0; padding: 2px 16px 8px 22px; gap: 8px;
+  /* fades the right edge so a partly-visible chip reads as "more to
+     scroll" instead of getting hard-clipped by the phone frame */
+  mask-image: linear-gradient(90deg, #000 calc(100% - 28px), transparent 100%);
+  -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 28px), transparent 100%);
+}
 
 .feed-head { display: flex; align-items: baseline; justify-content: space-between; padding: 16px 16px 4px; }
 .feed-head h2 { font-family: var(--font-display); font-weight: 600; font-size: 16px; }
 .feed-head .n { font-size: 12px; color: var(--color-text-muted); }
 
-.masonry { columns: 2; column-gap: 10px; padding: 8px 16px calc(24px + env(safe-area-inset-bottom)); }
+.masonry { columns: 2; column-gap: 8px; padding: 8px 16px calc(24px + env(safe-area-inset-bottom)); }
 @media (min-width: 700px) { body:not(.framed) .masonry { columns: 4; max-width: 1100px; margin: 0 auto; } }
-.look-card {
-  break-inside: avoid; margin-bottom: 10px; border-radius: 16px; overflow: hidden; position: relative;
-  background: var(--color-bg-card); border: 1px solid var(--color-border); box-shadow: var(--shadow-sm);
-  transition: transform 200ms var(--ease-out), box-shadow 200ms var(--ease-out);
-  display: block; -webkit-tap-highlight-color: transparent;
-}
-.look-card:active { transform: scale(0.98); }
-@media (hover:hover) { .look-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); } }
-.look-card .ph { aspect-ratio: var(--ar, 4/5); }
-.look-card .heart-btn { position: absolute; top: 8px; right: 8px; width: 38px; height: 38px; }
-.look-meta { padding: 10px 12px 12px; }
-.look-meta .cap { font-size: 13px; font-weight: 500; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-.look-meta .by { display: flex; align-items: center; gap: 6px; margin-top: 7px; font-size: 11.5px; color: var(--color-text-muted); }
-.look-meta .by img { width: 18px; height: 18px; border-radius: 50%; object-fit: cover; }
-.look-meta .rowline { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; }
-.price-pill { font-family: var(--font-display); font-weight: 600; font-size: 13px; color: var(--color-primary); }
-.likes { display: flex; align-items: center; gap: 4px; font-size: 11.5px; color: var(--color-text-muted); }
-.likes svg { width: 12px; height: 12px; fill: var(--color-text-muted); }
 
-.skel-card { break-inside: avoid; margin-bottom: 10px; border-radius: 16px; overflow: hidden; }
-.skel-card .skel { border-radius: 0; }
+/* ---------------- LookCard: matches the real hisisnooty LookCard.tsx +
+   discovery.css exactly. Photo-only card, no white meta box beneath it:
+   like badge top-left, save button top-right, resting style tag
+   bottom-left, and a stylist/rating/Book overlay that darkens over the
+   photo on press. Cards never navigate here (see JS): tap/hold reveals
+   the overlay, same as the real app's hover state, but goes nowhere. */
+.lk-card {
+  break-inside: avoid; margin-bottom: 8px; position: relative; border-radius: 14px; overflow: hidden;
+  background: var(--color-border); -webkit-tap-highlight-color: transparent; transform: translateZ(0);
+}
+/* Real, natural aspect ratio per photo, like the real PortfolioImage's
+   aspectRatio="natural" on Discover: no forced box, no object-fit crop,
+   so every card is exactly as tall or short as its actual photo. */
+.lk-card-img { display: block; width: 100%; height: auto; }
+.lk-card-scrim {
+  position: absolute; inset: 0; border-radius: 14px; pointer-events: none; z-index: 1;
+  background: linear-gradient(0deg, rgba(0,0,0,0.38) 0%, rgba(0,0,0,0.08) 25%, rgba(0,0,0,0) 55%);
+  opacity: 1; transition: opacity 300ms ease;
+}
+.lk-card::after {
+  content: ""; position: absolute; inset: 0; border-radius: 14px; pointer-events: none; z-index: 1;
+  background: linear-gradient(0deg, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.55) 35%, rgba(0,0,0,0.18) 60%, rgba(0,0,0,0) 80%);
+  opacity: 0; transition: opacity 300ms ease;
+}
+.lk-card.is-open::after { opacity: 1; }
+
+.lk-card-save {
+  position: absolute; top: 12px; right: 12px; z-index: 3; width: 34px; height: 34px; border-radius: 50%;
+  background: var(--color-primary); border: none; display: flex; align-items: center; justify-content: center; color: #fff;
+  opacity: 0; transform: scale(0.78) translateY(-4px);
+  transition: opacity 220ms ease, transform 240ms cubic-bezier(0.34,1.4,0.64,1), background 150ms ease;
+}
+.lk-card.is-open .lk-card-save, .lk-card-save.is-saved { opacity: 1; transform: scale(1) translateY(0); }
+.lk-card-save.is-saved { background: var(--color-primary-deep); animation: lk-save-pop 360ms cubic-bezier(0.34,1.56,0.64,1); }
+.lk-card-save svg { width: 14px; height: 14px; }
+@keyframes lk-save-pop { 0% { transform: scale(1); } 45% { transform: scale(1.28); } 100% { transform: scale(1); } }
+
+.lk-card-tag {
+  position: absolute; bottom: 12px; left: 12px; z-index: 3;
+  font-family: var(--font-display); font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
+  color: rgba(255,255,255,0.85); text-shadow: 0 1px 4px rgba(0,0,0,0.5); pointer-events: none;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: calc(100% - 24px);
+  opacity: 1; transition: opacity 220ms ease;
+}
+.lk-card.is-open .lk-card-tag { opacity: 0; }
+
+/* Overlay: a single tight info block bottom-left (caption over stylist
+   name+rating, stacked with no wasted gap) and Book pinned bottom-right
+   on its own baseline, so nothing drifts apart the way a plain column
+   flex with equal gaps used to. */
+.lk-card-overlay {
+  position: absolute; left: 0; right: 0; bottom: 0; z-index: 2; padding: 20px 12px 12px;
+  display: flex; align-items: flex-end; justify-content: space-between; gap: 8px;
+  opacity: 0; transform: translateY(8px); pointer-events: none;
+  transition: opacity 260ms ease, transform 260ms cubic-bezier(0.34,1.1,0.64,1);
+}
+.lk-card.is-open .lk-card-overlay { opacity: 1; transform: translateY(0); pointer-events: auto; }
+.lk-card-overlay-info { min-width: 0; flex: 1 1 auto; }
+.lk-card-overlay-tag {
+  font-family: var(--font-display); font-size: 9.5px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase;
+  color: rgba(255,255,255,0.65); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-bottom: 3px;
+}
+.lk-card-stylist { font-family: var(--font-display); font-size: 12.5px; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 4px; text-shadow: 0 1px 4px rgba(0,0,0,0.4); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lk-card-verified { display: inline-flex; align-items: center; justify-content: center; width: 12px; height: 12px; border-radius: 50%; background: var(--color-primary); flex-shrink: 0; }
+.lk-card-verified svg { width: 6px; height: 6px; }
+.lk-card-meta { font-family: var(--font-display); font-size: 10.5px; color: rgba(255,255,255,0.85); display: flex; align-items: center; gap: 3px; margin-top: 3px; }
+.lk-card-meta svg { width: 9px; height: 9px; flex-shrink: 0; }
+.lk-card-book {
+  flex-shrink: 0; height: 28px; padding: 0 13px; border-radius: 9999px; border: none; background: #fff;
+  color: var(--color-secondary); font-family: var(--font-display); font-size: 10.5px; font-weight: 700;
+}
 
 .empty { text-align: center; padding: 60px 32px; }
 .empty h3 { font-family: var(--font-display); font-weight: 600; font-size: 17px; margin-top: 14px; }
 .empty p { font-size: 13.5px; color: var(--color-text-muted); margin-top: 6px; }
-
-.fallback-note {
-  margin: 4px 16px 12px; padding: 10px 14px; border-radius: 12px;
-  background: var(--color-accent-soft); border: 1px solid rgba(201,154,74,0.3);
-  font-size: 12.5px; color: #6b5426; display: none;
-}
-.fallback-note.is-on { display: block; animation: rise 400ms var(--ease-out); }
 </style>
 </head>
 <body>
@@ -76,7 +126,7 @@
   <header class="hdr">
     <div class="row" style="justify-content: space-between;">
       <div class="brand">snooty</div>
-      <div class="loc"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.1 2 5 5.1 5 9c0 5.2 7 13 7 13s7-7.8 7-13c0-3.9-3.1-7-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z"/></svg> Charlotte, NC</div>
+      <div class="loc"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.1 2 5 5.1 5 9c0 5.2 7 13 7 13s7-7.8 7-13c0-3.9-3.1-7-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z"/></svg> Fayetteville, NC</div>
     </div>
     <div class="search">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
@@ -87,7 +137,6 @@
   </header>
 
   <div class="feed-head"><h2 id="feed-title">Looks near you</h2><span class="n" id="feed-n"></span></div>
-  <div class="fallback-note" id="fallback-note">Not much within 50 miles for that one, so here are the best looks from everywhere. Snooty never shows you an empty page.</div>
   <main class="masonry" id="feed" aria-live="polite"></main>
 
 </div></div>
@@ -101,193 +150,157 @@
   const SEED = window.SNOOTY_SEED;
   const params = new URLSearchParams(location.search);
   const inDemo = params.has('demo');
-  const suffix = inDemo ? '?demo=1' : '';
+  const scripted = params.has('script');
+  const suffix = (inDemo ? '?demo=1' : '') + (params.has('session') ? (inDemo ? '&' : '?') + 'session=1' : '');
 
   SN.frameOnDesktop();
   SN.markSeen('discover');
   if (params.has('session')) SN.walkthroughProgress(1); /* Stop 1: Discover, in progress */
 
-  if (!inDemo && !params.has('script')) {
+  if (!inDemo && !scripted) {
     SN.purposeCard({
       title: 'This is what your future client sees.',
-      body: 'A feed of finished work, not business listings. Scroll it, search it, tap a look you would post.',
+      body: 'A feed of finished work, not business listings. Scroll it, search it, press a look to see it come alive.',
       cta: 'Start scrolling',
     });
   }
 
-  /* Aspect ratios cycle so the masonry feels editorial, like the real feed */
-  const ARS = ['4/5', '3/4', '4/5', '1/1', '3/4', '4/5', '1/1', '3/4'];
+  const starSvg = '<svg viewBox="0 0 24 24" fill="var(--color-accent)" stroke="none"><path d="M12 2l2.9 6.1 6.7.9-4.9 4.6 1.2 6.6-5.9-3.2-5.9 3.2 1.2-6.6L2.4 9l6.7-.9z"/></svg>';
+  const saveSvg = (filled) => '<svg viewBox="0 0 24 24" fill="' + (filled ? '#fff' : 'none') + '" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>';
+  const verifiedSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
 
-  const chipsEl = document.getElementById('chips');
-  const feedEl = document.getElementById('feed');
-  const titleEl = document.getElementById('feed-title');
-  const nEl = document.getElementById('feed-n');
-  const fbEl = document.getElementById('fallback-note');
-  const qEl = document.getElementById('q');
-  const clearEl = document.getElementById('clear');
+  function card(look, i) {
+    const el = document.createElement('article');
+    el.className = 'lk-card';
+    el.dataset.feedI = String(i);
+    el.innerHTML =
+      '<img class="lk-card-img" data-src="' + look.img + '" alt="' + look.caption + '">' +
+      '<div class="lk-card-scrim"></div>' +
+      '<button class="lk-card-save" type="button" aria-label="Save look">' + saveSvg(false) + '</button>' +
+      '<div class="lk-card-tag"></div>' +
+      '<div class="lk-card-overlay">' +
+      '<div class="lk-card-overlay-info">' +
+      '<div class="lk-card-overlay-tag"></div>' +
+      '<div class="lk-card-stylist"><span></span><span class="lk-card-verified">' + verifiedSvg + '</span></div>' +
+      '<div class="lk-card-meta">' + starSvg + '<b style="font-family:\'Space Mono\',monospace;">4.9</b></div>' +
+      '</div>' +
+      '<button class="lk-card-book" type="button">Book</button>' +
+      '</div>';
 
-  let activeCat = 'all';
-  let query = '';
+    el.querySelector('.lk-card-tag').textContent = look.caption;
+    el.querySelector('.lk-card-overlay-tag').textContent = look.caption;
+    el.querySelector('.lk-card-stylist span').textContent = look.stylist;
 
-  /* Category chips */
+    /* Press/hold reveals the overlay, exactly like the real app's hover
+       state, but this feed never navigates: it's a preview, not a link.
+       A tap outside any open card closes it (handled once, below).
+       Bound on both pointerdown (real touch/mouse press) and click
+       (synthetic/automated taps, and a safety net if pointerdown is
+       ever missed) with a timestamp guard so a single interaction that
+       fires both never double-toggles the card back closed. */
+    let lastToggle = 0;
+    function toggleOpen() {
+      const now = Date.now();
+      if (now - lastToggle < 350) return;
+      lastToggle = now;
+      document.querySelectorAll('.lk-card.is-open').forEach((c) => { if (c !== el) c.classList.remove('is-open'); });
+      el.classList.toggle('is-open');
+    }
+    el.addEventListener('pointerdown', toggleOpen);
+    el.addEventListener('click', toggleOpen);
+
+    const saveBtn = el.querySelector('.lk-card-save');
+    saveBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const nowSaved = saveBtn.classList.toggle('is-saved');
+      saveBtn.innerHTML = saveSvg(nowSaved);
+      if (nowSaved) SN.toast('Saved to your collection', look.caption, { icon: '✓' });
+    });
+    el.querySelector('.lk-card-book').addEventListener('click', (e) => { e.stopPropagation(); });
+
+    return el;
+  }
+
+  /* Tapping empty feed space (not a card) closes any open overlay */
+  document.getElementById('feed').addEventListener('pointerdown', (e) => {
+    if (!e.target.closest('.lk-card')) document.querySelectorAll('.lk-card.is-open').forEach((c) => c.classList.remove('is-open'));
+  });
+
+  function render(list, term) {
+    const feed = document.getElementById('feed');
+    feed.innerHTML = '';
+    document.getElementById('feed-title').textContent = term ? '"' + term + '"' : 'Looks near you';
+    document.getElementById('feed-n').textContent = list.length ? list.length + ' looks' : '';
+    if (!list.length) {
+      feed.innerHTML = '<div class="empty"><h3>Nothing matched that, yet</h3><p>Try a different word, or browse everything below.</p></div>';
+      return;
+    }
+    list.forEach((look) => feed.appendChild(card(look, SEED.feed.indexOf(look))));
+    SN.hydrateImages(feed);
+  }
+
+  function search(term) {
+    const t = term.trim().toLowerCase();
+    if (!t) return render(SEED.feed, '');
+    const hit = (look) =>
+      look.caption.toLowerCase().includes(t) ||
+      look.slug.toLowerCase().includes(t.replace(/\s+/g, '-')) ||
+      look.stylist.toLowerCase().includes(t);
+    render(SEED.feed.filter(hit), term);
+  }
+
+  const chips = document.getElementById('chips');
   SEED.categories.forEach((c) => {
     const b = document.createElement('button');
     b.className = 'chip' + (c.slug === 'all' ? ' is-active' : '');
     b.type = 'button';
     b.textContent = c.name;
+    b.dataset.slug = c.slug;
     b.addEventListener('click', () => {
-      activeCat = c.slug;
-      chipsEl.querySelectorAll('.chip').forEach((x) => x.classList.remove('is-active'));
+      document.querySelectorAll('.chip').forEach((x) => x.classList.remove('is-active'));
       b.classList.add('is-active');
-      render(true);
+      document.getElementById('q').value = '';
+      if (c.slug === 'all') return render(SEED.feed, '');
+      render(SEED.feed.filter((l) => l.slug === c.slug), c.name);
     });
-    chipsEl.appendChild(b);
+    chips.appendChild(b);
   });
 
-  /* Search with a convincing debounce + skeleton beat */
-  let debounce;
-  qEl.addEventListener('input', () => {
-    clearEl.classList.toggle('hidden', !qEl.value);
-    clearTimeout(debounce);
-    debounce = setTimeout(() => { query = qEl.value.trim().toLowerCase(); render(true); }, 350);
+  const qInput = document.getElementById('q');
+  const clearBtn = document.getElementById('clear');
+  qInput.addEventListener('input', () => {
+    clearBtn.classList.toggle('hidden', !qInput.value);
+    document.querySelectorAll('.chip').forEach((x) => x.classList.toggle('is-active', x.dataset.slug === 'all'));
+    search(qInput.value);
   });
-  clearEl.addEventListener('click', () => { qEl.value = ''; query = ''; clearEl.classList.add('hidden'); render(true); qEl.focus(); });
+  clearBtn.addEventListener('click', () => { qInput.value = ''; clearBtn.classList.add('hidden'); render(SEED.feed, ''); qInput.focus(); });
 
-  function matches(l) {
-    const inCat = activeCat === 'all' || l.slug === activeCat;
-    if (!query) return { hit: inCat, near: true };
-    const hay = (l.caption + ' ' + l.stylist + ' ' + l.business + ' ' + l.slug.replace(/-/g, ' ')).toLowerCase();
-    return { hit: inCat && hay.includes(query), near: l.city.includes('NC') };
-  }
+  render(SEED.feed, '');
 
-  function skeletons(n) {
-    feedEl.innerHTML = '';
-    for (let i = 0; i < n; i++) {
-      const d = document.createElement('div');
-      d.className = 'skel-card';
-      d.innerHTML = '<div class="skel" style="height:' + (150 + (i % 4) * 40) + 'px"></div>';
-      feedEl.appendChild(d);
-    }
-  }
-
-  function cardHTML(l, i) {
-    const liked = false;
-    return (
-      '<div class="ph" style="--ar:' + ARS[i % ARS.length] + '">' +
-      '<img data-src="' + l.img + '" alt="' + l.caption.replace(/"/g, '&quot;') + '">' +
-      '</div>' +
-      '<button class="heart-btn' + (liked ? ' is-saved' : '') + '" type="button" aria-label="Save this look" data-like>' +
-      '<svg viewBox="0 0 24 24"><path d="M12 21s-7.5-4.9-9.7-9.2C.7 8.6 2.8 5 6.2 5c2 0 3.4 1.1 4.3 2.4h3c.9-1.3 2.3-2.4 4.3-2.4 3.4 0 5.5 3.6 3.9 6.8C19.5 16.1 12 21 12 21z" transform="scale(0.92) translate(1,0.5)"/></svg>' +
-      '</button>' +
-      '<div class="look-meta">' +
-      '<div class="cap"></div>' +
-      '<div class="by"><img src="' + (l.stylist === SEED.hero.name ? SEED.hero.avatar : SEED.av.client) + '" alt=""><span></span></div>' +
-      '<div class="rowline"><span class="price-pill">from ' + SN.money(l.cents) + '</span>' +
-      '<span class="likes"><svg viewBox="0 0 24 24"><path d="M12 21s-7.5-4.9-9.7-9.2C.7 8.6 2.8 5 6.2 5c2 0 3.4 1.1 4.3 2.4h3c.9-1.3 2.3-2.4 4.3-2.4 3.4 0 5.5 3.6 3.9 6.8C19.5 16.1 12 21 12 21z"/></svg>' + SN.compact(l.likes) + '</span></div>' +
-      '</div>'
-    );
-  }
-
-  function render(withSkeleton) {
-    const local = [], everywhere = [];
-    SEED.feed.forEach((l, idx) => {
-      const m = matches(l);
-      if (m.hit) (m.near || !query ? local : everywhere).push([l, idx]);
-    });
-    /* Location-free fallback: sparse local results get topped up, like the real app */
-    let rows = local, fellBack = false;
-    if (query && local.length < 4) {
-      const seen = new Set(local.map(([l]) => l.img));
-      SEED.feed.forEach((l, idx) => {
-        const hay = (l.caption + ' ' + l.stylist + ' ' + l.slug.replace(/-/g, ' ')).toLowerCase();
-        if (!seen.has(l.img) && hay.includes(query) && (activeCat === 'all' || l.slug === activeCat)) { rows.push([l, idx]); fellBack = true; }
-      });
-    }
-
-    const finish = () => {
-      fbEl.classList.toggle('is-on', fellBack);
-      titleEl.textContent = query ? 'Results for "' + query + '"' : (activeCat === 'all' ? 'Looks near you' : SEED.categories.find((c) => c.slug === activeCat).name + ' near you');
-      nEl.textContent = rows.length ? rows.length + (rows.length === 1 ? ' look' : ' looks') : '';
-      feedEl.innerHTML = '';
-      if (!rows.length) {
-        feedEl.innerHTML =
-          '<div class="empty" style="column-span: all;">' +
-          '<div style="font-size:34px;">🔍</div><h3>Nothing for that yet</h3>' +
-          '<p>Try "knotless", "locs", "silk press", or a stylist\'s name.</p></div>';
+  /* ---------- Scripted autoplay: Stop 1 of the guided walkthrough ----------
+     Presenter-driven mode is unaffected by the standalone no-navigation
+     change above: it drives the search box directly and then jumps the
+     phone to look.html itself (bypassing the card's own click handler),
+     carrying the room through Discover -> Look -> Booking -> Dashboard. */
+  if (scripted) {
+    const TYPE_TEXT = 'knotless';
+    function typeStep(i) {
+      if (i > TYPE_TEXT.length) {
+        setTimeout(() => {
+          const hit = document.querySelector('.lk-card');
+          if (hit) {
+            hit.classList.add('is-open');
+            setTimeout(() => { location.href = 'look.html?i=' + hit.dataset.feedI + '&script=1' + (params.has('session') ? '&session=1' : ''); }, 1100);
+          }
+        }, 700);
         return;
       }
-      feedEl.classList.add('stagger');
-      rows.forEach(([l, idx], i) => {
-        const a = document.createElement('a');
-        a.className = 'look-card';
-        a.href = 'look.html?i=' + idx + (inDemo ? '&demo=1' : '');
-        a.innerHTML = cardHTML(l, idx);
-        a.querySelector('.cap').textContent = l.caption;
-        a.querySelector('.by span').textContent = l.business + ' · ' + l.city;
-        a.querySelector('[data-like]').addEventListener('click', (e) => {
-          e.preventDefault(); e.stopPropagation();
-          const btn = e.currentTarget;
-          btn.classList.toggle('is-saved');
-          if (btn.classList.contains('is-saved')) SN.toast('Saved to your looks', l.caption, { icon: '❤' });
-        });
-        feedEl.appendChild(a);
-      });
-      SN.hydrateImages(feedEl);
-      setTimeout(() => feedEl.classList.remove('stagger'), 900);
-    };
-
-    if (withSkeleton) { skeletons(8); setTimeout(finish, query ? 550 : 700); }
-    else finish();
-  }
-
-  render(true);
-
-  /* Stop 1 of the guided walkthrough: the feed holds still on arrival,
-     then plays itself. Nobody types or taps; the phone acts on its own
-     so every connected phone shows the identical beat at the identical
-     moment. Search box, phone camera, and typing driven with :focus/
-     value so it visually reads as being typed, not just appearing. */
-  if (params.has('script')) {
-    const type = (el, text, ms) => new Promise((resolve) => {
-      let i = 0;
-      const t = setInterval(() => {
-        el.value = text.slice(0, ++i);
-        el.dispatchEvent(new Event('input'));
-        if (i >= text.length) { clearInterval(t); setTimeout(resolve, ms); }
-      }, 90);
-    });
-    const wait = (ms) => new Promise((r) => setTimeout(r, ms));
-    /* render()'s own debounce (350ms) plus its skeleton-to-finish delay
-       (550ms) means real cards don't exist until ~900ms after the last
-       keystroke. Poll for them instead of guessing a fixed wait, so a
-       slower device/network can't leave the phone stuck on Discover
-       with "knotless" typed and nothing ever tapped. */
-    const waitForCards = () => new Promise((resolve) => {
-      const check = () => {
-        const cards = feedEl.querySelectorAll('.look-card');
-        if (cards.length) resolve([...cards]);
-        else setTimeout(check, 100);
-      };
-      check();
-    });
-
-    (async () => {
-      await wait(1600); /* settle on the untouched feed first */
-      qEl.focus();
-      await type(qEl, 'knotless', 0);
-      const cards = await waitForCards();
-      /* find Jordyn Ellis's top knotless look (lk1, seed's highest-liked
-         result for this search) and highlight it like a finger landing,
-         then carry the whole phone into the Look page for Stop 2 */
-      const target = cards.find((a) => a.href.includes('i=' + SEED.feed.findIndex((l) => l.stylist === 'Jordyn Ellis' && l.slug === 'knotless-braids' && l.likes === 2800)));
-      const card = target || cards[0];
-      if (card) {
-        card.style.transition = 'transform 220ms var(--ease-out)';
-        card.style.transform = 'scale(0.96)';
-        await wait(500); /* let the room actually read the result before it navigates away */
-        location.href = card.getAttribute('href') + '&script=1&session=1';
-      }
-    })();
+      qInput.value = TYPE_TEXT.slice(0, i);
+      clearBtn.classList.toggle('hidden', !qInput.value);
+      search(qInput.value);
+      setTimeout(() => typeStep(i + 1), 110);
+    }
+    setTimeout(() => typeStep(0), 1400);
   }
 })();
 </script>

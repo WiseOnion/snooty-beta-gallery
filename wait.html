@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Snooty · Follow Along</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@1,400;1,500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared/snooty.css">
+<style>
+/* This is the ONLY page the deck's QR code sends people to. It is a
+   locked waiting room, not a hub: there is nothing to tap and no menu
+   of pages to browse. Every phone that scans the QR sits here, invisible
+   to the visitor, until the presenter's live slide number maps to a
+   scripted stop (see SLIDE_MAP), then it jumps there on its own. */
+body { background: var(--color-bg-dark); color: var(--color-text-inverse); }
+.wait-screen {
+  min-height: 100vh; min-height: 100dvh;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px;
+  padding: 32px; text-align: center;
+}
+.wait-screen .w-word { font-family: var(--font-display); font-weight: 400; font-size: 30px; letter-spacing: 0.28em; text-transform: uppercase; padding-left: 0.28em; }
+.wait-screen .w-status { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--color-text-muted-inverse); }
+.wait-screen .w-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--color-accent); animation: w-pulse 1.6s ease-in-out infinite; }
+@keyframes w-pulse { 0%, 100% { opacity: 0.35; } 50% { opacity: 1; } }
+.wait-screen .w-line { font-family: var(--font-editorial); font-style: italic; font-size: 19px; color: #D8CFC2; max-width: 30ch; line-height: 1.5; }
+.wait-screen .w-hint { font-size: 12px; color: rgba(216,207,194,0.5); max-width: 30ch; }
+</style>
+</head>
+<body>
+
+<div class="wait-screen">
+  <div class="w-word">Snooty</div>
+  <div class="w-status"><span class="w-dot"></span><span>Connected to the presentation</span></div>
+  <div class="w-line">Your phone will follow along on its own. Nothing to tap.</div>
+  <div class="w-hint">Watch the screen up front.</div>
+</div>
+
+<script src="shared/seed.js"></script>
+<script src="shared/snooty.js"></script>
+<script src="shared/sync.js"></script>
+<script>
+(function () {
+  'use strict';
+  SN.markSeen('wait');
+
+  /* SLIDE_MAP keys are 1-indexed deck-preview.html slide numbers. This
+     is the single source of truth for which slide sends followers to
+     which scripted stop; nothing else on this page can be tapped, so
+     it's the only way a phone here ever goes anywhere. */
+  const SLIDE_MAP = {
+    3: 'discover.html?script=1&session=1',
+    4: 'messages.html?script=1&session=1',
+    6: 'booking.html?script=1&step=3&session=1',
+  };
+
+  SN.sync.watchSlide((slide) => {
+    const dest = SLIDE_MAP[slide];
+    if (dest) location.href = dest;
+  });
+})();
+</script>
+</body>
+</html>

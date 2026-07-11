@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Snooty · Messages</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@1,400;1,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared/snooty.css">
+<style>
+body { background: var(--color-bg); display: flex; flex-direction: column; }
+.phone-wrap { display: flex; flex-direction: column; }
+.scroll-root { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+
+.topbar {
+  position: sticky; top: 0; z-index: 100; display: flex; align-items: center; gap: 10px;
+  background: rgba(252,250,249,0.95); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--color-border);
+  padding: calc(10px + env(safe-area-inset-top)) 12px 10px;
+}
+.icon-btn { width: 40px; height: 40px; border-radius: var(--radius-full); display: flex; align-items: center; justify-content: center; -webkit-tap-highlight-color: transparent; }
+.icon-btn svg { width: 19px; height: 19px; stroke: var(--color-text); fill: none; stroke-width: 2; }
+.topbar img { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; }
+.topbar .tb-n { font-family: var(--font-display); font-weight: 600; font-size: 14.5px; }
+.topbar .tb-s { font-size: 11px; color: var(--color-success); }
+
+.pinned-booking {
+  margin: 10px 14px; padding: 11px 13px; display: flex; align-items: center; gap: 10px;
+  background: var(--color-accent-soft); border: 1px solid rgba(201,154,74,0.3); border-radius: 14px;
+}
+.pinned-booking .pb-icon {
+  width: 26px; height: 26px; flex-shrink: 0; border-radius: 50%; background: var(--color-accent);
+  display: flex; align-items: center; justify-content: center;
+}
+.pinned-booking .pb-icon svg { width: 13px; height: 13px; stroke: #241505; fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.pinned-booking .pb-t { font-family: var(--font-display); font-weight: 600; font-size: 12.5px; color: #6b5426; }
+.pinned-booking .pb-s { font-size: 11px; color: #7a6a4e; margin-top: 1px; }
+
+/* Thread content anchors to the BOTTOM, like a real messaging app: a
+   short conversation sits just above the composer instead of pinned to
+   the top with a wall of dead space beneath it. */
+.thread { flex: 1; overflow-y: auto; padding: 10px 14px 14px; display: flex; flex-direction: column; justify-content: flex-end; gap: 3px; -webkit-overflow-scrolling: touch; }
+.msg-row { display: flex; margin-top: 10px; }
+.msg-row.them { justify-content: flex-start; }
+.msg-row.me { justify-content: flex-end; }
+/* max-width lives on .msg-col ONLY (the flex child that actually sizes
+   against the row). A duplicate max-width on .bubble used to resolve
+   against msg-col's already-shrunk width, compounding down to ~61% of
+   the row and leaving a big dead gap from the true edge; a bubble also
+   needs a min-width or a one-word message collapses into a near-circle
+   instead of reading as a chat bubble. */
+.bubble {
+  display: inline-block; align-self: flex-start; min-width: 58px;
+  padding: 10px 16px; border-radius: 18px; font-size: 14px; line-height: 1.42;
+  opacity: 0; transform: translateY(8px) scale(0.96); transition: all 320ms var(--ease-brand);
+}
+.bubble.on { opacity: 1; transform: none; }
+.them .bubble { background: var(--color-bg-alt); border: 1px solid var(--color-border); border-bottom-left-radius: 4px; align-self: flex-start; }
+.me .bubble { background: var(--color-primary); color: var(--color-text-inverse); border-bottom-right-radius: 4px; align-self: flex-end; }
+.msg-time { font-size: 10px; color: var(--color-text-muted); margin-top: 4px; padding: 0 4px; }
+.them .msg-time { text-align: left; }
+.me .msg-time { text-align: right; }
+.msg-col { display: flex; flex-direction: column; max-width: 78%; }
+
+.typing { display: flex; gap: 4px; padding: 12px 16px; }
+.typing i { width: 6px; height: 6px; border-radius: 50%; background: var(--color-text-muted); opacity: 0.4; animation: typing-bounce 1.1s infinite; }
+.typing i:nth-child(2) { animation-delay: 0.15s; } .typing i:nth-child(3) { animation-delay: 0.3s; }
+@keyframes typing-bounce { 0%, 60%, 100% { transform: translateY(0); opacity: 0.4; } 30% { transform: translateY(-4px); opacity: 1; } }
+
+.composer {
+  display: flex; align-items: center; gap: 10px; padding: 10px 14px calc(12px + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--color-border); background: var(--color-bg);
+}
+body.framed .composer { position: relative; }
+.composer input {
+  flex: 1; height: 42px; border-radius: var(--radius-full); border: 1px solid var(--color-border);
+  padding: 0 16px; font-size: 14px; outline: none; background: var(--color-bg-alt);
+}
+.composer input:focus { border-color: var(--color-accent); }
+.composer .send-btn {
+  width: 42px; height: 42px; border-radius: 50%; background: var(--color-primary); color: #fff;
+  display: flex; align-items: center; justify-content: center; flex: 0 0 42px;
+}
+.composer .send-btn svg { width: 18px; height: 18px; }
+.composer .send-btn:active { transform: scale(0.92); }
+</style>
+</head>
+<body>
+<div class="phone-wrap"><div class="scroll-root">
+
+  <header class="topbar">
+    <button class="icon-btn" id="back" type="button" aria-label="Back"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
+    <img id="av" src="" alt="">
+    <div><div class="tb-n" id="who"></div><div class="tb-s">Usually replies within an hour</div></div>
+  </header>
+
+  <div class="pinned-booking" id="pinned">
+    <span class="pb-icon"><svg viewBox="0 0 24 24"><rect x="3" y="4.5" width="18" height="16" rx="2"/><line x1="3" y1="9.5" x2="21" y2="9.5"/><line x1="8" y1="2.5" x2="8" y2="6.5"/><line x1="16" y1="2.5" x2="16" y2="6.5"/></svg></span>
+    <div><div class="pb-t" id="pb-t"></div><div class="pb-s" id="pb-s"></div></div>
+  </div>
+
+  <div class="thread" id="thread"></div>
+
+  <div class="composer">
+    <input id="input" type="text" placeholder="Message" autocomplete="off" aria-label="Type a message">
+    <button class="send-btn" id="send" type="button" aria-label="Send"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M2 21l21-9L2 3v7l15 2-15 2v7z"/></svg></button>
+  </div>
+
+</div></div>
+
+<script src="shared/seed.js"></script>
+<script src="shared/snooty.js"></script>
+<script src="shared/sync.js"></script>
+<script>
+(function () {
+  'use strict';
+  const SEED = window.SNOOTY_SEED;
+  const T = SEED.thread;
+  const params = new URLSearchParams(location.search);
+  const inDemo = params.has('demo');
+  const scripted = params.has('script');
+
+  SN.frameOnDesktop();
+  SN.markSeen('messages');
+  if (params.has('session')) SN.walkthroughProgress(2); /* messaging sits inside the client stop */
+
+  if (!inDemo && !scripted) {
+    SN.purposeCard({
+      title: 'One thread, tied to one booking.',
+      body: 'No more hunting through Instagram DMs and text messages. Every conversation already knows the appointment it belongs to.',
+      cta: 'See the thread',
+    });
+  }
+
+  document.getElementById('av').src = T.avatar;
+  document.getElementById('who').textContent = T.client;
+  document.getElementById('pb-t').textContent = 'Pinned to booking: ' + T.booking.service;
+  document.getElementById('pb-s').textContent = T.booking.when + ' · $' + (T.booking.depositCents / 100).toFixed(2) + ' deposit paid';
+
+  const thread = document.getElementById('thread');
+  function addBubble(from, text, at, cb) {
+    const row = document.createElement('div');
+    row.className = 'msg-row ' + (from === 'me' ? 'me' : 'them');
+    const col = document.createElement('div');
+    col.className = 'msg-col';
+    const b = document.createElement('div');
+    b.className = 'bubble';
+    b.textContent = text;
+    col.appendChild(b);
+    if (at) {
+      const t = document.createElement('div');
+      t.className = 'msg-time';
+      t.textContent = at;
+      col.appendChild(t);
+    }
+    row.appendChild(col);
+    thread.appendChild(row);
+    requestAnimationFrame(() => { b.classList.add('on'); thread.scrollTop = thread.scrollHeight; });
+    if (cb) setTimeout(cb, 260);
+  }
+
+  function addTyping() {
+    const row = document.createElement('div');
+    row.className = 'msg-row them';
+    row.id = 'typing-row';
+    row.innerHTML = '<div class="msg-col"><div class="card typing"><i></i><i></i><i></i></div></div>';
+    thread.appendChild(row);
+    thread.scrollTop = thread.scrollHeight;
+    return () => { const el = document.getElementById('typing-row'); if (el) el.remove(); };
+  }
+
+  /* Real history renders instantly, in order, with a soft stagger */
+  T.messages.forEach((m, i) => setTimeout(() => addBubble(m.from, m.text, m.at), i * 260));
+
+  /* Reply composer: typing something and hitting send appends a real
+     bubble, then the stylist "replies" with the seeded reply after a
+     believable typing pause. Not a chatbot: one scripted reply, because
+     this is a demo of the thread's shape, not a live LLM. */
+  const input = document.getElementById('input');
+  const sendBtn = document.getElementById('send');
+  let replied = false;
+  function send() {
+    const val = input.value.trim();
+    if (!val) return;
+    addBubble('me', val, 'now');
+    input.value = '';
+    if (!replied) {
+      replied = true;
+      const stopTyping = addTyping();
+      setTimeout(() => { stopTyping(); addBubble('them', T.reply, 'now'); }, 1600);
+    }
+  }
+  sendBtn.addEventListener('click', send);
+  input.addEventListener('keydown', (e) => { if (e.key === 'Enter') send(); });
+
+  /* ---------- Scripted autoplay: messaging beat inside Stop 1 ----------
+     After the real history plays, the room watches a typing indicator
+     and a reply land on their own, no tap required, then the phone
+     carries itself back into the booking chain. */
+  if (scripted) {
+    setTimeout(() => {
+      const stopTyping = addTyping();
+      setTimeout(() => { stopTyping(); addBubble('them', T.reply, 'now'); }, 1500);
+    }, T.messages.length * 260 + 1200);
+  }
+})();
+</script>
+</body>
+</html>

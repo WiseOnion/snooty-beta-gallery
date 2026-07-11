@@ -52,8 +52,15 @@ input[type=range]::-moz-range-thumb { width: 22px; height: 22px; border-radius: 
 .res.gray .r-v { color: #8a8a8a; text-decoration: line-through solid rgba(0,0,0,0.3) 1.5px; }
 
 .divider { text-align: center; font-family: var(--font-display); font-size: 11px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-text-muted); margin: 20px 0 12px; }
+
+.fee-explainer { margin-top: 22px; padding: 18px; }
+.fee-explainer h3 { font-family: var(--font-display); font-weight: 600; font-size: 14.5px; margin-bottom: 12px; }
+.fee-explainer .fx-row { display: flex; gap: 12px; padding: 9px 0; border-bottom: 1px dashed var(--color-border); font-size: 12.5px; align-items: baseline; }
+.fee-explainer .fx-row:last-child { border-bottom: 0; }
+.fee-explainer .fx-n { font-family: var(--font-display); font-weight: 700; color: var(--color-primary); white-space: nowrap; }
+.fee-explainer .fx-d { color: #4c4741; line-height: 1.5; }
+
 .fine { font-size: 11px; color: var(--color-text-muted); line-height: 1.6; margin-top: 18px; text-align: center; }
-.backlink { display: block; text-align: center; margin-top: 20px; font-family: var(--font-display); font-weight: 600; font-size: 13.5px; color: var(--color-primary); }
 </style>
 </head>
 <body>
@@ -63,6 +70,14 @@ input[type=range]::-moz-range-thumb { width: 22px; height: 22px; border-radius: 
     <div class="k">The honest calculator</div>
     <h1>What would Snooty<br>make you?</h1>
     <p>Your numbers, not ours. Nothing is saved or sent anywhere.</p>
+  </div>
+
+  <div class="card fee-explainer">
+    <h3>How the money actually moves</h3>
+    <div class="fx-row"><span class="fx-n" id="fx-dep">20%</span><span class="fx-d">deposit, paid by the client the moment they book. It's yours if they no-show.</span></div>
+    <div class="fx-row"><span class="fx-n">Rest</span><span class="fx-d">of the price is paid at the chair, in person, the same way you collect today.</span></div>
+    <div class="fx-row"><span class="fx-n">$20/yr</span><span class="fx-d">flat, whether you book 1 client or 100. Not a monthly fee.</span></div>
+    <div class="fx-row"><span class="fx-n">5%</span><span class="fx-d">of the deposit only, not the full ticket. That's Snooty's entire cut.</span></div>
   </div>
 
   <div class="card sliders">
@@ -131,18 +146,20 @@ input[type=range]::-moz-range-thumb { width: 22px; height: 22px; border-radius: 
   </div>
 
   <p class="fine">Estimates, not promises. No-show reduction uses the conservative end of published salon platform data (deposits cut no-shows 40 to 65%; Vagaro's 2023 report measured 41% on 90-minute-plus appointments). Competitor figure reflects StyleSeat's published $35/mo plus 20% new-client fee.</p>
-
-  <a class="backlink" href="index.html" id="backlink">← Back to the gallery</a>
 </div>
 
 <script src="shared/seed.js"></script>
 <script src="shared/snooty.js"></script>
+<script src="shared/sync.js"></script>
 <script>
 (function () {
   'use strict';
-  const inDemo = new URLSearchParams(location.search).has('demo');
-  if (inDemo) document.getElementById('backlink').classList.add('hidden');
+  const SEED = window.SNOOTY_SEED;
+  const params = new URLSearchParams(location.search);
   SN.markSeen('calculator');
+  if (params.has('session')) SN.walkthroughProgress(3); /* Stop 3: Your Business (the money tool) */
+
+  document.getElementById('fx-dep').textContent = SEED.platform.depositPct + '%';
 
   const $ = (id) => document.getElementById(id);
   const sliders = ['appts', 'ticket', 'noshow', 'dep', 'weeks'];
@@ -182,9 +199,9 @@ input[type=range]::-moz-range-thumb { width: 22px; height: 22px; border-radius: 
 
     const completed = booked * (1 - ns * 0.6);
     const depositsCollected = completed * t * dep;
-    const snootyFee = 20 + depositsCollected * 0.05;
+    const snootyFee = SEED.platform.annualFeeCents / 100 + depositsCollected * (SEED.platform.commissionPct / 100);
 
-    const compFee = 35 * 12 + booked * 0.3 * t * 0.20;     /* $35/mo + 20% of new clients (3 in 10) */
+    const compFee = SEED.platform.competitors.styleseat.monthly * 12 + booked * 0.3 * t * (SEED.platform.competitors.styleseat.newClientPct / 100);
     const hours = Math.round(booked * 20 / 60);            /* ~20 min of DM admin per booking */
 
     animateTo('r-now', Math.round(nowRevenue) * 100, true);

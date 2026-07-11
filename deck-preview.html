@@ -383,6 +383,30 @@ h1.headline { font-family: var(--font-display); font-weight: 600; font-size: cla
 .close-bg::after { content: ""; position: absolute; inset: 0; background: linear-gradient(rgba(0,0,0,0.25), rgba(0,0,0,0.72)); }
 .close-line { position: relative; z-index: 2; text-align: center; }
 
+/* ============ Stop 4: money worked on screen ============ */
+.money-split { display: flex; gap: 2vw; margin-top: 5vh; }
+.money-block { flex: 1; border-radius: 18px; padding: 3.2vh 2vw; text-align: center; }
+.money-block.dep { background: var(--color-accent-soft); border: 1px solid rgba(201,154,74,0.35); }
+.money-block.rest { background: var(--color-bg-card); border: 1px solid var(--color-border); }
+.money-block .mb-label { font-family: var(--font-display); font-weight: 600; font-size: clamp(11px, 1.05vw, 14px); letter-spacing: 0.08em; text-transform: uppercase; color: var(--color-text-muted); }
+.money-block .mb-val { font-family: var(--font-display); font-weight: 700; font-size: clamp(30px, 3.6vw, 54px); line-height: 1.1; margin-top: 1vh; color: var(--color-primary); }
+.money-block.dep .mb-val { color: #6b5426; }
+.money-block .mb-note { font-size: clamp(11.5px, 1.05vw, 14.5px); color: var(--color-text-muted); margin-top: 1vh; line-height: 1.5; }
+.money-fee-row { display: flex; gap: 2vw; margin-top: 2.4vh; align-items: stretch; }
+.money-fee-row .fee-pill {
+  flex: 1; display: flex; align-items: center; justify-content: space-between; gap: 1vw;
+  background: var(--color-bg-dark); color: var(--color-text-inverse); border-radius: 14px; padding: 2.2vh 1.8vw;
+}
+.money-fee-row .fee-pill .fp-label { font-size: clamp(12px, 1.15vw, 15.5px); color: var(--color-text-muted-inverse); }
+.money-fee-row .fee-pill .fp-val { font-family: var(--font-display); font-weight: 700; font-size: clamp(20px, 2.2vw, 30px); color: var(--color-accent); white-space: nowrap; }
+.money-fee-row .fee-pill.comp .fp-val { color: #b7aca0; text-decoration: line-through solid rgba(255,255,255,0.4) 1.5px; }
+
+/* ============ Q&A pause slides ============ */
+.qa-pause { align-items: center; text-align: center; }
+.qa-pause .kicker { text-align: center; }
+.qa-pause .headline { max-width: 20ch; margin: 0 auto; }
+.qa-pause .sub { margin-left: auto; margin-right: auto; text-align: center; }
+
 /* ============ Notes mode ============ */
 body.notes-mode #deck { display: none; }
 #notes-panel { display: none; }
@@ -426,29 +450,59 @@ body.notes-mode #notes-panel {
 
   <!-- 3 ▸ Stop 1: Discover -->
   <section class="slide light" data-title="Stop 1: How do clients even find me?">
-    <div class="kicker">On their phones now</div>
+    <div class="kicker">On their phones now · Client side</div>
     <h1 class="headline">How do clients even find you?</h1>
     <p class="sub">Their phone just opened on the Discover feed. Watch: someone searches "knotless," and the work does the rest.</p>
   </section>
 
-  <!-- 4 ▸ Stop 2: Booking / Deposit -->
+  <!-- 4 ▸ Stop 1b: Messaging -->
+  <section class="slide light" data-title="Stop 1b: How do they talk to me?">
+    <div class="kicker">On their phones now · Client side</div>
+    <h1 class="headline">One thread. Tied to one booking.</h1>
+    <p class="sub">Their phone jumps into a real message thread, already pinned to the appointment. No hunting through Instagram DMs to remember which client asked what.</p>
+  </section>
+
+  <!-- 5 ▸ Q&A pause 1 -->
+  <section class="slide black qa-pause" data-title="Pause: questions on the client side">
+    <div class="kicker">Pause</div>
+    <h1 class="headline">Any questions so far?</h1>
+    <p class="sub">That's everything a client sees: find you, message you, book you.</p>
+  </section>
+
+  <!-- 6 ▸ Stop 2: Booking / Deposit -->
   <section class="slide light" data-title="Stop 2: Okay, they found me. Now what?">
-    <div class="kicker">On their phones now</div>
+    <div class="kicker">On their phones now · Client side</div>
     <h1 class="headline">They found you. Now what?</h1>
     <p class="sub">Their phone is on the look itself: angles, reviews, price. Then it books, straight to the deposit. This is the moment you stop chasing deposits.</p>
   </section>
 
-  <!-- 5 ▸ Stop 3: Your Business -->
+  <!-- 7 ▸ Stop 3: Your toolkit -->
   <section class="slide light" data-title="Stop 3: What happens after they book?">
-    <div class="kicker">On their phones now</div>
+    <div class="kicker">On their phones now · Stylist side</div>
     <h1 class="headline">While you were asleep, your business moved.</h1>
-    <p class="sub">Notification. Deposit paid. Calendar fills. Earnings tick up. Then: now it's theirs to explore.</p>
+    <p class="sub">Notification. Deposit paid. Calendar fills. Earnings tick up. Then their phone tours your whole toolkit: your storefront, your services, your reviews.</p>
+  </section>
+
+  <!-- 8 ▸ Stop 4: The money, worked on screen -->
+  <section class="slide light" data-title="Stop 4: How does the money work?">
+    <div class="kicker">The money, on screen</div>
+    <h1 class="headline">The deposit. The rest. The fee.</h1>
+    <p class="sub">One $220 booking, worked out in full. Their phone has the same math with their own numbers, but here it is where everyone can see it.</p>
+    <div class="money-split" id="money-split"></div>
+    <div class="money-fee-row" id="money-fee-row"></div>
+  </section>
+
+  <!-- 9 ▸ Q&A pause 2 -->
+  <section class="slide black qa-pause" data-title="Pause: questions on the business side">
+    <div class="kicker">Pause</div>
+    <h1 class="headline">Any questions before we close?</h1>
+    <p class="sub">Deposits, the balance, and Snooty's entire fee. Ask anything.</p>
   </section>
 
 </div>
 
 <div id="progress"></div>
-<div id="hud">1 / 5</div>
+<div id="hud">1 / 9</div>
 
 <div id="notes-panel">
   <div class="np-head"><span class="np-slide">1</span><span class="np-timer">00:00</span></div>
@@ -472,12 +526,13 @@ body.notes-mode #notes-panel {
   });
   SN.hydrateImages(document);
 
-  /* Real, scannable QR on slide 2: points at the gallery hub so testers
-     can follow along on their own phones for the rest of the deck. */
+  /* Real, scannable QR on slide 2: points at the locked waiting room
+     (wait.html), not a browsable hub. Followers only ever see the
+     presenter-driven stops; there's nothing here for them to tap. */
   (function renderQR() {
     const el = document.getElementById('qr-real');
     if (!el || !window.qrcodegen) return;
-    const url = location.origin + location.pathname.replace(/deck-preview\.html$/, 'index.html') + '?session=1';
+    const url = location.origin + location.pathname.replace(/deck-preview\.html$/, 'wait.html') + '?session=1';
     const qr = qrcodegen.QrCode.encodeText(url, qrcodegen.QrCode.Ecc.MEDIUM);
     const n = qr.size;
     let cells = '';
@@ -495,9 +550,13 @@ body.notes-mode #notes-panel {
   const NOTES = [
 'Say NOTHING for the entire sequence, about 6.5 seconds. Opens punched in close on one photo alone, holds a beat, then the camera pulls back WHILE the rest of the wall fades in one tile at a time, spreading outward in waves, so the zoom and the reveal finish together. The wall then blurs and the wordmark fades in on top. Once it settles, say: "This is Snooty." Then advance to the QR slide.',
     'Hold here. "Scan that now, you\'ll follow along on your own phone for the rest of this." Give the room 15-20 seconds to actually scan before advancing.',
-    'The moment you land here, every connected phone jumps to Discover on its own and plays itself: settles on the feed, types "knotless," taps the top result. You don\'t touch anything. Let it play, then say: "You didn\'t type her name. You didn\'t know her Instagram. You found the work first." Advance whenever you\'re ready, their phones will already have carried themselves into Stop 2.',
+    'The moment you land here, every connected phone jumps to Discover on its own and plays itself: settles on the feed, types "knotless," taps the top result. You don\'t touch anything. Let it play, then say: "You didn\'t type her name. You didn\'t know her Instagram. You found the work first."',
+    'Their phones carry themselves straight into a real message thread, already pinned to the booking. Let it play, then say: "Notice it already knows which appointment this is about. That\'s the whole point." If anyone asks about pricing or the fee here, say: "Hold that, we get to the money in a few minutes." Advance to the pause.',
+    'STOP TALKING. Hold this slide. Take real questions. If a question is about booking, deposits, or the toolkit, say "great question, that\'s coming up in a minute" and name the upcoming stop. Don\'t rush this; a room that got to ask early questions listens better later.',
     'Their phones are already moving on their own: Look page, then straight into the deposit screen, no need to prompt anything. Let it land, then say: "This is the moment you stop chasing deposits." This slide is narration only, nothing to trigger.',
-    'Their phones are already animating the whole business side: notification, deposit paid, calendar fills, earnings tick up. Let it finish, then say: "While you were asleep, your business moved." Their phones release into free exploration on their own right after. This slide is narration only, nothing to trigger.',
+    'Their phones are already animating the whole business side: notification, deposit paid, calendar fills, earnings tick up, then a tour of the storefront, services, and reviews on their own. Let it finish, then say: "Every piece of that toolkit is yours to fill." This slide is narration only, nothing to trigger.',
+    'The numbers on THIS screen are the real math, not a promise: 20% deposit paid up front, the rest at the chair, then Snooty\'s entire cut against a typical competitor. Walk it left to right out loud. "Twenty percent now. Everything else, same as you collect today. And what we take for that: five percent of the deposit, plus twenty dollars a year." Let the competitor number sit crossed out. Mention their own phone has the same calculator with their own numbers.',
+    'STOP TALKING again. Hold this one longer than the first pause; this is where "what\'s the catch" comes out. Answer plainly. If someone asks something better answered at the close (the beta ask, next steps), say "one more slide and we get there."',
   ];
 
   /* ---------- Engine ---------- */
@@ -518,6 +577,32 @@ body.notes-mode #notes-panel {
       SN.countUp(el, parseInt(el.dataset.count, 10), { ms: 1100, suffix: el.dataset.suffix || '' });
     });
     if (i === 0) cascadeOpen();
+    if (i === 7) renderMoney();
+  }
+
+  /* ---------- Stop 4: the money, worked on screen ----------
+     Same numbers and math as calculator.html/SEED.platform, rendered
+     once as a fixed worked example (a $220 booking) so the room sees
+     real figures on the big screen instead of only hearing "check your
+     phone." Runs once per visit to the slide; harmless to re-run. */
+  let moneyRendered = false;
+  function renderMoney() {
+    if (moneyRendered) return;
+    moneyRendered = true;
+    const P = SEED.platform;
+    const price = 22000; /* cents: Knotless Braids - Medium, the hero's signature ticket */
+    const dep = Math.round(price * P.depositPct / 100);
+    const rest = price - dep;
+    const fee = P.annualFeeCents / 100 + (dep / 100) * (P.commissionPct / 100);
+    const comp = P.competitors.styleseat.monthly + price / 100 * (P.competitors.styleseat.newClientPct / 100);
+
+    document.getElementById('money-split').innerHTML =
+      '<div class="money-block dep"><div class="mb-label">Deposit, paid today</div><div class="mb-val">' + SN.money(dep) + '</div><div class="mb-note">' + P.depositPct + '% of a ' + SN.money(price) + ' booking. Hers if the client no-shows.</div></div>' +
+      '<div class="money-block rest"><div class="mb-label">Balance, paid at the chair</div><div class="mb-val">' + SN.money(rest) + '</div><div class="mb-note">Collected the same way she collects it today. Nothing changes here.</div></div>';
+
+    document.getElementById('money-fee-row').innerHTML =
+      '<div class="fee-pill"><span class="fp-label">Snooty\'s entire cut (' + P.commissionPct + '% of the deposit + $' + (P.annualFeeCents / 100) + '/yr)</span><span class="fp-val">' + SN.money(Math.round(fee * 100)) + '</span></div>' +
+      '<div class="fee-pill comp"><span class="fp-label">A typical competitor, one new client</span><span class="fp-val">$' + comp.toFixed(2) + '</span></div>';
   }
 
   function show(i, fromHash) {
