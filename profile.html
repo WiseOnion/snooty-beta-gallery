@@ -160,7 +160,9 @@
     });
   }
 
-  /* Back arrow is decorative only: nothing leaves this page. */
+  document.getElementById('back').addEventListener('click', () => {
+    SN.toast('Would go back', 'This would return you to where you came from.', { icon: '←' });
+  });
 
   document.getElementById('av').src = H.avatar;
   document.getElementById('biz').textContent = H.business;

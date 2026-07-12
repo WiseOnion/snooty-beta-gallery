@@ -134,6 +134,10 @@ body.framed .composer { position: relative; }
     });
   }
 
+  document.getElementById('back').addEventListener('click', () => {
+    SN.toast('Would go back', 'This would return you to where you came from.', { icon: '←' });
+  });
+
   document.getElementById('av').src = T.avatar;
   document.getElementById('who').textContent = T.client;
   document.getElementById('pb-t').textContent = 'Pinned to booking: ' + T.booking.service;

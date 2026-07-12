@@ -228,7 +228,10 @@
       saveBtn.innerHTML = saveSvg(nowSaved);
       if (nowSaved) SN.toast('Saved to your collection', look.caption, { icon: '✓' });
     });
-    el.querySelector('.lk-card-book').addEventListener('click', (e) => { e.stopPropagation(); });
+    el.querySelector('.lk-card-book').addEventListener('click', (e) => {
+      e.stopPropagation();
+      SN.toast('Would start booking', 'This would open the booking flow for this look.', { icon: '📅' });
+    });
 
     return el;
   }

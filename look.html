@@ -92,11 +92,11 @@
 
 .ld-braid { width: 100%; height: 1px; background: var(--color-border); margin-bottom: 18px; }
 .ld-more-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 24px; }
-.ld-more-grid a { display: block; border-radius: 8px; overflow: hidden; aspect-ratio: 3/4; background: var(--color-border); }
+.ld-more-grid span { display: block; border-radius: 8px; overflow: hidden; aspect-ratio: 3/4; background: var(--color-border); }
 .ld-more-grid img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .ld-more-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
-.ld-more-head a { display: inline-flex; align-items: center; gap: 2px; font-size: 13px; font-weight: 600; color: var(--color-primary); }
-.ld-more-head a svg { width: 13px; height: 13px; stroke: currentColor; fill: none; stroke-width: 2.5; stroke-linecap: round; }
+.ld-more-head span { display: inline-flex; align-items: center; gap: 2px; font-size: 13px; font-weight: 600; color: var(--color-primary); }
+.ld-more-head span svg { width: 13px; height: 13px; stroke: currentColor; fill: none; stroke-width: 2.5; stroke-linecap: round; }
 
 .ld-caption { font-size: 14px; color: var(--color-text-muted); line-height: 1.65; margin: 0 0 24px; }
 
@@ -211,9 +211,19 @@
     });
   }
 
+  /* Nothing on this page navigates away; every tap that would leave in
+     the real app instead shows what it would have done. */
   document.getElementById('back').addEventListener('click', () => {
-    if (history.length > 1) history.back();
-    else location.href = 'discover.html' + (inDemo ? '?demo=1' : '');
+    SN.toast('Would go back', 'This would return you to the results grid.', { icon: '←' });
+  });
+  document.getElementById('stylist-link').addEventListener('click', () => {
+    SN.toast('Would open profile', 'This would open ' + feedLook.stylist + '’s full profile.', { icon: '↗' });
+  });
+  document.getElementById('book').addEventListener('click', () => {
+    SN.toast('Would start booking', 'This would open the booking flow for this look.', { icon: '📅' });
+  });
+  document.getElementById('view-profile').addEventListener('click', () => {
+    SN.toast('Would open profile', 'This would open ' + feedLook.stylist + '’s full profile.', { icon: '↗' });
   });
 
   /* Category kicker + editorial headline, matching LookDetail.tsx's
@@ -227,8 +237,6 @@
   document.getElementById('by-rate').textContent = H.rating.toFixed(1);
   document.getElementById('by-rev').textContent = ' (' + H.reviewCount + ')';
   document.getElementById('by-city').textContent = ' · ' + H.city;
-  document.getElementById('stylist-link').href = 'profile.html' + suffix;
-  document.getElementById('view-profile').href = 'profile.html' + suffix;
 
   /* Thumbnail strip: this look's own angle photos only, real LookDetail
      shows no strip at all when there's just one photo. Standard PDP
@@ -299,10 +307,12 @@
 
   /* Style tag chips: every category this look is filed under */
   const tagsWrap = document.getElementById('tags');
-  const tag = document.createElement('a');
+  const tag = document.createElement('span');
   tag.className = 'ld-tag';
-  tag.href = 'discover.html' + suffix;
   tag.textContent = 'See more ' + categoryName;
+  tag.addEventListener('click', () => {
+    SN.toast('Would filter results', 'This would show more ' + categoryName + ' looks.', { icon: '↗' });
+  });
   tagsWrap.appendChild(tag);
 
   /* More from this stylist: her other looks in the same category */
@@ -311,14 +321,18 @@
     const block = document.getElementById('more-from-block');
     block.innerHTML = '<div class="ld-braid"></div>' +
       '<div class="ld-more-head"><p class="ld-sec-h" style="margin:0;">More from ' + feedLook.stylist + '</p>' +
-      '<a href="profile.html' + suffix + '">Full portfolio <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></a></div>' +
+      '<span id="full-portfolio">Full portfolio <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></span></div>' +
       '<div class="ld-more-grid" id="more-grid"></div>';
+    document.getElementById('full-portfolio').addEventListener('click', () => {
+      SN.toast('Would open profile', 'This would open ' + feedLook.stylist + '’s full profile.', { icon: '↗' });
+    });
     const grid = document.getElementById('more-grid');
     moreFrom.forEach((l) => {
-      const idx = SEED.feed.findIndex((f) => f.heroLook === l.id);
-      const a = document.createElement('a');
-      a.href = 'look.html?i=' + (idx >= 0 ? idx : 0) + suffix;
+      const a = document.createElement('span');
       a.innerHTML = '<img src="' + l.img + '" alt="">';
+      a.addEventListener('click', () => {
+        SN.toast('Would open look', 'This would open this look’s detail page.', { icon: '↗' });
+      });
       grid.appendChild(a);
     });
   }
@@ -345,8 +359,6 @@
     revs.appendChild(d);
   });
 
-  const bookBtn = document.getElementById('book');
-  bookBtn.addEventListener('click', () => { location.href = 'booking.html?i=' + i + suffix; });
 
   /* "..." menu: Save / Share / Message / Report, matching LookDetail.tsx's dots menu */
   const moreBtn = document.getElementById('more-btn');
@@ -373,7 +385,7 @@
       b.addEventListener('click', () => {
         overlay.remove();
         if (it.label === 'Save Style') saveBtn.classList.toggle('saved');
-        else if (it.label === 'Message Stylist') location.href = 'messages.html' + suffix;
+        else if (it.label === 'Message Stylist') SN.toast('Message sent', 'Your message is on its way.', { icon: '↗' });
         else SN.toast('Link copied', 'This look\'s link is ready to share.', { icon: '↗' });
       });
       menu.appendChild(b);
