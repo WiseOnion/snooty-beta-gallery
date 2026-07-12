@@ -401,13 +401,24 @@ h1.headline { font-family: var(--font-display); font-weight: 600; font-size: cla
    without also being explained in one line underneath it, and every
    beat pushes toward the same verdict, Snooty is the cheapest and the
    most honest about it. */
-.money-stage { position: relative; margin-top: 2vh; height: 52vh; min-height: 380px; }
+.money-stage { position: relative; margin-top: 2vh; height: 52vh; min-height: 380px; overflow: hidden; }
+/* One continuous flow, not a slideshow of independent fades. Advancing
+   pushes the outgoing beat up and away (is-leaving) at the exact same
+   moment the incoming beat rises up from below and grows into place
+   (is-on), both running on the same clock so they read as a single
+   conveyor passing through the middle, not two unrelated cuts. Going
+   backward reverses the direction via --dir (set in JS just before
+   the class swap) so the conveyor always visibly matches which way
+   you're moving through the story. */
 .m-beat {
+  --dir: 1;
   position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center;
   justify-content: center; text-align: center; opacity: 0; pointer-events: none;
-  transform: scale(1.06); transition: opacity 500ms var(--ease-out), transform 650ms var(--ease-brand);
+  transform: translateY(calc(56px * var(--dir))) scale(0.92);
+  transition: opacity 700ms var(--ease-out), transform 750ms var(--ease-brand);
 }
-.m-beat.is-on { opacity: 1; pointer-events: auto; transform: scale(1); }
+.m-beat.is-on { opacity: 1; pointer-events: auto; transform: translateY(0) scale(1); }
+.m-beat.is-leaving { opacity: 0; transform: translateY(calc(-56px * var(--dir))) scale(0.92); transition: opacity 550ms var(--ease-out), transform 650ms var(--ease-out); }
 .m-beat .m-eyebrow { font-family: var(--font-display); font-weight: 600; font-size: clamp(12px, 1.15vw, 15px); letter-spacing: 0.1em; text-transform: uppercase; color: var(--color-text-muted); margin-bottom: 1.6vh; }
 .m-beat .m-note { font-size: clamp(13.5px, 1.25vw, 17px); color: var(--color-text-muted); max-width: 40ch; margin-top: 2vh; line-height: 1.5; }
 .m-beat .m-note b { color: var(--color-text); font-weight: 600; }
@@ -759,18 +770,33 @@ body.notes-mode #notes-panel {
   }
 
   /* moneyBeat(dir): +1 advances to the next full-screen beat, -1 goes
-     back. Only one .m-beat carries .is-on at a time (mutually
-     exclusive, unlike the additive .frag pattern used elsewhere), and
-     the dot trail mirrors position so the room can see how much of
-     the story is left. Returns false once there's nowhere further to
-     go in that direction, so next()/prev() know to fall through to
-     the normal slide-to-slide advance. */
+     back. Only one .m-beat is ever visible, but the swap is a single
+     continuous conveyor rather than an instant cut: the outgoing beat
+     gets .is-leaving (exits in the direction of travel) in the same
+     frame the incoming beat gets .is-on (enters from the opposite
+     side), both reading --dir off the same variable so they visibly
+     move as one motion. is-leaving clears on a fixed timer matched to
+     its own transition duration rather than transitionend: a beat
+     that gets advanced past again before finishing its exit (fast
+     clicking) can end up with an opacity/transform that was already
+     at its target value, which never fires a transitionend at all, so
+     a timer is the only reliable way to guarantee cleanup. The dot
+     trail mirrors position so the room can see how much of the story
+     is left. Returns false once there's nowhere further to go in that
+     direction, so next()/prev() fall through to the normal
+     slide-to-slide advance. */
   function moneyBeat(dir) {
     const target = moneyBeatIdx + dir;
     if (target < 0 || target >= MONEY_BEATS) return false;
-    document.getElementById('m-beat-' + (moneyBeatIdx + 1)).classList.remove('is-on');
+    const outgoing = document.getElementById('m-beat-' + (moneyBeatIdx + 1));
     moneyBeatIdx = target;
-    document.getElementById('m-beat-' + (moneyBeatIdx + 1)).classList.add('is-on');
+    const incoming = document.getElementById('m-beat-' + (moneyBeatIdx + 1));
+    [outgoing, incoming].forEach((el) => el.style.setProperty('--dir', String(dir)));
+    outgoing.classList.remove('is-on');
+    outgoing.classList.add('is-leaving');
+    clearTimeout(outgoing._leaveTimer);
+    outgoing._leaveTimer = setTimeout(() => outgoing.classList.remove('is-leaving'), 650);
+    incoming.classList.add('is-on');
     Array.from(document.getElementById('m-dots').children).forEach((dot, i) => dot.classList.toggle('is-on', i === moneyBeatIdx));
     return true;
   }
