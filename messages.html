@@ -193,16 +193,6 @@ body.framed .composer { position: relative; }
   sendBtn.addEventListener('click', send);
   input.addEventListener('keydown', (e) => { if (e.key === 'Enter') send(); });
 
-  /* ---------- Scripted autoplay: messaging beat inside Stop 1 ----------
-     After the real history plays, the room watches a typing indicator
-     and a reply land on their own, no tap required, then the phone
-     carries itself back into the booking chain. */
-  if (scripted) {
-    setTimeout(() => {
-      const stopTyping = addTyping();
-      setTimeout(() => { stopTyping(); addBubble('them', T.reply, 'now'); }, 1500);
-    }, T.messages.length * 260 + 1200);
-  }
 })();
 </script>
 </body>

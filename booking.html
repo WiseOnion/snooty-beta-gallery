@@ -273,13 +273,6 @@ body.framed .cta-bar { position: absolute; }
   const startStep = parseInt(params.get('step'), 10);
   go(!isNaN(startStep) && startStep >= 1 && startStep <= 4 ? startStep : 1);
 
-  /* ---------- Scripted autoplay ----------
-     Land on the deposit screen, let it sit for the presenter's line,
-     then auto-advance through payment and confirmation, then carry the
-     phone into the dashboard for Stop 3. */
-  if (scripted) {
-    setTimeout(() => { if (cur === 3) { go(4); setTimeout(() => { location.href = 'dashboard.html?script=1&session=1'; }, 2600); } }, 3400);
-  }
 })();
 </script>
 </body>

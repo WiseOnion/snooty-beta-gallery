@@ -213,15 +213,13 @@ body { background: var(--color-bg); }
   const SEED = window.SNOOTY_SEED;
   const qp = new URLSearchParams(location.search);
   const inDemo = qp.has('demo');
-  const scripted = qp.has('script');
   SN.frameOnDesktop();
   SN.markSeen('dashboard');
-  if (qp.has('session')) SN.walkthroughProgress(scripted ? 2 : 3); /* holds at Stop 2 (Booking still "in progress") until the approve sequence completes Stop 3 */
 
   document.getElementById('av').src = SEED.hero.avatar;
   document.getElementById('req-av').src = SEED.av.keisha;
 
-  if (!inDemo && !scripted) {
+  if (!inDemo) {
     SN.purposeCard({
       title: 'Your side of the counter.',
       body: 'This is home base: money, requests, activity, and every tool you have to promote yourself. Try approving the booking request.',
@@ -448,47 +446,11 @@ body { background: var(--color-bg); }
     actCard.insertBefore(act, actCard.children[1]);
 
     SN.toast('Booking confirmed', 'Keisha paid her $68.00 deposit. Calendar updated.', { icon: '✓' });
-
-    if (scripted) {
-      SN.walkthroughProgress(4); /* all three stops complete: the whole loop just closed itself */
-      setTimeout(showRelease, 3200);
-    }
   });
 
   document.getElementById('decline').addEventListener('click', () => {
     SN.toast('It stays your call', 'Declining releases her deposit back, no awkward text needed.', { icon: '↩' });
   });
-
-  /* The guided portion ends here: Discovery -> Booking -> Business, one
-     connected story. QR visitors are a locked, presenter-driven
-     audience: this is the true final screen, not a hand-off into free
-     exploration. It stays up, nothing on it is tappable, and it never
-     redirects anywhere. */
-  function showRelease() {
-    const el = document.createElement('div');
-    el.id = 'wt-release';
-    el.style.cssText =
-      'position:fixed; inset:0; z-index:700; background:rgba(24,24,24,0.97);' +
-      'display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px; text-align:center; padding:24px;' +
-      'opacity:0; transition:opacity 500ms ease;';
-    el.innerHTML =
-      '<div style="font-family:Jost,sans-serif; font-weight:400; font-size:clamp(28px,8vw,40px); letter-spacing:0.28em; text-transform:uppercase; color:#fff; padding-left:0.28em;">Snooty</div>' +
-      '<div style="font-family:\'Cormorant Garamond\',serif; font-style:italic; font-weight:500; font-size:19px; color:#D8CFC2; max-width:26ch; line-height:1.5;">Discovery. Booking. Your business. One story.</div>' +
-      '<div style="font-family:Jost,sans-serif; font-weight:600; font-size:15px; color:#C99A4A; margin-top:6px;">That\'s Snooty.</div>' +
-      '<div style="font-size:12.5px; color:rgba(216,207,194,0.5); max-width:30ch;">Thanks for following along.</div>';
-    document.body.appendChild(el);
-    requestAnimationFrame(() => { el.style.opacity = '1'; });
-  }
-
-  /* Stop 3 of the guided walkthrough: instead of loading onto an
-     already-busy dashboard, land quiet, then play the exact "approve"
-     sequence that already exists above for real visitors, on its own,
-     so the room watches the booking from Stop 2 actually land while
-     they're asleep. Reuses the same DOM/animation, just triggers it
-     with a script instead of a tap. */
-  if (scripted) {
-    setTimeout(() => { document.getElementById('approve').click(); }, 1800);
-  }
 
   SN.hydrateImages(document);
 })();

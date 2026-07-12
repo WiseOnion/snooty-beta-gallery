@@ -362,13 +362,6 @@
     document.body.appendChild(overlay);
   });
 
-  /* ---------- Scripted autoplay: Stop 2 lead-in ----------
-     Land on the look, let the room see the headline/stylist row/info
-     strip for a beat, then tap Book and jump straight to booking.html's
-     deposit step. */
-  if (scripted) {
-    setTimeout(() => { location.href = 'booking.html?i=' + i + '&script=1&step=3' + (params.has('session') ? '&session=1' : ''); }, 3600);
-  }
 })();
 </script>
 </body>

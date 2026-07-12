@@ -276,32 +276,6 @@
   clearBtn.addEventListener('click', () => { qInput.value = ''; clearBtn.classList.add('hidden'); render(SEED.feed, ''); qInput.focus(); });
 
   render(SEED.feed, '');
-
-  /* ---------- Scripted autoplay: Stop 1 of the guided walkthrough ----------
-     Presenter-driven mode is unaffected by the standalone no-navigation
-     change above: it drives the search box directly and then jumps the
-     phone to look.html itself (bypassing the card's own click handler),
-     carrying the room through Discover -> Look -> Booking -> Dashboard. */
-  if (scripted) {
-    const TYPE_TEXT = 'knotless';
-    function typeStep(i) {
-      if (i > TYPE_TEXT.length) {
-        setTimeout(() => {
-          const hit = document.querySelector('.lk-card');
-          if (hit) {
-            hit.classList.add('is-open');
-            setTimeout(() => { location.href = 'look.html?i=' + hit.dataset.feedI + '&script=1' + (params.has('session') ? '&session=1' : ''); }, 1100);
-          }
-        }, 700);
-        return;
-      }
-      qInput.value = TYPE_TEXT.slice(0, i);
-      clearBtn.classList.toggle('hidden', !qInput.value);
-      search(qInput.value);
-      setTimeout(() => typeStep(i + 1), 110);
-    }
-    setTimeout(() => typeStep(0), 1400);
-  }
 })();
 </script>
 </body>

@@ -228,23 +228,6 @@
     SN.toast('This is where booking starts', 'In the real app, this opens the deposit flow for ' + H.business + '.', { icon: '✓' });
   });
 
-  /* ---------- Scripted autoplay: toolkit tour beat inside Stop 3 ----------
-     Flip through Work -> Services -> Reviews on its own, pausing on each
-     long enough to read, so the room sees the whole promo surface without
-     anyone tapping a tab. */
-  if (scripted) {
-    const order = ['work', 'services', 'reviews'];
-    let oi = 0;
-    function nextTab() {
-      oi++;
-      if (oi >= order.length) return;
-      const tab = document.querySelector('.tab[data-pane="' + order[oi] + '"]');
-      if (tab) tab.click();
-      setTimeout(nextTab, 2600);
-    }
-    setTimeout(nextTab, 2600);
-  }
-
   SN.hydrateImages(document);
 })();
 </script>
