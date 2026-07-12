@@ -9,7 +9,7 @@
 <title>Snooty · The Look</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400;1,500&family=Inter:wght@400;500;600&family=Space+Mono:wght@700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="shared/snooty.css?d=20260714">
+<link rel="stylesheet" href="shared/snooty.css?d=20260715">
 <style>
 /* Mirrors the real hisisnooty LookDetail.tsx mobile layout (<767px):
    hero-first flex column, pill back button + bookmark save button
@@ -41,9 +41,9 @@
 .ld-thumbs { display: flex; gap: 8px; padding: 12px 16px 0; overflow-x: auto; }
 .ld-thumbs button {
   width: 64px; flex-shrink: 0; padding: 0; border-radius: 8px; overflow: hidden; aspect-ratio: 3/4;
-  background: var(--color-border); border: 2px solid transparent; opacity: 0.6;
+  background: var(--color-border); border: 2px solid transparent;
 }
-.ld-thumbs button.on { border-color: var(--color-primary); opacity: 1; }
+.ld-thumbs button:active { border-color: var(--color-primary); }
 .ld-thumbs button img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
 .ld-content { padding: 20px 18px 0; }
@@ -182,9 +182,9 @@
 
 </div></div>
 
-<script src="shared/seed.js?d=20260714"></script>
-<script src="shared/snooty.js?d=20260714"></script>
-<script src="shared/sync.js?d=20260714"></script>
+<script src="shared/seed.js?d=20260715"></script>
+<script src="shared/snooty.js?d=20260715"></script>
+<script src="shared/sync.js?d=20260715"></script>
 <script>
 (function () {
   'use strict';
@@ -231,38 +231,48 @@
   document.getElementById('view-profile').href = 'profile.html' + suffix;
 
   /* Thumbnail strip: this look's own angle photos only, real LookDetail
-     shows no strip at all when there's just one photo. */
+     shows no strip at all when there's just one photo. The strip always
+     shows the angles NOT currently in the hero spot (never duplicates
+     the active photo as its own thumbnail), so clicking one swaps it
+     into the hero position and the bumped photo rejoins the strip. */
   const angles = heroLook.angles && heroLook.angles.length ? heroLook.angles : [feedLook.img];
   const heroImg = document.getElementById('hero-img');
   const thumbsWrap = document.getElementById('thumbs');
-  let ai = 0;
-  function paintAngle(crossfade) {
-    thumbsWrap.querySelectorAll('button').forEach((b, j) => b.classList.toggle('on', j === ai));
-    const nextSrc = angles[ai];
-    if (!crossfade) { heroImg.src = nextSrc; return; }
+  let heroSrc = angles[0];
+
+  function renderThumbs() {
+    thumbsWrap.innerHTML = '';
+    angles.filter((src) => src !== heroSrc).forEach((src) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.setAttribute('aria-label', 'Switch to this angle');
+      b.innerHTML = '<img src="' + src + '" alt="">';
+      b.addEventListener('click', () => selectAngle(src, true));
+      thumbsWrap.appendChild(b);
+    });
+  }
+
+  function selectAngle(src, crossfade) {
+    heroSrc = src;
+    renderThumbs();
+    if (!crossfade) { heroImg.src = heroSrc; return; }
     const preload = new Image();
     preload.onload = () => {
       heroImg.classList.add('switching');
       setTimeout(() => {
-        heroImg.src = nextSrc;
+        heroImg.src = heroSrc;
         heroImg.classList.remove('switching');
       }, 220);
     };
-    preload.src = nextSrc;
+    preload.src = heroSrc;
   }
+
   if (angles.length > 1) {
-    angles.forEach((src, j) => {
-      const b = document.createElement('button');
-      b.type = 'button';
-      b.setAttribute('aria-label', j === 0 ? 'Main photo' : 'Angle ' + j);
-      b.innerHTML = '<img src="' + src + '" alt="">';
-      b.addEventListener('click', () => { if (ai === j) return; ai = j; paintAngle(true); });
-      thumbsWrap.appendChild(b);
-    });
+    renderThumbs();
   } else {
     thumbsWrap.style.display = 'none';
   }
-  paintAngle(false);
+  heroImg.src = heroSrc;
 
   /* Save (bookmark, not heart, to match the real product's icon) */
   const saveBtn = document.getElementById('save');
