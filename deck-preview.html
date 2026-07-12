@@ -409,7 +409,7 @@ h1.headline { font-family: var(--font-display); font-weight: 600; font-size: cla
   position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center;
   justify-content: center; text-align: center; opacity: 0; pointer-events: none;
   transform: translateY(calc(56px * var(--dir))) scale(0.92);
-  transition: opacity 700ms var(--ease-out), transform 750ms var(--ease-brand);
+  transition: opacity 700ms var(--ease-out), transform 750ms var(--ease-out);
 }
 .m-beat.is-on { opacity: 1; pointer-events: auto; transform: translateY(0) scale(1); }
 .m-beat.is-leaving { opacity: 0; transform: translateY(calc(-56px * var(--dir))) scale(0.92); transition: opacity 550ms var(--ease-out), transform 650ms var(--ease-out); }
@@ -429,7 +429,7 @@ h1.headline { font-family: var(--font-display); font-weight: 600; font-size: cla
    two cards fading in side by side. */
 .m-split-stack { display: flex; flex-direction: column; align-items: center; gap: 0; }
 .m-split-piece {
-  padding: 2.6vh 4vw; border-radius: 18px; transition: transform 900ms var(--ease-brand) 200ms, margin 900ms var(--ease-brand) 200ms;
+  padding: 2.6vh 4vw; border-radius: 18px; transition: transform 900ms var(--ease-out) 200ms, margin 900ms var(--ease-out) 200ms;
 }
 .m-split-piece .sp-label { font-family: var(--font-display); font-weight: 600; font-size: clamp(12px, 1.1vw, 15px); letter-spacing: 0.08em; text-transform: uppercase; }
 .m-split-piece .sp-val { font-family: var(--font-display); font-weight: 700; font-size: clamp(38px, 4.6vw, 64px); line-height: 1.1; margin-top: 1vh; }
@@ -443,7 +443,7 @@ h1.headline { font-family: var(--font-display); font-weight: 600; font-size: cla
    as if the camera pushed in on it; everything else is already gone. */
 .m-zoom-card {
   background: var(--color-accent); color: #241505; border-radius: 22px; padding: 5vh 6vw;
-  transform: scale(0.7); transition: transform 850ms var(--ease-brand) 150ms;
+  transform: scale(0.7); transition: transform 850ms var(--ease-out) 150ms;
 }
 .m-beat.is-on .m-zoom-card { transform: scale(1); }
 .m-zoom-card .sp-label { font-family: var(--font-display); font-weight: 600; font-size: clamp(12px, 1.1vw, 15px); letter-spacing: 0.08em; text-transform: uppercase; }
@@ -456,7 +456,7 @@ h1.headline { font-family: var(--font-display); font-weight: 600; font-size: cla
 .m-cut-stage { display: flex; gap: 0; width: min(640px, 84vw); }
 .m-cut-block {
   flex: 1; padding: 4vh 2vw; border-radius: 18px; opacity: 0; transform: scale(0.85);
-  transition: opacity 500ms var(--ease-out), transform 550ms var(--ease-brand);
+  transition: opacity 500ms var(--ease-out), transform 550ms var(--ease-out);
 }
 .m-cut-block .cb-label { font-family: var(--font-display); font-weight: 600; font-size: clamp(12px, 1.1vw, 15px); letter-spacing: 0.06em; text-transform: uppercase; }
 .m-cut-block .cb-val { font-family: var(--font-display); font-weight: 700; font-size: clamp(34px, 4.2vw, 58px); line-height: 1.1; margin-top: 1vh; }
@@ -475,7 +475,7 @@ h1.headline { font-family: var(--font-display); font-weight: 600; font-size: cla
 .cmp-name { flex: 0 0 clamp(90px, 10vw, 130px); font-family: var(--font-display); font-weight: 600; font-size: clamp(12.5px, 1.15vw, 16px); color: var(--color-text-muted-inverse); text-align: left; }
 .cmp-row.snooty .cmp-name { color: var(--color-accent); }
 .cmp-track { flex: 1; height: clamp(28px, 3.2vh, 42px); background: rgba(255,255,255,0.06); border-radius: 9px; overflow: hidden; }
-.cmp-fill { height: 100%; width: 0; border-radius: 9px; display: flex; align-items: center; justify-content: flex-end; padding-right: 14px; transition: width 1000ms var(--ease-brand) 200ms; }
+.cmp-fill { height: 100%; width: 0; border-radius: 9px; display: flex; align-items: center; justify-content: flex-end; padding-right: 14px; transition: width 1000ms var(--ease-out) 200ms; }
 .cmp-row.snooty .cmp-fill { background: var(--color-accent); }
 .cmp-row:not(.snooty) .cmp-fill { background: rgba(255,255,255,0.18); }
 .m-beat.is-on .cmp-fill { width: var(--cmp-w); }
@@ -485,7 +485,7 @@ h1.headline { font-family: var(--font-display); font-weight: 600; font-size: cla
 
 /* Beat 6: pull back out, the running total counts up at the end. */
 .m-recap { display: flex; flex-direction: column; align-items: center; gap: 1.4vh; }
-.m-recap-row { display: flex; align-items: baseline; gap: 1vw; opacity: 0; transform: translateY(10px); transition: opacity 450ms var(--ease-out), transform 500ms var(--ease-brand); }
+.m-recap-row { display: flex; align-items: baseline; gap: 1vw; opacity: 0; transform: translateY(10px); transition: opacity 450ms var(--ease-out), transform 500ms var(--ease-out); }
 .m-recap-row .rr-k { font-family: var(--font-display); font-weight: 500; font-size: clamp(13px, 1.2vw, 16px); color: var(--color-text-muted-inverse); min-width: 13ch; text-align: right; }
 .m-recap-row .rr-v { font-family: var(--font-display); font-weight: 700; font-size: clamp(20px, 2.2vw, 28px); color: var(--color-text-inverse); }
 .m-recap-row.dim .rr-v { color: var(--color-text-muted-inverse); font-weight: 600; }
@@ -495,7 +495,7 @@ h1.headline { font-family: var(--font-display); font-weight: 600; font-size: cla
 .m-recap-row:nth-child(3) { transition-delay: 340ms; }
 .m-recap-total {
   margin-top: 2.2vh; padding-top: 2.2vh; border-top: 1px solid rgba(255,255,255,0.16);
-  opacity: 0; transform: translateY(10px); transition: opacity 500ms var(--ease-out) 600ms, transform 550ms var(--ease-brand) 600ms;
+  opacity: 0; transform: translateY(10px); transition: opacity 500ms var(--ease-out) 600ms, transform 550ms var(--ease-out) 600ms;
 }
 .m-beat.is-on .m-recap-total { opacity: 1; transform: translateY(0); }
 .m-recap-total .rt-k { font-family: var(--font-display); font-weight: 600; font-size: clamp(13px, 1.2vw, 16px); letter-spacing: 0.06em; text-transform: uppercase; color: var(--color-text-muted-inverse); text-align: center; }
