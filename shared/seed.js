@@ -203,8 +203,10 @@
 
   const PLATFORM = {
     depositPct: 20,
+    /* commissionPct applies to the FULL booking price, not just the deposit
+       collected today; it's taken out of the deposit the moment it lands. */
     commissionPct: 5,
-    annualFeeCents: 2000,
+    annualFeeCents: 5000,
     /* Receipts-slide comparisons, from docs/reference/research/competitor-research.md */
     competitors: {
       styleseat: { monthly: 35, newClientPct: 20 },

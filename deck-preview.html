@@ -386,30 +386,24 @@ h1.headline { font-family: var(--font-display); font-weight: 600; font-size: cla
 .close-bg::after { content: ""; position: absolute; inset: 0; background: linear-gradient(rgba(0,0,0,0.25), rgba(0,0,0,0.72)); }
 .close-line { position: relative; z-index: 2; text-align: center; }
 
-/* ============ Stop 4: money, worked on screen ============
-   A keynote-style reveal, not a scrolling list: five beats, each one
-   owning the FULL slide before the next arrives. Every beat is
-   absolutely positioned over the others; only the active one is
-   visible or interactive. Advancing crossfades out the old beat while
-   the new one's headline number punches in from slightly-large-and-
-   faded to full size and full opacity, the same "scale settles into
-   place" motion a product keynote uses when a number becomes the
-   whole point of the screen for a second. Chart beats (split bar,
-   race bars) additionally grow their fill once their beat is active,
-   so the shape of the comparison draws itself instead of appearing
-   pre-drawn. Written for a room with zero context: nothing is named
-   without also being explained in one line underneath it, and every
-   beat pushes toward the same verdict, Snooty is the cheapest and the
-   most honest about it. */
-.money-stage { position: relative; margin-top: 2vh; height: 52vh; min-height: 380px; overflow: hidden; }
-/* One continuous flow, not a slideshow of independent fades. Advancing
-   pushes the outgoing beat up and away (is-leaving) at the exact same
-   moment the incoming beat rises up from below and grows into place
-   (is-on), both running on the same clock so they read as a single
-   conveyor passing through the middle, not two unrelated cuts. Going
-   backward reverses the direction via --dir (set in JS just before
-   the class swap) so the conveyor always visibly matches which way
-   you're moving through the story. */
+/* ============ Stop 4: the money, dissected live ============
+   Not a pricing slide, a live dissection of one real transaction. The
+   whole slide runs on black so a single number can hold the entire
+   room's attention with nothing else competing. Six clicker beats:
+   (1) the booking total, alone, (2) it physically pulls apart into
+   deposit + balance, (3) the camera pushes in until only the deposit
+   fills the frame, (4) the deposit itself splits into two blocks that
+   slide apart like cutting a cake, Snooty's cut and the stylist's cut,
+   Stripe never named on stage, (5) the camera pulls back out to the
+   full picture and the stylist's total counts up from zero, (6) the
+   final reveal: everything fades except what the client paid and what
+   the stylist earned. Only two actors in this story, the stylist and
+   Snooty, exactly like the product itself only ever shows the client
+   two names: who they're booking, and Snooty. */
+/* The whole slide is the stage now, full-bleed black, no boxed
+   sub-region and no competing header copy: every beat gets the
+   complete 16:9 canvas the same way the opening vision slide does. */
+.money-stage { position: absolute; inset: 0; overflow: hidden; }
 .m-beat {
   --dir: 1;
   position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center;
@@ -419,80 +413,105 @@ h1.headline { font-family: var(--font-display); font-weight: 600; font-size: cla
 }
 .m-beat.is-on { opacity: 1; pointer-events: auto; transform: translateY(0) scale(1); }
 .m-beat.is-leaving { opacity: 0; transform: translateY(calc(-56px * var(--dir))) scale(0.92); transition: opacity 550ms var(--ease-out), transform 650ms var(--ease-out); }
-.m-beat .m-eyebrow { font-family: var(--font-display); font-weight: 600; font-size: clamp(12px, 1.15vw, 15px); letter-spacing: 0.1em; text-transform: uppercase; color: var(--color-text-muted); margin-bottom: 1.6vh; }
-.m-beat .m-note { font-size: clamp(13.5px, 1.25vw, 17px); color: var(--color-text-muted); max-width: 40ch; margin-top: 2vh; line-height: 1.5; }
-.m-beat .m-note b { color: var(--color-text); font-weight: 600; }
+.m-beat .m-eyebrow { font-family: var(--font-display); font-weight: 600; font-size: clamp(12px, 1.15vw, 15px); letter-spacing: 0.14em; text-transform: uppercase; color: var(--color-text-muted-inverse); margin-bottom: 2vh; }
+.m-beat .m-note { font-size: clamp(14px, 1.3vw, 18px); color: var(--color-text-muted-inverse); max-width: 42ch; margin-top: 2.4vh; line-height: 1.55; }
+.m-beat .m-note b { color: var(--color-text-inverse); font-weight: 600; }
 
-/* Beat 1: the booking, alone. One number, nothing else competing. */
-.m-hero-val { font-family: var(--font-display); font-weight: 700; font-size: clamp(64px, 9vw, 128px); line-height: 1; color: var(--color-text); }
+/* Beat 1: the whole payment, alone. Nothing else on screen. The slide
+   title lives here instead of in a header, since this is the only
+   beat with room to spare before a number becomes the entire screen. */
+.m-title { position: absolute; top: 6vh; left: 50%; transform: translateX(-50%); font-family: var(--font-display); font-weight: 600; font-size: clamp(20px, 2.2vw, 30px); color: var(--color-text-muted-inverse); }
+.m-hero-val { font-family: var(--font-display); font-weight: 700; font-size: clamp(72px, 10vw, 148px); line-height: 1; color: var(--color-text-inverse); }
+.m-hero-sub { font-family: var(--font-display); font-weight: 600; font-size: clamp(13px, 1.2vw, 16px); letter-spacing: 0.06em; color: var(--color-text-muted-inverse); margin-top: 2vh; }
 
-/* Beat 2: the split. Bar draws itself left to right once the beat is
-   active; the two dollar amounts punch in a half-beat after. */
-.m-split-stage { width: min(760px, 84vw); }
-.split-bar { position: relative; display: flex; height: 20px; border-radius: 10px; overflow: hidden; background: var(--color-border); }
-.split-bar .sb-dep, .split-bar .sb-rest { height: 100%; width: 0; transition: width 1000ms var(--ease-brand) 260ms; }
-.split-bar .sb-dep { background: var(--color-accent); }
-.split-bar .sb-rest { background: var(--color-bg-dark); }
-.m-beat.is-on .split-bar .sb-dep { width: var(--dep-pct); }
-.m-beat.is-on .split-bar .sb-rest { width: var(--rest-pct); }
-.split-labels { display: flex; justify-content: space-between; margin-top: 1vh; font-size: clamp(11.5px, 1.05vw, 14px); color: var(--color-text-muted); }
-.split-labels b { color: var(--color-text); }
-.money-split { display: flex; gap: 2vw; margin-top: 3.2vh; opacity: 0; transform: translateY(10px); transition: opacity 500ms var(--ease-out) 500ms, transform 550ms var(--ease-brand) 500ms; }
-.m-beat.is-on .money-split { opacity: 1; transform: translateY(0); }
-.money-block { flex: 1; border-radius: 18px; padding: 2.6vh 2vw; text-align: left; }
-.money-block.dep { background: var(--color-accent-soft); border: 1px solid rgba(201,154,74,0.35); }
-.money-block.rest { background: var(--color-bg-card); border: 1px solid var(--color-border); }
-.money-block .mb-tag { display: flex; align-items: center; gap: 0.6vw; font-family: var(--font-display); font-weight: 600; font-size: clamp(11px, 1.05vw, 14px); letter-spacing: 0.06em; text-transform: uppercase; color: var(--color-text-muted); }
-.money-block .mb-tag::before { content: ""; width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
-.money-block.dep .mb-tag::before { background: var(--color-accent); }
-.money-block.rest .mb-tag::before { background: var(--color-bg-dark); }
-.money-block .mb-val { font-family: var(--font-display); font-weight: 700; font-size: clamp(28px, 3.4vw, 48px); line-height: 1.1; margin-top: 1vh; color: var(--color-primary); }
-.money-block.dep .mb-val { color: #6b5426; }
-.money-block .mb-note { font-size: clamp(11.5px, 1.05vw, 14.5px); color: var(--color-text-muted); margin-top: 1vh; line-height: 1.5; }
-
-/* Beat 3: Snooty's cut, alone, in gold on dark. Its own moment before
-   any comparison exists, so it reads as a fact, not a defense. */
-.m-us-card { background: var(--color-bg-dark); color: var(--color-text-inverse); border: 2px solid var(--color-accent); border-radius: 22px; padding: 4vh 5vw; position: relative; }
-.m-us-card::before { content: "SNOOTY'S ENTIRE CUT"; position: absolute; top: -13px; left: 50%; transform: translateX(-50%); background: var(--color-accent); color: #241505; font-family: var(--font-display); font-weight: 700; font-size: 11px; letter-spacing: 0.1em; padding: 4px 14px; border-radius: 20px; white-space: nowrap; }
-.m-us-val { font-family: var(--font-display); font-weight: 700; font-size: clamp(56px, 7.2vw, 100px); line-height: 1; color: var(--color-accent); }
-
-/* Beat 4: the competitor lands right where Snooty's number just was,
-   same size and position, so the swap itself makes the contrast. */
-.m-vs-stage { display: flex; align-items: stretch; gap: 1.6vw; width: min(820px, 88vw); }
-.vs-card { flex: 1; border-radius: 20px; padding: 3vh 2vw; }
-.vs-card.us { background: var(--color-bg-dark); color: var(--color-text-inverse); border: 2px solid var(--color-accent); }
-.vs-card.them { background: var(--color-bg-card); border: 1px solid var(--color-border); }
-.vs-card .vc-label { font-size: clamp(11.5px, 1.05vw, 14.5px); line-height: 1.4; }
-.vs-card.us .vc-label { color: var(--color-text-muted-inverse); }
-.vs-card.them .vc-label { color: var(--color-text-muted); }
-.vs-card .vc-val { font-family: var(--font-display); font-weight: 700; font-size: clamp(32px, 4vw, 56px); line-height: 1.1; margin-top: 1.2vh; }
-.vs-card.us .vc-val { color: var(--color-accent); }
-.vs-card.them .vc-val { color: var(--color-primary); text-decoration: line-through solid rgba(94,35,48,0.4) 2px; opacity: 0; transition: opacity 400ms var(--ease-out) 500ms; }
-.m-beat.is-on .vs-card.them .vc-val { opacity: 1; }
-.vs-mid { flex: 0 0 auto; display: flex; align-items: center; justify-content: center; font-family: var(--font-display); font-weight: 700; font-size: clamp(15px, 1.6vw, 20px); color: var(--color-text-muted); }
-
-/* Beat 5: the payoff. Two bars race to scale, then the multiple lands
-   as the biggest text on the whole slide, colored to read as a win. */
-.money-race { width: min(760px, 86vw); }
-.race-row { display: flex; align-items: center; gap: 1.4vw; margin-bottom: 1.8vh; }
-.race-row .rr-label { flex: 0 0 clamp(110px, 12vw, 170px); font-size: clamp(12.5px, 1.15vw, 16px); font-weight: 600; font-family: var(--font-display); text-align: left; }
-.race-row.us .rr-label { color: #6b5426; }
-.race-track { flex: 1; height: clamp(30px, 3.4vh, 44px); background: var(--color-bg-card); border: 1px solid var(--color-border); border-radius: 9px; overflow: hidden; }
-.race-fill { height: 100%; width: 0; border-radius: 9px; display: flex; align-items: center; justify-content: flex-end; padding-right: 14px; transition: width 1200ms var(--ease-brand) 260ms; }
-.race-row.us .race-fill { background: var(--color-accent); }
-.race-row.them .race-fill { background: var(--color-primary); }
-.m-beat.is-on .race-fill { width: var(--race-w); }
-.race-fill span { font-family: var(--font-display); font-weight: 700; font-size: clamp(13px, 1.3vw, 17px); color: #241505; white-space: nowrap; }
-.race-row.them .race-fill span { color: var(--color-text-inverse); }
-.race-verdict {
-  margin-top: 2.6vh; text-align: center; font-family: var(--font-display); font-weight: 700;
-  font-size: clamp(30px, 3.6vw, 48px); color: var(--color-success);
-  opacity: 0; transform: scale(0.85); transition: opacity 450ms var(--ease-out) 1400ms, transform 550ms var(--ease-brand) 1400ms;
+/* Beat 2: the deposit pulls away. Two blocks that visibly separate on
+   the vertical axis, like the payment is being physically split, not
+   two cards fading in side by side. */
+.m-split-stack { display: flex; flex-direction: column; align-items: center; gap: 0; }
+.m-split-piece {
+  padding: 2.6vh 4vw; border-radius: 18px; transition: transform 900ms var(--ease-brand) 200ms, margin 900ms var(--ease-brand) 200ms;
 }
-.m-beat.is-on .race-verdict { opacity: 1; transform: scale(1); }
-.race-verdict small { display: block; font-family: var(--font-display); font-weight: 400; font-size: clamp(13px, 1.15vw, 16px); color: var(--color-text-muted); margin-top: 0.8vh; letter-spacing: normal; text-transform: none; }
+.m-split-piece .sp-label { font-family: var(--font-display); font-weight: 600; font-size: clamp(12px, 1.1vw, 15px); letter-spacing: 0.08em; text-transform: uppercase; }
+.m-split-piece .sp-val { font-family: var(--font-display); font-weight: 700; font-size: clamp(38px, 4.6vw, 64px); line-height: 1.1; margin-top: 1vh; }
+.m-split-piece.rest { background: rgba(255,255,255,0.06); color: var(--color-text-inverse); transform: translateY(0); }
+.m-split-piece.rest .sp-label { color: var(--color-text-muted-inverse); }
+.m-split-piece.dep { background: var(--color-accent); color: #241505; margin-top: 14px; transform: translateY(0); }
+.m-beat.is-on .m-split-piece.dep { transform: translateY(28px); margin-top: 30px; }
+.m-beat.is-on .m-split-piece.rest { transform: translateY(-8px); }
 
-.m-dots { position: absolute; bottom: -5vh; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; }
+/* Beat 3: zoom into the deposit. One card grows from small to large
+   as if the camera pushed in on it; everything else is already gone. */
+.m-zoom-card {
+  background: var(--color-accent); color: #241505; border-radius: 22px; padding: 5vh 6vw;
+  transform: scale(0.7); transition: transform 850ms var(--ease-brand) 150ms;
+}
+.m-beat.is-on .m-zoom-card { transform: scale(1); }
+.m-zoom-card .sp-label { font-family: var(--font-display); font-weight: 600; font-size: clamp(12px, 1.1vw, 15px); letter-spacing: 0.08em; text-transform: uppercase; }
+.m-zoom-card .sp-val { font-family: var(--font-display); font-weight: 700; font-size: clamp(56px, 7.4vw, 108px); line-height: 1.05; margin-top: 1vh; }
+
+/* Beat 4: the deposit opens into two blocks that slide apart, cutting
+   a cake, not a table appearing. Each block reveals on its own click
+   (JS toggles is-cut on the beat), so narration can land one name at
+   a time: Snooty, then the stylist. */
+.m-cut-stage { display: flex; gap: 0; width: min(640px, 84vw); }
+.m-cut-block {
+  flex: 1; padding: 4vh 2vw; border-radius: 18px; opacity: 0; transform: scale(0.85);
+  transition: opacity 500ms var(--ease-out), transform 550ms var(--ease-brand);
+}
+.m-cut-block .cb-label { font-family: var(--font-display); font-weight: 600; font-size: clamp(12px, 1.1vw, 15px); letter-spacing: 0.06em; text-transform: uppercase; }
+.m-cut-block .cb-val { font-family: var(--font-display); font-weight: 700; font-size: clamp(34px, 4.2vw, 58px); line-height: 1.1; margin-top: 1vh; }
+.m-cut-block.snooty { background: rgba(255,255,255,0.08); color: var(--color-text-inverse); margin-right: 10px; }
+.m-cut-block.snooty .cb-label { color: var(--color-text-muted-inverse); }
+.m-cut-block.you { background: var(--color-accent); color: #241505; margin-left: 10px; }
+.m-beat.is-cut-1 .m-cut-block.snooty, .m-beat.is-cut-2 .m-cut-block.snooty { opacity: 1; transform: scale(1); }
+.m-beat.is-cut-2 .m-cut-block.you { opacity: 1; transform: scale(1); }
+.m-cut-hint { font-size: clamp(12.5px, 1.15vw, 16px); color: var(--color-text-muted-inverse); margin-top: 2.6vh; opacity: 0.7; }
+
+/* Beat 5: the same booking against what StyleSeat and Booksy would
+   take, bars drawn to actual scale so Snooty's 5% visibly reads as the
+   shortest bar in the room, not just the smallest number in a table. */
+.m-compare { width: min(640px, 84vw); }
+.cmp-row { display: flex; align-items: center; gap: 1.4vw; margin-bottom: 1.8vh; }
+.cmp-name { flex: 0 0 clamp(90px, 10vw, 130px); font-family: var(--font-display); font-weight: 600; font-size: clamp(12.5px, 1.15vw, 16px); color: var(--color-text-muted-inverse); text-align: left; }
+.cmp-row.snooty .cmp-name { color: var(--color-accent); }
+.cmp-track { flex: 1; height: clamp(28px, 3.2vh, 42px); background: rgba(255,255,255,0.06); border-radius: 9px; overflow: hidden; }
+.cmp-fill { height: 100%; width: 0; border-radius: 9px; display: flex; align-items: center; justify-content: flex-end; padding-right: 14px; transition: width 1000ms var(--ease-brand) 200ms; }
+.cmp-row.snooty .cmp-fill { background: var(--color-accent); }
+.cmp-row:not(.snooty) .cmp-fill { background: rgba(255,255,255,0.18); }
+.m-beat.is-on .cmp-fill { width: var(--cmp-w); }
+.cmp-fill span { font-family: var(--font-display); font-weight: 700; font-size: clamp(13px, 1.2vw, 16px); white-space: nowrap; }
+.cmp-row.snooty .cmp-fill span { color: #241505; }
+.cmp-row:not(.snooty) .cmp-fill span { color: var(--color-text-inverse); }
+
+/* Beat 6: pull back out, the running total counts up at the end. */
+.m-recap { display: flex; flex-direction: column; align-items: center; gap: 1.4vh; }
+.m-recap-row { display: flex; align-items: baseline; gap: 1vw; opacity: 0; transform: translateY(10px); transition: opacity 450ms var(--ease-out), transform 500ms var(--ease-brand); }
+.m-recap-row .rr-k { font-family: var(--font-display); font-weight: 500; font-size: clamp(13px, 1.2vw, 16px); color: var(--color-text-muted-inverse); min-width: 13ch; text-align: right; }
+.m-recap-row .rr-v { font-family: var(--font-display); font-weight: 700; font-size: clamp(20px, 2.2vw, 28px); color: var(--color-text-inverse); }
+.m-recap-row.dim .rr-v { color: var(--color-text-muted-inverse); font-weight: 600; }
+.m-beat.is-on .m-recap-row { opacity: 1; transform: translateY(0); }
+.m-recap-row:nth-child(1) { transition-delay: 100ms; }
+.m-recap-row:nth-child(2) { transition-delay: 220ms; }
+.m-recap-row:nth-child(3) { transition-delay: 340ms; }
+.m-recap-total {
+  margin-top: 2.2vh; padding-top: 2.2vh; border-top: 1px solid rgba(255,255,255,0.16);
+  opacity: 0; transform: translateY(10px); transition: opacity 500ms var(--ease-out) 600ms, transform 550ms var(--ease-brand) 600ms;
+}
+.m-beat.is-on .m-recap-total { opacity: 1; transform: translateY(0); }
+.m-recap-total .rt-k { font-family: var(--font-display); font-weight: 600; font-size: clamp(13px, 1.2vw, 16px); letter-spacing: 0.06em; text-transform: uppercase; color: var(--color-text-muted-inverse); text-align: center; }
+.m-recap-total .rt-v { font-family: var(--font-display); font-weight: 700; font-size: clamp(46px, 5.6vw, 76px); color: var(--color-accent); line-height: 1.1; margin-top: 0.6vh; text-align: center; }
+
+/* Beat 6: the final reveal. Two numbers only. */
+.m-final { display: flex; align-items: center; gap: 4vw; }
+.m-final-col { display: flex; flex-direction: column; align-items: center; }
+.m-final-col .fc-k { font-family: var(--font-display); font-weight: 600; font-size: clamp(12px, 1.1vw, 15px); letter-spacing: 0.1em; text-transform: uppercase; color: var(--color-text-muted-inverse); }
+.m-final-col .fc-v { font-family: var(--font-display); font-weight: 700; font-size: clamp(48px, 6vw, 88px); line-height: 1.05; margin-top: 1.2vh; }
+.m-final-col.paid .fc-v { color: var(--color-text-inverse); }
+.m-final-col.earned .fc-v { color: var(--color-accent); }
+.m-final-arrow { font-size: clamp(20px, 2.4vw, 30px); color: var(--color-text-muted-inverse); }
+.m-final-fine { margin-top: 4vh; font-size: clamp(11px, 1vw, 13.5px); color: var(--color-text-muted-inverse); opacity: 0.6; }
+
+.m-dots { position: absolute; bottom: 6vh; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; z-index: 5; }
 .m-dots i { width: 6px; height: 6px; border-radius: 50%; background: var(--color-border); transition: background 300ms var(--ease-out), width 300ms var(--ease-out); }
 .m-dots i.is-on { background: var(--color-accent); width: 18px; border-radius: 3px; }
 
@@ -578,58 +597,68 @@ body.notes-mode #notes-panel {
     <p class="sub">Notification. Deposit paid. Calendar fills. Earnings tick up. Then their phone tours your whole toolkit: your storefront, your services, your reviews.</p>
   </section>
 
-  <!-- 8 ▸ Stop 4: The money, worked on screen -->
-  <section class="slide light" data-title="Stop 4: How does the money work?">
-    <div class="kicker">The money, on screen</div>
-    <h1 class="headline">The deposit. The rest. The fee.</h1>
-    <p class="sub">One real booking, walked through step by step. Their own phone runs the same math with their own numbers, but here it is where the whole room can see it at once.</p>
+  <!-- 8 ▸ Stop 4: The money, dissected live -->
+  <section class="slide black" data-title="Stop 4: How does the money work?" style="padding:0;">
 
     <div class="money-stage">
 
       <div class="m-beat is-on" id="m-beat-1">
-        <div class="m-eyebrow">One booking</div>
+        <div class="m-title">Watch the money move.</div>
+        <div class="m-eyebrow">One client</div>
         <div class="m-hero-val" id="m-ticket-val"></div>
-        <div class="m-note">is what one client pays for one appointment. <b>Every number after this comes out of this one total.</b></div>
+        <div class="m-hero-sub">Full service price</div>
       </div>
 
       <div class="m-beat" id="m-beat-2">
-        <div class="m-eyebrow">It splits into two payments</div>
-        <div class="m-split-stage">
-          <div class="split-bar"><div class="sb-dep"></div><div class="sb-rest"></div></div>
-          <div class="split-labels"><span id="m-split-left"></span><span id="m-split-right"></span></div>
-          <div class="money-split">
-            <div class="money-block dep"><div class="mb-tag">Paid the moment they book</div><div class="mb-val" id="m-dep-val"></div><div class="mb-note" id="m-dep-note"></div></div>
-            <div class="money-block rest"><div class="mb-tag">Paid in person, at the chair</div><div class="mb-val" id="m-rest-val"></div><div class="mb-note">Exactly how it's collected today. Nothing about this part changes.</div></div>
-          </div>
+        <div class="m-split-stack">
+          <div class="m-split-piece rest"><div class="sp-label">Remaining balance</div><div class="sp-val" id="m-rest-val"></div></div>
+          <div class="m-split-piece dep"><div class="sp-label">Deposit today</div><div class="sp-val" id="m-dep-val"></div></div>
         </div>
+        <div class="m-note">She isn't paying everything today. <b>She's paying a deposit.</b></div>
       </div>
 
       <div class="m-beat" id="m-beat-3">
-        <div class="m-us-card">
-          <div class="m-us-val" id="m-us-val"></div>
-        </div>
-        <div class="m-note" id="m-us-note"></div>
+        <div class="m-zoom-card"><div class="sp-label">Deposit</div><div class="sp-val" id="m-zoom-dep-val"></div></div>
+        <div class="m-note"><b>This is the only money moving today.</b></div>
       </div>
 
       <div class="m-beat" id="m-beat-4">
-        <div class="m-eyebrow">Now compare that to a typical booking app</div>
-        <div class="m-vs-stage">
-          <div class="vs-card us"><div class="vc-label">Snooty's entire cut</div><div class="vc-val" id="m-us-val-2"></div></div>
-          <div class="vs-mid">vs.</div>
-          <div class="vs-card them"><div class="vc-label">A typical app, one new client</div><div class="vc-val" id="m-them-val"></div></div>
+        <div class="m-cut-stage">
+          <div class="m-cut-block snooty"><div class="cb-label">Snooty</div><div class="cb-val" id="m-cut-snooty-val"></div></div>
+          <div class="m-cut-block you"><div class="cb-label">You</div><div class="cb-val" id="m-cut-you-val"></div></div>
         </div>
+        <div class="m-cut-hint" id="m-cut-hint">Click to open the deposit.</div>
       </div>
 
       <div class="m-beat" id="m-beat-5">
-        <div class="m-eyebrow">Same client. Same booking. Very different bill.</div>
-        <div class="money-race">
-          <div class="race-row us"><div class="rr-label">Snooty</div><div class="race-track"><div class="race-fill" id="m-race-us"><span id="m-race-us-val"></span></div></div></div>
-          <div class="race-row them"><div class="rr-label">Typical competitor</div><div class="race-track"><div class="race-fill" id="m-race-them"><span id="m-race-them-val"></span></div></div></div>
+        <div class="m-eyebrow">On the same $220 booking</div>
+        <div class="m-compare">
+          <div class="cmp-row snooty"><div class="cmp-name">Snooty</div><div class="cmp-track"><div class="cmp-fill" id="cmp-fill-snooty"><span id="cmp-val-snooty"></span></div></div></div>
+          <div class="cmp-row"><div class="cmp-name">StyleSeat</div><div class="cmp-track"><div class="cmp-fill" id="cmp-fill-styleseat"><span id="cmp-val-styleseat"></span></div></div></div>
+          <div class="cmp-row"><div class="cmp-name">Booksy</div><div class="cmp-track"><div class="cmp-fill" id="cmp-fill-booksy"><span id="cmp-val-booksy"></span></div></div></div>
         </div>
-        <div class="race-verdict" id="m-verdict"></div>
+        <div class="m-note">StyleSeat charges 20% on a new client's first visit. Booksy charges 30% on any booking it boosted. <b>Snooty charges 5%, every time, boosted or not.</b></div>
       </div>
 
-      <div class="m-dots" id="m-dots"><i class="is-on"></i><i></i><i></i><i></i><i></i></div>
+      <div class="m-beat" id="m-beat-6">
+        <div class="m-recap">
+          <div class="m-recap-row"><span class="rr-k">Client paid</span><span class="rr-v" id="m-recap-paid"></span></div>
+          <div class="m-recap-row dim"><span class="rr-k">Snooty keeps</span><span class="rr-v" id="m-recap-snooty"></span></div>
+          <div class="m-recap-row dim"><span class="rr-k">Collected at appointment</span><span class="rr-v" id="m-recap-rest"></span></div>
+          <div class="m-recap-total"><div class="rt-k">You earned</div><div class="rt-v" id="m-recap-total">$0</div></div>
+        </div>
+      </div>
+
+      <div class="m-beat" id="m-beat-7">
+        <div class="m-final">
+          <div class="m-final-col paid"><div class="fc-k">Client paid</div><div class="fc-v" id="m-final-paid"></div></div>
+          <div class="m-final-arrow">&#8594;</div>
+          <div class="m-final-col earned"><div class="fc-k">You earned</div><div class="fc-v" id="m-final-earned"></div></div>
+        </div>
+        <div class="m-final-fine">Snooty's entire fee is built into that difference. Nothing else, ever.</div>
+      </div>
+
+      <div class="m-dots" id="m-dots"><i class="is-on"></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
     </div>
   </section>
 
@@ -696,7 +725,7 @@ body.notes-mode #notes-panel {
     'STOP TALKING. Hold this slide. Take real questions. If a question is about booking, deposits, or the toolkit, say "great question, that\'s coming up in a minute" and name the upcoming stop. Don\'t rush this; a room that got to ask early questions listens better later.',
     'Their phones jump to the real booking flow, starting at step 1: choose a service. Invite the room to tap through it themselves, service to time to deposit. Say: "This is the moment you stop chasing deposits."',
     'Their phones jump to the stylist\'s home base and storefront, real and tappable. Invite the room to explore requests, the calendar, services, reviews. Say: "Every piece of that toolkit is yours to fill."',
-    'This slide is five clicks, not one: click through the beats yourself, out loud. (1) The booking total. (2) It splits into deposit and balance, bar draws itself. (3) Snooty\'s cut gets its own moment, say it plainly: "five percent of the deposit, plus twenty dollars a year, that\'s the whole bill." (4) The competitor\'s number lands next to it. (5) The race bars and the multiple. Don\'t rush the clicks; each one is a beat, let it land before talking over the next.',
+'This is 8 clicks, not one slide. Let each one land before you talk over the next. (1) "They paid two hundred and twenty dollars." Click. (2) The deposit pulls away: "They don\'t pay everything upfront." Click. (3) Zoom into the deposit: "This is the only money moving today." Click. (4) "Snooty gets paid." Click. (5) "You get the rest." Click. (6) Same booking against StyleSeat and Booksy\'s real rates: "Snooty charges five percent, every time." Click. (7) Pull back out, let the total count up: "That\'s what you earned." Click. (8) The final two numbers, then keep talking over them. Never say the word Stripe on stage; if it comes up in Q&A, that\'s a "standard payment processing fees apply, same as Square or Booksy" answer, not a stage answer.',
     'STOP TALKING again. Hold this one longer than the first pause; this is where "what\'s the catch" comes out. Answer plainly. If someone asks something better answered at the close (the beta ask, next steps), say "one more slide and we get there."',
   ];
 
@@ -721,19 +750,28 @@ body.notes-mode #notes-panel {
     if (i === 7) renderMoney();
   }
 
-  /* ---------- Stop 4: the money, worked on screen ----------
-     Five full-screen beats, keynote style: only one is ever visible,
+  /* ---------- Stop 4: the money, dissected live ----------
+     Six full-screen beats, keynote style: only one is ever visible,
      each one owning the whole slide before the next replaces it.
-     (1) one plain number for the whole booking, (2) that number
-     visibly splits into "pay now" / "pay later" with a bar that draws
-     itself, (3) Snooty's cut gets its own uncontested moment, (4) a
-     typical competitor's number lands in the same spot for direct
-     contrast, (5) both cuts race as bars drawn to actual scale, ending
-     on a one-line verdict. Same math as SEED.platform; text populates
-     once per visit, moneyBeat() drives which panel is on. */
+     (1) the booking total, alone, (2) it physically pulls apart into
+     deposit + balance, (3) the camera pushes in until only the
+     deposit fills the frame, (4) the deposit itself opens into two
+     blocks, Snooty's cut then the stylist's cut, revealed one click at
+     a time (its own two-step micro-sequence inside the beat, tracked
+     by cutStep, not a fifth full beat), (5) pull back out to the full
+     picture with the stylist's total, (6) the final reveal: just what
+     the client paid and what the stylist earned. Stripe is never
+     modeled or named anywhere in this story on purpose, only two
+     actors exist here: the stylist and Snooty. Commission is 5% of
+     the FULL booking price (not just the deposit), taken out of the
+     deposit the moment it lands; the $50/yr flat fee is real but
+     isn't a per-transaction number, so it's mentioned once, never
+     baked into this booking's math. Text populates once per visit,
+     moneyBeat() drives which panel is on. */
   let moneyRendered = false;
-  const MONEY_BEATS = 5;
+  const MONEY_BEATS = 7;
   let moneyBeatIdx = 0;
+  let cutStep = 0; /* 0 = nothing open, 1 = Snooty revealed, 2 = both revealed */
   function renderMoney() {
     if (moneyRendered) return;
     moneyRendered = true;
@@ -741,32 +779,60 @@ body.notes-mode #notes-panel {
     const price = 22000; /* cents: Knotless Braids - Medium, the hero's signature ticket */
     const dep = Math.round(price * P.depositPct / 100);
     const rest = price - dep;
-    const fee = Math.round((P.annualFeeCents / 100 + (dep / 100) * (P.commissionPct / 100)) * 100);
-    const comp = Math.round((P.competitors.styleseat.monthly + price / 100 * (P.competitors.styleseat.newClientPct / 100)) * 100);
-    const multiple = comp / fee;
+    const snootyCut = Math.round(price * P.commissionPct / 100);
+    const youFromDeposit = dep - snootyCut;
+    const totalEarned = youFromDeposit + rest;
 
     document.getElementById('m-ticket-val').textContent = SN.money(price);
 
-    document.getElementById('m-split-left').innerHTML = '<b>' + P.depositPct + '%</b> due to book, today';
-    document.getElementById('m-split-right').innerHTML = '<b>' + (100 - P.depositPct) + '%</b> due later, in person';
-    const beat2 = document.getElementById('m-beat-2');
-    beat2.style.setProperty('--dep-pct', P.depositPct + '%');
-    beat2.style.setProperty('--rest-pct', (100 - P.depositPct) + '%');
     document.getElementById('m-dep-val').textContent = SN.money(dep);
-    document.getElementById('m-dep-note').textContent = 'Hers to keep even if the client never shows up.';
     document.getElementById('m-rest-val').textContent = SN.money(rest);
+    document.getElementById('m-zoom-dep-val').textContent = SN.money(dep);
 
-    document.getElementById('m-us-val').textContent = SN.money(fee);
-    document.getElementById('m-us-note').innerHTML = P.commissionPct + '% of the deposit, plus $' + (P.annualFeeCents / 100) + ' a year. <b>That\'s the whole bill.</b> No monthly charge, no fee on the balance.';
-    document.getElementById('m-us-val-2').textContent = SN.money(fee);
-    document.getElementById('m-them-val').textContent = '$' + (comp / 100).toFixed(2);
+    document.getElementById('m-cut-snooty-val').textContent = SN.money(snootyCut);
+    document.getElementById('m-cut-you-val').textContent = SN.money(youFromDeposit);
 
-    document.getElementById('m-race-us-val').textContent = SN.money(fee);
-    document.getElementById('m-race-them-val').textContent = '$' + (comp / 100).toFixed(2);
-    document.getElementById('m-race-us').style.setProperty('--race-w', (fee / comp * 100) + '%');
-    document.getElementById('m-race-them').style.setProperty('--race-w', '100%');
-    document.getElementById('m-verdict').innerHTML =
-      multiple.toFixed(1) + 'x cheaper for the stylist<small>Same deposit collected, same booking protected. Snooty just takes less to do it.</small>';
+    /* Beat 5: same $220 booking, three real cut structures. StyleSeat
+       and Booksy's percentages don't apply to every booking the way
+       Snooty's does (new-client-only, boost-only), so the bars are
+       drawn to their stated rate on this one ticket as the honest
+       apples-to-apples "if this booking qualified" comparison, and the
+       caveat is spelled out in the beat's own copy, not hidden. */
+    const styleseatCut = Math.round(price * P.competitors.styleseat.newClientPct / 100);
+    const booksyCut = Math.round(price * P.competitors.booksy.boostPct / 100);
+    const cmpMax = Math.max(snootyCut, styleseatCut, booksyCut);
+    document.getElementById('cmp-val-snooty').textContent = SN.money(snootyCut);
+    document.getElementById('cmp-val-styleseat').textContent = SN.money(styleseatCut);
+    document.getElementById('cmp-val-booksy').textContent = SN.money(booksyCut);
+    document.getElementById('cmp-fill-snooty').style.setProperty('--cmp-w', (snootyCut / cmpMax * 100) + '%');
+    document.getElementById('cmp-fill-styleseat').style.setProperty('--cmp-w', (styleseatCut / cmpMax * 100) + '%');
+    document.getElementById('cmp-fill-booksy').style.setProperty('--cmp-w', (booksyCut / cmpMax * 100) + '%');
+
+    document.getElementById('m-recap-paid').textContent = SN.money(price);
+    document.getElementById('m-recap-snooty').textContent = '-' + SN.money(snootyCut);
+    document.getElementById('m-recap-rest').textContent = '+' + SN.money(rest);
+    document.getElementById('m-recap-total').dataset.target = totalEarned;
+
+    document.getElementById('m-final-paid').textContent = SN.money(price);
+    document.getElementById('m-final-earned').textContent = SN.money(totalEarned);
+  }
+
+  /* cutReveal(): drives beat 4's own two-click micro-sequence without
+     spending a whole beat slot per name. First click reveals Snooty's
+     block, second reveals the stylist's, narrated one at a time
+     ("Snooty gets paid" / click / "you get the rest"). Returns true
+     while it consumed the click, false once both blocks are open so
+     next() knows to fall through to the normal beat advance. */
+  function cutReveal() {
+    if (cutStep >= 2) return false;
+    cutStep += 1;
+    const beat = document.getElementById('m-beat-4');
+    beat.classList.remove('is-cut-1', 'is-cut-2');
+    beat.classList.add('is-cut-' + cutStep);
+    document.getElementById('m-cut-hint').textContent = cutStep === 1
+      ? 'Snooty gets paid.'
+      : 'You get the rest.';
+    return true;
   }
 
   /* moneyBeat(dir): +1 advances to the next full-screen beat, -1 goes
@@ -780,17 +846,24 @@ body.notes-mode #notes-panel {
      that gets advanced past again before finishing its exit (fast
      clicking) can end up with an opacity/transform that was already
      at its target value, which never fires a transitionend at all, so
-     a timer is the only reliable way to guarantee cleanup. The dot
-     trail mirrors position so the room can see how much of the story
-     is left. Returns false once there's nowhere further to go in that
-     direction, so next()/prev() fall through to the normal
-     slide-to-slide advance. */
+     a timer is the only reliable way to guarantee cleanup. Leaving
+     beat 4 resets its own cut-open micro-state so re-entering it later
+     starts closed again. Entering beat 5 kicks off the stylist's
+     count-up. The dot trail mirrors position so the room can see how
+     much of the story is left. Returns false once there's nowhere
+     further to go in that direction, so next()/prev() fall through to
+     the normal slide-to-slide advance. */
   function moneyBeat(dir) {
     const target = moneyBeatIdx + dir;
     if (target < 0 || target >= MONEY_BEATS) return false;
     const outgoing = document.getElementById('m-beat-' + (moneyBeatIdx + 1));
+    if (moneyBeatIdx === 3) { outgoing.classList.remove('is-cut-1', 'is-cut-2'); cutStep = 0; document.getElementById('m-cut-hint').textContent = 'Click to open the deposit.'; }
     moneyBeatIdx = target;
     const incoming = document.getElementById('m-beat-' + (moneyBeatIdx + 1));
+    if (moneyBeatIdx === 5) {
+      const el = document.getElementById('m-recap-total');
+      setTimeout(() => SN.countUp(el, parseInt(el.dataset.target, 10), { ms: 1400, money: true }), 700);
+    }
     [outgoing, incoming].forEach((el) => el.style.setProperty('--dir', String(dir)));
     outgoing.classList.remove('is-on');
     outgoing.classList.add('is-leaving');
@@ -816,6 +889,7 @@ body.notes-mode #notes-panel {
   }
 
   function next() {
+    if (cur === 7 && moneyBeatIdx === 3 && cutReveal()) return;
     if (cur === 7 && moneyBeat(1)) return;
     const pending = fragsOf(cur).filter((f) => !f.classList.contains('is-on'));
     if (pending.length) {
@@ -826,6 +900,14 @@ body.notes-mode #notes-panel {
     show(cur + 1);
   }
   function prev() {
+    if (cur === 7 && moneyBeatIdx === 3 && cutStep > 0) {
+      cutStep -= 1;
+      const beat = document.getElementById('m-beat-4');
+      beat.classList.remove('is-cut-1', 'is-cut-2');
+      if (cutStep > 0) beat.classList.add('is-cut-' + cutStep);
+      document.getElementById('m-cut-hint').textContent = cutStep === 0 ? 'Click to open the deposit.' : 'Snooty gets paid.';
+      return;
+    }
     if (cur === 7 && moneyBeatIdx > 0) { moneyBeat(-1); return; }
     const on = fragsOf(cur).filter((f) => f.classList.contains('is-on'));
     if (on.length) { on[on.length - 1].classList.remove('is-on'); return; }
