@@ -386,7 +386,7 @@ h1.headline { font-family: var(--font-display); font-weight: 600; font-size: cla
 .close-bg::after { content: ""; position: absolute; inset: 0; background: linear-gradient(rgba(0,0,0,0.25), rgba(0,0,0,0.72)); }
 .close-line { position: relative; z-index: 2; text-align: center; }
 
-/* ============ Stop 4: the money, dissected live ============
+/* ============ Earnings: the money, dissected live ============
    Not a pricing slide, a live dissection of one real transaction. The
    whole slide runs on black so a single number can hold the entire
    room's attention with nothing else competing. Six clicker beats:
@@ -399,7 +399,18 @@ h1.headline { font-family: var(--font-display); font-weight: 600; font-size: cla
    final reveal: everything fades except what the client paid and what
    the stylist earned. Only two actors in this story, the stylist and
    Snooty, exactly like the product itself only ever shows the client
-   two names: who they're booking, and Snooty. */
+   two names: who they're booking, and Snooty.
+
+   Every beat now reads as a sentence, not a label: each panel carries
+   a full plain-language line (.m-sentence) telling the room what's
+   happening, not a two-word uppercase tag. Every major reveal gets a
+   short anticipation "prime" beforehand (a ~160ms held breath, a
+   slight dim + inward scale on the number about to change) before the
+   real reveal fires, so eyes are already on the right spot when the
+   number lands, per Disney's anticipation principle. All transitions
+   are capped at 600ms (the "Deliberate" band for reveals a whole room
+   has to read, not app-speed micro-timing) and run on the project's
+   one calm --ease-out curve, never a bouncier one. */
 /* The whole slide is the stage now, full-bleed black, no boxed
    sub-region and no competing header copy: every beat gets the
    complete 16:9 canvas the same way the opening vision slide does. */
@@ -408,16 +419,37 @@ h1.headline { font-family: var(--font-display); font-weight: 600; font-size: cla
   --dir: 1;
   position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center;
   justify-content: center; text-align: center; opacity: 0; pointer-events: none;
-  transform: translateY(calc(22px * var(--dir)));
-  transition: opacity 850ms var(--ease-out), transform 850ms var(--ease-out);
+  transform: translateY(calc(18px * var(--dir)));
+  transition: opacity 550ms var(--ease-out), transform 550ms var(--ease-out);
 }
 .m-beat.is-on { opacity: 1; pointer-events: auto; transform: translateY(0); }
-.m-beat.is-leaving { opacity: 0; transform: translateY(calc(-22px * var(--dir))); transition: opacity 650ms var(--ease-out), transform 650ms var(--ease-out); }
+.m-beat.is-leaving { opacity: 0; transform: translateY(calc(-18px * var(--dir))); transition: opacity 400ms var(--ease-out), transform 400ms var(--ease-out); }
 .m-beat .m-eyebrow { font-family: var(--font-display); font-weight: 600; font-size: clamp(12px, 1.15vw, 15px); letter-spacing: 0.14em; text-transform: uppercase; color: var(--color-text-muted-inverse); margin-bottom: 2vh; }
 .m-beat .m-note { font-size: clamp(14px, 1.3vw, 18px); color: var(--color-text-muted-inverse); max-width: 42ch; margin-top: 2.4vh; line-height: 1.55; }
 .m-beat .m-note b { color: var(--color-text-inverse); font-weight: 600; }
-#m-split-note { opacity: 0; transition: opacity 500ms var(--ease-out) 500ms; }
+/* .m-sentence: the plain-language line every beat leads or trails
+   with, replacing bare micro-labels. Sized between the kicker and the
+   headline so it reads instantly from the back of the room. */
+.m-beat .m-sentence {
+  font-family: var(--font-editorial); font-style: italic; font-weight: 500;
+  font-size: clamp(19px, 2.1vw, 30px); line-height: 1.35; color: var(--color-text-inverse);
+  max-width: 30ch; margin-bottom: 2.6vh;
+}
+.m-beat .m-sentence b, .m-beat .m-sentence strong { color: var(--color-accent); font-weight: 600; font-style: normal; }
+#m-split-note { opacity: 0; transition: opacity 350ms var(--ease-out) 300ms; }
 #m-beat-1.is-split #m-split-note { opacity: 1; }
+
+/* ---------- Anticipation priming ----------
+   Shared "held breath" utility: JS adds .is-priming to the element
+   about to change for ~160ms before the real reveal class lands. The
+   number dims and nudges inward very slightly, a small anticipatory
+   contraction, not a full animation, so eyes land on it a beat before
+   the payoff instead of the payoff firing cold. Kept under 200ms so it
+   never reads as its own separate wait. */
+.m-prime-target { transition: opacity 180ms var(--ease-out), transform 180ms var(--ease-out), filter 180ms var(--ease-out); }
+.is-priming .m-prime-target, .m-prime-target.is-priming {
+  opacity: 0.55; transform: scale(0.97); filter: saturate(0.7);
+}
 
 /* Beats 1+2 are ONE panel (#m-beat-1) so the $220 itself splits
    instead of two panels swapping. "Mask" split technique: the stage
@@ -436,39 +468,46 @@ h1.headline { font-family: var(--font-display); font-weight: 600; font-size: cla
 
 .m-crack-stage {
   position: relative; width: min(90vw, 640px); height: clamp(72px, 10vw, 148px);
-  transition: height 1000ms var(--ease-out) 150ms;
+  transition: height 550ms var(--ease-out) 60ms;
 }
 #m-beat-1.is-split .m-crack-stage { height: 42vh; }
 
 .m-split-line {
   position: absolute; left: 6%; right: 6%; top: 50%; height: 2px; margin-top: -1px;
   background: rgba(255,255,255,0.35); z-index: 2;
-  transition: opacity 400ms var(--ease-out);
+  transition: opacity 250ms var(--ease-out);
 }
 #m-beat-1.is-split .m-split-line { opacity: 0; }
+/* Anticipation: right before the split fires, the seam line brightens
+   and thickens for one short beat, priming the room's eyes on exactly
+   where the number is about to tear. */
+#m-beat-1.is-priming .m-split-line { opacity: 1; height: 3px; margin-top: -1.5px; background: var(--color-accent); }
 
 .m-mask {
   position: absolute; left: 0; right: 0; overflow: hidden;
-  transition: top 1000ms var(--ease-out) 150ms, bottom 1000ms var(--ease-out) 150ms, height 1000ms var(--ease-out) 150ms,
-              background 700ms var(--ease-out) 300ms, border-radius 700ms var(--ease-out) 150ms;
+  transition: top 550ms var(--ease-out) 60ms, bottom 550ms var(--ease-out) 60ms, height 550ms var(--ease-out) 60ms,
+              background 400ms var(--ease-out) 150ms, border-radius 400ms var(--ease-out) 60ms;
 }
 .m-mask.top { top: 0; height: 50%; }
 .m-mask.bottom { bottom: 0; height: 50%; }
 .m-mask-inner {
   position: absolute; left: 0; right: 0; top: 0; display: flex; flex-direction: column; align-items: center;
   padding: 0 3vw;
-  transition: transform 1000ms var(--ease-out) 150ms;
+  transition: transform 550ms var(--ease-out) 60ms;
 }
 .m-mask.top .m-mask-inner { top: 0; }
 .m-mask.bottom .m-mask-inner { top: -100%; }
 .ch-val {
   font-family: var(--font-display); font-weight: 700; font-size: clamp(72px, 10vw, 148px); line-height: 1; color: var(--color-text-inverse);
-  transition: font-size 1000ms var(--ease-out) 150ms, color 600ms var(--ease-out) 300ms;
+  transition: font-size 550ms var(--ease-out) 60ms, color 350ms var(--ease-out) 150ms, opacity 180ms var(--ease-out), transform 180ms var(--ease-out), filter 180ms var(--ease-out);
 }
+/* Priming state on the whole $220: a brief inward dim right before the
+   crack, so the number itself visibly "gathers" before it tears. */
+#m-beat-1.is-priming .ch-val { opacity: 0.55; transform: scale(0.97); filter: saturate(0.7); }
 .ch-label {
   font-family: var(--font-display); font-weight: 600; font-size: clamp(11px, 1.05vw, 14px); letter-spacing: 0.08em; text-transform: uppercase;
   color: var(--color-text-muted-inverse); opacity: 0; max-height: 0; overflow: hidden;
-  transition: opacity 500ms var(--ease-out) 500ms, max-height 500ms var(--ease-out) 500ms, margin 500ms var(--ease-out) 500ms;
+  transition: opacity 350ms var(--ease-out) 300ms, max-height 350ms var(--ease-out) 300ms, margin 350ms var(--ease-out) 300ms;
 }
 .m-mask.top .ch-label { order: -1; margin-bottom: 0; }
 .m-mask.bottom .ch-label { margin-top: 0; }
@@ -495,37 +534,58 @@ h1.headline { font-family: var(--font-display); font-weight: 600; font-size: cla
 #m-hero-sub {
   font-family: var(--font-display); font-weight: 600; font-size: clamp(13px, 1.2vw, 16px);
   letter-spacing: 0.06em; color: var(--color-text-muted-inverse); margin-top: 2vh;
-  transition: opacity 400ms var(--ease-out), max-height 400ms var(--ease-out), margin 400ms var(--ease-out);
+  transition: opacity 300ms var(--ease-out), max-height 300ms var(--ease-out), margin 300ms var(--ease-out);
   overflow: hidden; max-height: 5vh;
 }
 #m-beat-1.is-split #m-hero-sub { opacity: 0; max-height: 0; margin-top: 0; }
 
-/* Beat 3: zoom into the deposit. One card grows from small to large
+/* Beat 2: zoom into the deposit. One card grows from small to large
    as if the camera pushed in on it; everything else is already gone. */
 .m-zoom-card {
   background: var(--color-accent); color: #241505; border-radius: 22px; padding: 6.5vh 8vw;
-  transform: scale(0.88); transition: transform 1000ms var(--ease-out) 150ms;
+  transform: scale(0.88); transition: transform 550ms var(--ease-out) 60ms;
 }
 .m-beat.is-on .m-zoom-card { transform: scale(1); }
 .m-zoom-card .sp-label { font-family: var(--font-display); font-weight: 600; font-size: clamp(12px, 1.1vw, 15px); letter-spacing: 0.08em; text-transform: uppercase; }
 .m-zoom-card .sp-val { font-family: var(--font-display); font-weight: 700; font-size: clamp(56px, 7.4vw, 108px); line-height: 1.05; margin-top: 1vh; }
 
-/* Beat 4: the deposit opens into two blocks that slide apart, cutting
+/* Beat 3: the deposit opens into two blocks that slide apart, cutting
    a cake, not a table appearing. Each block reveals on its own click
    (JS toggles is-cut on the beat), so narration can land one name at
-   a time: Snooty, then the stylist. */
+   a time: Snooty, then the stylist.
+
+   Staged hierarchy per the attention-management skill: Snooty's cut
+   (secondary, the smaller/context number) gets a modest, quieter
+   reveal. The stylist's cut (primary, the payoff number the whole
+   slide is building to) gets a visibly stronger entrance: bigger
+   overshoot-free scale travel, a brief accent glow, and it only ever
+   starts moving once Snooty's block has finished settling, one thing
+   animating at a time rather than both blocks arriving together. */
 .m-cut-stage { display: flex; gap: 0; width: min(640px, 84vw); }
 .m-cut-block {
-  flex: 1; padding: 5vh 2.8vw; border-radius: 18px; opacity: 0; transform: scale(0.94);
-  transition: opacity 700ms var(--ease-out), transform 700ms var(--ease-out);
+  flex: 1; padding: 5vh 2.8vw; border-radius: 18px; opacity: 0; transform: scale(0.92);
+  transition: opacity 400ms var(--ease-out), transform 400ms var(--ease-out), box-shadow 400ms var(--ease-out);
 }
 .m-cut-block .cb-label { font-family: var(--font-display); font-weight: 600; font-size: clamp(12px, 1.1vw, 15px); letter-spacing: 0.06em; text-transform: uppercase; }
 .m-cut-block .cb-val { font-family: var(--font-display); font-weight: 700; font-size: clamp(34px, 4.2vw, 58px); line-height: 1.1; margin-top: 1vh; }
 .m-cut-block.snooty { background: rgba(255,255,255,0.08); color: var(--color-text-inverse); margin-right: 10px; }
 .m-cut-block.snooty .cb-label { color: var(--color-text-muted-inverse); }
-.m-cut-block.you { background: var(--color-accent); color: #241505; margin-left: 10px; }
+.m-cut-block.you { background: var(--color-accent); color: #241505; margin-left: 10px; box-shadow: 0 0 0 rgba(201,154,74,0); }
+/* Step 1: Snooty's block only, secondary emphasis, settles quickly. */
 .m-beat.is-cut-1 .m-cut-block.snooty, .m-beat.is-cut-2 .m-cut-block.snooty { opacity: 1; transform: scale(1); }
-.m-beat.is-cut-2 .m-cut-block.you { opacity: 1; transform: scale(1); }
+/* Step 2: the stylist's block, primary emphasis. Longer duration and a
+   small overshoot-free scale-through plus a soft gold glow give it
+   visibly more animation weight than Snooty's block got, and its
+   transition-delay lets Snooty's step fully land first. */
+.m-beat.is-cut-2 .m-cut-block.you {
+  opacity: 1; transform: scale(1);
+  transition: opacity 480ms var(--ease-out) 120ms, transform 480ms var(--ease-out) 120ms, box-shadow 480ms var(--ease-out) 120ms;
+  box-shadow: 0 0 44px rgba(201,154,74,0.45);
+}
+/* Priming: a short held-breath pulse on whichever block is about to
+   open, firing just before its is-cut-N class lands. */
+.m-beat.is-priming-snooty .m-cut-block.snooty,
+.m-beat.is-priming-you .m-cut-block.you { opacity: 0.3; transform: scale(0.86); }
 .m-cut-hint { font-size: clamp(12.5px, 1.15vw, 16px); color: var(--color-text-muted-inverse); margin-top: 2.6vh; opacity: 0.7; }
 
 /* Beat 5: the same booking against what StyleSeat and Booksy would
@@ -536,7 +596,7 @@ h1.headline { font-family: var(--font-display); font-weight: 600; font-size: cla
 .cmp-name { flex: 0 0 clamp(90px, 10vw, 130px); font-family: var(--font-display); font-weight: 600; font-size: clamp(12.5px, 1.15vw, 16px); color: var(--color-text-muted-inverse); text-align: left; }
 .cmp-row.snooty .cmp-name { color: var(--color-accent); }
 .cmp-track { flex: 1; height: clamp(28px, 3.2vh, 42px); background: rgba(255,255,255,0.06); border-radius: 9px; overflow: hidden; }
-.cmp-fill { height: 100%; width: 0; border-radius: 9px; display: flex; align-items: center; justify-content: flex-end; padding-right: 14px; transition: width 1000ms var(--ease-out) 200ms; }
+.cmp-fill { height: 100%; width: 0; border-radius: 9px; display: flex; align-items: center; justify-content: flex-end; padding-right: 14px; transition: width 550ms var(--ease-out) 120ms; }
 .cmp-row.snooty .cmp-fill { background: var(--color-accent); }
 .cmp-row:not(.snooty) .cmp-fill { background: rgba(255,255,255,0.18); }
 .m-beat.is-on .cmp-fill { width: var(--cmp-w); }
@@ -544,23 +604,37 @@ h1.headline { font-family: var(--font-display); font-weight: 600; font-size: cla
 .cmp-row.snooty .cmp-fill span { color: #241505; }
 .cmp-row:not(.snooty) .cmp-fill span { color: var(--color-text-inverse); }
 
-/* Beat 6: pull back out, the running total counts up at the end. */
+/* Beat 5: pull back out, the running total counts up at the end. */
 .m-recap { display: flex; flex-direction: column; align-items: center; gap: 1.4vh; }
-.m-recap-row { display: flex; align-items: baseline; gap: 1vw; opacity: 0; transform: translateY(10px); transition: opacity 450ms var(--ease-out), transform 500ms var(--ease-out); }
+.m-recap-row { display: flex; align-items: baseline; gap: 1vw; opacity: 0; transform: translateY(10px); transition: opacity 350ms var(--ease-out), transform 350ms var(--ease-out); }
 .m-recap-row .rr-k { font-family: var(--font-display); font-weight: 500; font-size: clamp(13px, 1.2vw, 16px); color: var(--color-text-muted-inverse); min-width: 13ch; text-align: right; }
 .m-recap-row .rr-v { font-family: var(--font-display); font-weight: 700; font-size: clamp(20px, 2.2vw, 28px); color: var(--color-text-inverse); }
 .m-recap-row.dim .rr-v { color: var(--color-text-muted-inverse); font-weight: 600; }
 .m-beat.is-on .m-recap-row { opacity: 1; transform: translateY(0); }
-.m-recap-row:nth-child(1) { transition-delay: 100ms; }
-.m-recap-row:nth-child(2) { transition-delay: 220ms; }
-.m-recap-row:nth-child(3) { transition-delay: 340ms; }
+.m-recap-row:nth-child(1) { transition-delay: 80ms; }
+.m-recap-row:nth-child(2) { transition-delay: 170ms; }
+.m-recap-row:nth-child(3) { transition-delay: 260ms; }
 .m-recap-total {
   margin-top: 2.2vh; padding-top: 2.2vh; border-top: 1px solid rgba(255,255,255,0.16);
-  opacity: 0; transform: translateY(10px); transition: opacity 500ms var(--ease-out) 600ms, transform 550ms var(--ease-out) 600ms;
+  opacity: 0; transform: translateY(10px); transition: opacity 400ms var(--ease-out) 380ms, transform 400ms var(--ease-out) 380ms;
 }
 .m-beat.is-on .m-recap-total { opacity: 1; transform: translateY(0); }
 .m-recap-total .rt-k { font-family: var(--font-display); font-weight: 600; font-size: clamp(13px, 1.2vw, 16px); letter-spacing: 0.06em; text-transform: uppercase; color: var(--color-text-muted-inverse); text-align: center; }
-.m-recap-total .rt-v { font-family: var(--font-display); font-weight: 700; font-size: clamp(46px, 5.6vw, 76px); color: var(--color-accent); line-height: 1.1; margin-top: 0.6vh; text-align: center; }
+.m-recap-total .rt-v {
+  font-family: var(--font-display); font-weight: 700; font-size: clamp(46px, 5.6vw, 76px); color: var(--color-accent); line-height: 1.1; margin-top: 0.6vh; text-align: center;
+  transition: opacity 180ms var(--ease-out), transform 180ms var(--ease-out);
+}
+/* Anticipation prime right before the total starts counting up: the
+   number itself (not the whole row, which is still settling into
+   place) dims and gathers for one short beat. */
+.m-recap-total.is-priming .rt-v { opacity: 0.5; transform: scale(0.94); }
+.m-recap .m-sentence { margin-bottom: 3.2vh; }
+.m-recap-takeaway {
+  margin-top: 2.6vh; font-family: var(--font-editorial); font-style: italic; font-weight: 500;
+  font-size: clamp(15px, 1.5vw, 19px); color: var(--color-text-muted-inverse); max-width: 34ch;
+  opacity: 0; transform: translateY(8px); transition: opacity 400ms var(--ease-out) 900ms, transform 400ms var(--ease-out) 900ms;
+}
+.m-beat.is-on .m-recap-takeaway { opacity: 1; transform: translateY(0); }
 
 /* Beat 6: the final reveal. Two numbers only. */
 .m-final { display: flex; align-items: center; gap: 4vw; }
@@ -571,10 +645,105 @@ h1.headline { font-family: var(--font-display); font-weight: 600; font-size: cla
 .m-final-col.earned .fc-v { color: var(--color-accent); }
 .m-final-arrow { font-size: clamp(20px, 2.4vw, 30px); color: var(--color-text-muted-inverse); }
 .m-final-fine { margin-top: 4vh; font-size: clamp(11px, 1vw, 13.5px); color: var(--color-text-muted-inverse); opacity: 0.6; }
+.m-final .m-sentence { margin-bottom: 4vh; }
 
 .m-dots { position: absolute; bottom: 6vh; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; z-index: 5; }
 .m-dots i { width: 6px; height: 6px; border-radius: 50%; background: var(--color-border); transition: background 300ms var(--ease-out), width 300ms var(--ease-out); }
 .m-dots i.is-on { background: var(--color-accent); width: 18px; border-radius: 3px; }
+
+/* ============ Business: domino-chain toolkit rebuild ============
+   Same architectural pattern as the Money slide's beats (full-bleed
+   black stage, one .biz-beat panel on screen at a time, conveyor
+   is-on/is-leaving/--dir transitions), renamed to biz-* so it can't
+   collide with the money-slide's own #m-* ids in the same document.
+   Seven click-triggered beats: notification, deposit badge, calendar
+   fill, earnings count-up, client counter, review-reminder badge,
+   then the payoff: a simplified dashboard summary card, already
+   populated. Every transition rides the project's one calm --ease-out
+   curve, nothing bounces, nothing exceeds ~550ms. */
+.biz-stage { position: absolute; inset: 0; overflow: hidden; }
+.biz-beat {
+  --dir: 1;
+  position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center;
+  justify-content: center; text-align: center; opacity: 0; pointer-events: none;
+  transform: translateY(calc(18px * var(--dir)));
+  transition: opacity 550ms var(--ease-out), transform 550ms var(--ease-out);
+}
+.biz-beat.is-on { opacity: 1; pointer-events: auto; transform: translateY(0); }
+.biz-beat.is-leaving { opacity: 0; transform: translateY(calc(-18px * var(--dir))); transition: opacity 400ms var(--ease-out), transform 400ms var(--ease-out); }
+.biz-eyebrow { font-family: var(--font-display); font-weight: 600; font-size: clamp(12px, 1.15vw, 15px); letter-spacing: 0.14em; text-transform: uppercase; color: var(--color-text-muted-inverse); margin-bottom: 3.4vh; }
+/* Per-beat caption: the same italic-serif sentence class the Money
+   slide uses (.m-sentence), reused verbatim rather than a near-dupe. */
+.biz-beat .biz-sentence {
+  font-family: var(--font-editorial); font-style: italic; font-weight: 500;
+  font-size: clamp(17px, 1.9vw, 26px); line-height: 1.4; color: var(--color-text-inverse);
+  max-width: 36ch; margin-top: 3.4vh;
+}
+.biz-beat .biz-sentence b { color: var(--color-accent); font-weight: 600; font-style: normal; }
+
+/* Beat 1: booking notification card, matching the messages.html thread
+   identity (Maya Reyes / Knotless Braids - Medium / Sat 11:00 AM) so
+   the deck stays internally consistent with the real seeded thread. */
+.biz-notify {
+  display: flex; align-items: center; gap: 16px; background: var(--color-bg-dark-raised);
+  border: 1px solid var(--color-border-dark); border-radius: 18px; padding: 2.2vh 2vw;
+  min-width: min(420px, 70vw); text-align: left;
+  transform: scale(0.94); opacity: 0; animation: biz-pop 500ms var(--ease-out) forwards;
+}
+.biz-notify-av { width: 52px; height: 52px; border-radius: 14px; overflow: hidden; flex-shrink: 0; }
+.biz-notify-av img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.biz-notify-title { font-family: var(--font-display); font-weight: 600; font-size: clamp(15px, 1.5vw, 19px); color: var(--color-text-inverse); }
+.biz-notify-sub { font-size: clamp(12px, 1.1vw, 14.5px); color: var(--color-text-muted-inverse); margin-top: 0.4vh; }
+@keyframes biz-pop { from { opacity: 0; transform: scale(0.94) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+
+/* Beats 2 + 6: a small checkmark / star badge, same treatment for both
+   so "deposit received" and "review reminder scheduled" read as the
+   same family of quiet confirmation, not two different UI languages. */
+.biz-badge-wrap { display: flex; flex-direction: column; align-items: center; gap: 1.8vh; }
+.biz-badge {
+  width: clamp(64px, 7vw, 92px); height: clamp(64px, 7vw, 92px); border-radius: 50%;
+  background: var(--color-accent); display: flex; align-items: center; justify-content: center;
+  transform: scale(0.7); opacity: 0; animation: biz-badge-in 480ms var(--ease-out) forwards;
+}
+.biz-badge svg { width: 44%; height: 44%; stroke: #241505; fill: none; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+.biz-badge.star svg { fill: #241505; stroke: none; }
+@keyframes biz-badge-in { from { opacity: 0; transform: scale(0.7); } to { opacity: 1; transform: scale(1); } }
+.biz-badge-label { font-family: var(--font-display); font-weight: 600; font-size: clamp(15px, 1.6vw, 20px); color: var(--color-text-inverse); }
+
+/* Beat 3: a tiny calendar grid, one day lighting up gold. */
+.biz-cal { display: flex; flex-direction: column; align-items: center; gap: 2.2vh; }
+.biz-cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 7px; width: min(300px, 42vw); }
+.biz-cal-grid i { display: block; aspect-ratio: 1; border-radius: 6px; background: rgba(255,255,255,0.08); }
+.biz-cal-grid i.is-lit { background: var(--color-accent); transition: background 400ms var(--ease-out) 150ms; }
+.biz-cal-label { font-family: var(--font-display); font-weight: 600; font-size: clamp(14px, 1.4vw, 18px); color: var(--color-accent); }
+
+/* Beats 4 + 5: one big stat number, shared layout for the earnings
+   count-up and the client-count increment. */
+.biz-stat { display: flex; flex-direction: column; align-items: center; gap: 1vh; }
+.biz-stat-val { font-family: var(--font-display); font-weight: 700; font-size: clamp(48px, 6.4vw, 96px); color: var(--color-accent); line-height: 1.05; display: flex; align-items: center; gap: 0.3em; }
+.biz-stat-arrow { font-size: 0.5em; color: var(--color-text-muted-inverse); }
+.biz-stat-label { font-family: var(--font-display); font-weight: 600; font-size: clamp(12px, 1.1vw, 15px); letter-spacing: 0.1em; text-transform: uppercase; color: var(--color-text-muted-inverse); }
+
+/* Beat 7: the payoff. A simplified summary card, not the real
+   dashboard.html rebuilt, deliberately: this is a presentation beat,
+   so it shows 2-3 of the numbers that just animated, already settled
+   in place, reading as "already done" rather than still loading. */
+.biz-dash { display: flex; flex-direction: column; align-items: center; gap: 2.6vh; margin-top: 1vh; }
+.biz-dash-row { display: flex; gap: 1.6vw; }
+.biz-dash-card {
+  background: var(--color-bg-dark-raised); border: 1px solid var(--color-border-dark); border-radius: 16px;
+  padding: 2.6vh 2.4vw; min-width: 12vw;
+  opacity: 0; transform: translateY(10px); animation: biz-pop 450ms var(--ease-out) forwards;
+}
+.biz-dash-card:nth-child(2) { animation-delay: 90ms; }
+.biz-dash-card:nth-child(3) { animation-delay: 180ms; }
+.biz-dash-card .bd-k { font-family: var(--font-display); font-weight: 600; font-size: clamp(11px, 1vw, 13.5px); letter-spacing: 0.08em; text-transform: uppercase; color: var(--color-text-muted-inverse); }
+.biz-dash-card .bd-v { font-family: var(--font-display); font-weight: 700; font-size: clamp(24px, 2.8vw, 38px); color: var(--color-text-inverse); margin-top: 0.8vh; }
+.biz-dash-note { font-size: clamp(12.5px, 1.15vw, 15.5px); color: var(--color-text-muted-inverse); max-width: 38ch; }
+
+.biz-dots { position: absolute; bottom: 6vh; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; z-index: 5; }
+.biz-dots i { width: 6px; height: 6px; border-radius: 50%; background: var(--color-border); transition: background 300ms var(--ease-out), width 300ms var(--ease-out); }
+.biz-dots i.is-on { background: var(--color-accent); width: 18px; border-radius: 3px; }
 
 /* ============ Q&A pause slides ============ */
 .qa-pause { align-items: center; text-align: center; }
@@ -600,7 +769,7 @@ body.notes-mode #notes-panel {
 <div id="deck">
 
   <!-- 1 ▸ Opening Vision Animation: the work comes first -->
-  <section class="slide black" data-title="Opening vision: the work comes first" style="padding:0;">
+  <section class="slide black" data-title="Opening: the work comes first" style="padding:0;">
     <div class="vision-stage">
       <div class="vision-field" id="vision-field"></div>
       <div class="vision-scrim" id="vision-scrim"></div>
@@ -623,43 +792,29 @@ body.notes-mode #notes-panel {
     </div>
   </section>
 
-  <!-- 3 ▸ Stop 1: Discover -->
-  <section class="slide light" data-title="Stop 1: How do clients even find me?">
-    <div class="kicker">On their phones now · Client side</div>
-    <h1 class="headline">How do clients even find you?</h1>
-    <p class="sub">Their phone just opened on the Discover feed. Watch: someone searches "knotless," and the work does the rest.</p>
+  <!-- 3 ▸ Discovery: how clients find you -->
+  <section class="slide light" data-title="Discovery: How clients find you">
+    <div class="kicker">On their phones now · Discovery</div>
+    <h1 class="headline">Clients don't search your name. They search the look.</h1>
+    <p class="sub">Their phone just opened on the Discover feed. Watch: someone searches "knotless," not "Jordyn Ellis," and the work does the rest.</p>
   </section>
 
-  <!-- 4 ▸ Stop 1b: Messaging -->
-  <section class="slide light" data-title="Stop 1b: How do they talk to me?">
-    <div class="kicker">On their phones now · Client side</div>
-    <h1 class="headline">One thread. Tied to one booking.</h1>
-    <p class="sub">Their phone jumps into a real message thread, already pinned to the appointment. No hunting through Instagram DMs to remember which client asked what.</p>
+  <!-- 4 ▸ The Look: why she trusts you -->
+  <section class="slide light" data-title="The Look: Why she trusts you">
+    <div class="kicker">On their phones now · The Look</div>
+    <h1 class="headline">They didn't book Jordyn. They booked THIS.</h1>
+    <p class="sub">Their phone opens the full look: real angles, a real price, reviews tied to real appointments. She booked the look, not the stylist's name.</p>
   </section>
 
-  <!-- 5 ▸ Q&A pause 1 -->
-  <section class="slide black qa-pause" data-title="Pause: questions on the client side">
-    <div class="kicker">Pause</div>
-    <h1 class="headline">Any questions so far?</h1>
-    <p class="sub">That's everything a client sees: find you, message you, book you.</p>
-  </section>
-
-  <!-- 6 ▸ Stop 2: Booking / Deposit -->
-  <section class="slide light" data-title="Stop 2: Okay, they found me. Now what?">
-    <div class="kicker">On their phones now · Client side</div>
-    <h1 class="headline">They found you. Now what?</h1>
+  <!-- 5 ▸ Booking: how they become a client -->
+  <section class="slide light" data-title="Booking: How they become a client">
+    <div class="kicker">On their phones now · Booking</div>
+    <h1 class="headline">She didn't message anyone. She's already choosing a time.</h1>
     <p class="sub">Their phone opens the real booking flow: pick the service, pick a real opening, then the deposit. This is the moment you stop chasing deposits.</p>
   </section>
 
-  <!-- 7 ▸ Stop 3: Your toolkit -->
-  <section class="slide light" data-title="Stop 3: What happens after they book?">
-    <div class="kicker">On their phones now · Stylist side</div>
-    <h1 class="headline">While you were asleep, your business moved.</h1>
-    <p class="sub">Notification. Deposit paid. Calendar fills. Earnings tick up. Then their phone tours your whole toolkit: your storefront, your services, your reviews.</p>
-  </section>
-
-  <!-- 8 ▸ Stop 4: The money, dissected live -->
-  <section class="slide black" data-title="Stop 4: How does the money work?" style="padding:0;">
+  <!-- 6 ▸ Earnings: what one booking is actually worth -->
+  <section class="slide black" data-title="Earnings: What one booking is actually worth" style="padding:0;">
 
     <div class="money-stage">
 
@@ -672,7 +827,8 @@ body.notes-mode #notes-panel {
            another. -->
       <div class="m-beat is-on" id="m-beat-1">
         <div class="m-title">Watch the money move.</div>
-        <div class="m-eyebrow">One client</div>
+        <div class="m-sentence">One client books a <b>$220</b> appointment with you.</div>
+        <div class="m-eyebrow">One client, one booking</div>
 
         <!-- The $220 itself is TWO stacked, identical copies of the
              same text, each clipped to show only its top or bottom
@@ -689,36 +845,39 @@ body.notes-mode #notes-panel {
           <div class="m-split-line"></div>
           <div class="m-mask top">
             <div class="m-mask-inner">
-              <div class="ch-label" id="ch-label-top">Remaining balance</div>
+              <div class="ch-label" id="ch-label-top">Remaining balance, paid at the appointment</div>
               <div class="ch-val" id="ch-val-top"></div>
             </div>
           </div>
           <div class="m-mask bottom">
             <div class="m-mask-inner">
               <div class="ch-val" id="ch-val-bottom"></div>
-              <div class="ch-label" id="ch-label-bottom">Deposit today</div>
+              <div class="ch-label" id="ch-label-bottom">Deposit, paid today to hold the slot</div>
             </div>
           </div>
         </div>
         <div class="m-hero-sub" id="m-hero-sub">Full service price</div>
 
-        <div class="m-note" id="m-split-note">She isn't paying everything today. <b>She's paying a deposit.</b></div>
+        <div class="m-note" id="m-split-note">She isn't paying all of it today. <b>She's paying a deposit to hold her slot</b> &mdash; the rest is collected when she shows up.</div>
       </div>
 
       <div class="m-beat" id="m-beat-2">
-        <div class="m-zoom-card"><div class="sp-label">Deposit</div><div class="sp-val" id="m-zoom-dep-val"></div></div>
-        <div class="m-note"><b>This is the only money moving today.</b></div>
+        <div class="m-sentence">Today, only the <b>deposit</b> actually moves.</div>
+        <div class="m-zoom-card"><div class="sp-label">Deposit, paid right now</div><div class="sp-val" id="m-zoom-dep-val"></div></div>
+        <div class="m-note"><b>This is the only money moving today.</b> The other $176 shows up later, at the chair.</div>
       </div>
 
       <div class="m-beat" id="m-beat-3">
+        <div class="m-sentence" id="m-cut-sentence">That deposit splits two ways the moment it lands.</div>
         <div class="m-cut-stage">
-          <div class="m-cut-block snooty"><div class="cb-label">Snooty</div><div class="cb-val" id="m-cut-snooty-val"></div></div>
-          <div class="m-cut-block you"><div class="cb-label">You</div><div class="cb-val" id="m-cut-you-val"></div></div>
+          <div class="m-cut-block snooty"><div class="cb-label">Snooty keeps</div><div class="cb-val" id="m-cut-snooty-val"></div></div>
+          <div class="m-cut-block you"><div class="cb-label">You keep</div><div class="cb-val" id="m-cut-you-val"></div></div>
         </div>
         <div class="m-cut-hint" id="m-cut-hint">Click to open the deposit.</div>
       </div>
 
       <div class="m-beat" id="m-beat-4">
+        <div class="m-sentence">Here's that same <b>5%</b> next to what the other guys take on the same $220 booking.</div>
         <div class="m-eyebrow">On the same $220 booking</div>
         <div class="m-compare">
           <div class="cmp-row snooty"><div class="cmp-name">Snooty</div><div class="cmp-track"><div class="cmp-fill" id="cmp-fill-snooty"><span id="cmp-val-snooty"></span></div></div></div>
@@ -729,15 +888,18 @@ body.notes-mode #notes-panel {
       </div>
 
       <div class="m-beat" id="m-beat-5">
+        <div class="m-sentence">Add the deposit and the balance back together, here's the whole booking.</div>
         <div class="m-recap">
           <div class="m-recap-row"><span class="rr-k">Client paid</span><span class="rr-v" id="m-recap-paid"></span></div>
           <div class="m-recap-row dim"><span class="rr-k">Snooty keeps</span><span class="rr-v" id="m-recap-snooty"></span></div>
           <div class="m-recap-row dim"><span class="rr-k">Collected at appointment</span><span class="rr-v" id="m-recap-rest"></span></div>
           <div class="m-recap-total"><div class="rt-k">You earned</div><div class="rt-v" id="m-recap-total">$0</div></div>
         </div>
+        <div class="m-recap-takeaway">On a $220 booking, <b>you keep $209</b>. That's the whole deal, every time.</div>
       </div>
 
       <div class="m-beat" id="m-beat-6">
+        <div class="m-sentence">So: one client, one booking, one honest split.</div>
         <div class="m-final">
           <div class="m-final-col paid"><div class="fc-k">Client paid</div><div class="fc-v" id="m-final-paid"></div></div>
           <div class="m-final-arrow">&#8594;</div>
@@ -750,17 +912,108 @@ body.notes-mode #notes-panel {
     </div>
   </section>
 
-  <!-- 9 ▸ Q&A pause 2 -->
-  <section class="slide black qa-pause" data-title="Pause: questions on the business side">
+  <!-- 7 ▸ Business: everything that happens after (domino-chain rebuild) -->
+  <section class="slide black" data-title="Business: Everything that happens after" style="padding:0;">
+    <div class="biz-stage">
+
+      <div class="biz-beat is-on" id="biz-beat-1">
+        <div class="biz-eyebrow">One booking, six things happen automatically</div>
+        <div class="biz-notify">
+          <div class="biz-notify-av"><img data-seed="knotlessMedium" alt=""></div>
+          <div class="biz-notify-body">
+            <div class="biz-notify-title">Maya booked Knotless Braids</div>
+            <div class="biz-notify-sub">Sat, 11:00 AM &middot; Roots &amp; Ritual</div>
+          </div>
+        </div>
+        <div class="biz-sentence">A booking notification lands on your phone the moment she confirms.</div>
+      </div>
+
+      <div class="biz-beat" id="biz-beat-2">
+        <div class="biz-eyebrow">Step 2 of 6</div>
+        <div class="biz-badge-wrap">
+          <div class="biz-badge"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+          <div class="biz-badge-label">Deposit received</div>
+        </div>
+        <div class="biz-sentence">You didn't have to ask for it. <b>The $44 deposit already landed.</b></div>
+      </div>
+
+      <div class="biz-beat" id="biz-beat-3">
+        <div class="biz-eyebrow">Step 3 of 6</div>
+        <div class="biz-cal">
+          <div class="biz-cal-grid" id="biz-cal-grid"></div>
+          <div class="biz-cal-label">Sat, 11:00 AM</div>
+        </div>
+        <div class="biz-sentence">Your calendar fills itself in. <b>No back-and-forth to find a time that works.</b></div>
+      </div>
+
+      <div class="biz-beat" id="biz-beat-4">
+        <div class="biz-eyebrow">Step 4 of 6</div>
+        <div class="biz-stat"><div class="biz-stat-val" id="biz-earnings-val">$0</div><div class="biz-stat-label">Today's earnings</div></div>
+        <div class="biz-sentence">Your earnings tick up in real time. <b>You watch it happen, you don't chase it.</b></div>
+      </div>
+
+      <div class="biz-beat" id="biz-beat-5">
+        <div class="biz-eyebrow">Step 5 of 6</div>
+        <div class="biz-stat"><div class="biz-stat-val"><span id="biz-clients-from">4</span><span class="biz-stat-arrow">&#8594;</span><span id="biz-clients-to">5</span></div><div class="biz-stat-label">Clients on file</div></div>
+        <div class="biz-sentence">Maya's now a client on record. <b>Every visit after this one gets easier, not harder.</b></div>
+      </div>
+
+      <div class="biz-beat" id="biz-beat-6">
+        <div class="biz-eyebrow">Step 6 of 6</div>
+        <div class="biz-badge-wrap">
+          <div class="biz-badge star"><svg viewBox="0 0 24 24"><path d="M12 2l2.9 6.1 6.7.9-4.9 4.6 1.2 6.6-5.9-3.2-5.9 3.2 1.2-6.6L2.4 9l6.7-.9z"/></svg></div>
+          <div class="biz-badge-label">Review request queued</div>
+        </div>
+        <div class="biz-sentence">A review request is already scheduled for after her appointment. <b>You never have to remember to ask.</b></div>
+      </div>
+
+      <div class="biz-beat" id="biz-beat-7">
+        <div class="biz-sentence">One booking. Six things happened automatically.</div>
+        <div class="biz-dash">
+          <div class="biz-dash-row">
+            <div class="biz-dash-card"><div class="bd-k">Today's earnings</div><div class="bd-v" id="biz-dash-earnings">$209</div></div>
+            <div class="biz-dash-card"><div class="bd-k">Clients on file</div><div class="bd-v">5</div></div>
+            <div class="biz-dash-card"><div class="bd-k">Upcoming</div><div class="bd-v">1</div></div>
+          </div>
+          <div class="biz-dash-note">Your dashboard, already caught up. Nothing left for you to log.</div>
+        </div>
+      </div>
+
+      <div class="biz-dots" id="biz-dots"><i class="is-on"></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+    </div>
+  </section>
+
+  <!-- 8 ▸ Conversation: the only messages left -->
+  <section class="slide light" data-title="Conversation: The only messages left">
+    <div class="kicker">On their phones now · Conversation</div>
+    <h1 class="headline">This isn't another DM. It's the conversation attached to the client who already booked.</h1>
+    <p class="sub">Their phone jumps into a real message thread, already pinned to the appointment. No hunting through Instagram DMs to remember which client asked what.</p>
+  </section>
+
+  <!-- 9 ▸ Q&A pause -->
+  <section class="slide black qa-pause" data-title="Pause: questions before we close">
     <div class="kicker">Pause</div>
     <h1 class="headline">Any questions before we close?</h1>
-    <p class="sub">Deposits, the balance, and Snooty's entire fee. Ask anything.</p>
+    <p class="sub">Finding you, booking you, paying you, and everything that runs itself after. Ask anything.</p>
+  </section>
+
+  <!-- 10 ▸ Close -->
+  <section class="slide black" data-title="Close: Founding stylist" style="padding:0;">
+    <div class="close-bg"><div class="ph"><img data-seed="knotlessMedium" alt="" style="width:100%;height:100%;object-fit:cover;"></div></div>
+    <div class="close-line">
+      <div class="kicker" style="text-align:center;">Founding Stylist</div>
+      <h1 class="headline" style="font-size:clamp(28px,3.6vw,54px);">Beta opens tomorrow.</h1>
+      <div class="qr-stage" style="height:auto; margin-top:5vh; gap:0; justify-content:center;">
+        <div class="qr-box" role="img" aria-label="QR code to the Snooty beta gallery"><div class="qr-inner" id="qr-real-close"></div></div>
+      </div>
+      <p class="editorial-line" style="margin-top:5vh;">If this existed today&hellip; would you use it?</p>
+    </div>
   </section>
 
 </div>
 
 <div id="progress"></div>
-<div id="hud">1 / 9</div>
+<div id="hud">1 / 10</div>
 
 <div id="notes-panel">
   <div class="np-head"><span class="np-slide">1</span><span class="np-timer">00:00</span></div>
@@ -784,11 +1037,14 @@ body.notes-mode #notes-panel {
   });
   SN.hydrateImages(document);
 
-  /* Real, scannable QR on slide 2: points at the locked waiting room
-     (wait.html), not a browsable hub. Followers only ever see the
-     presenter-driven stops; there's nothing here for them to tap. */
-  (function renderQR() {
-    const el = document.getElementById('qr-real');
+  /* Real, scannable QR, factored into one reusable function so both the
+     opening "scan to follow along" slide AND the closing slide can each
+     render their own instance of the SAME mechanism rather than
+     duplicating the qrcodegen wiring. Both point at the locked waiting
+     room (wait.html), not a browsable hub: followers only ever see the
+     presenter-driven stops, there's nothing here for them to tap. */
+  function renderQR(elId) {
+    const el = document.getElementById(elId);
     if (!el || !window.qrcodegen) return;
     const url = location.origin + location.pathname.replace(/deck-preview\.html$/, 'wait.html') + '?session=1';
     const qr = qrcodegen.QrCode.encodeText(url, qrcodegen.QrCode.Ecc.MEDIUM);
@@ -802,19 +1058,32 @@ body.notes-mode #notes-panel {
     el.style.gridTemplateColumns = 'repeat(' + n + ', 1fr)';
     el.style.gap = '0';
     el.innerHTML = cells;
-  })();
+  }
+  renderQR('qr-real');
+  renderQR('qr-real-close');
 
   /* ---------- Presenter notes ---------- */
   const NOTES = [
+    /* 1: Opening */
 'Say NOTHING for the entire sequence, about 6.5 seconds. Opens punched in close on one photo alone, holds a beat, then the camera pulls back WHILE the rest of the wall fades in one tile at a time, spreading outward in waves, so the zoom and the reveal finish together. The wall then blurs and the wordmark fades in on top. Once it settles, say: "This is Snooty." Then advance to the QR slide.',
+    /* 2: Scan Along */
     'Hold here. "Scan that now, you\'ll follow along on your own phone for the rest of this." Give the room 15-20 seconds to actually scan before advancing.',
-    'The moment you land here, every connected phone jumps to the real Discover feed. Invite the room to search "knotless" themselves. Let them scroll and tap for real, then say: "You didn\'t type her name. You didn\'t know her Instagram. You found the work first."',
-    'Their phones jump to a real message thread, already pinned to a booking. Let people read it, then say: "Notice it already knows which appointment this is about. That\'s the whole point." If anyone asks about pricing or the fee here, say: "Hold that, we get to the money in a few minutes." Advance to the pause.',
-    'STOP TALKING. Hold this slide. Take real questions. If a question is about booking, deposits, or the toolkit, say "great question, that\'s coming up in a minute" and name the upcoming stop. Don\'t rush this; a room that got to ask early questions listens better later.',
-    'Their phones jump to the real booking flow, starting at step 1: choose a service. Invite the room to tap through it themselves, service to time to deposit. Say: "This is the moment you stop chasing deposits."',
-    'Their phones jump to the stylist\'s home base and storefront, real and tappable. Invite the room to explore requests, the calendar, services, reviews. Say: "Every piece of that toolkit is yours to fill."',
+    /* 3: Discovery */
+    'The moment you land here, every connected phone jumps to the real Discover feed. Invite the room to search "knotless" themselves. Let them scroll and tap for real, then say: "You didn\'t type her name. You didn\'t know her Instagram. You found the look first."',
+    /* 4: The Look */
+    'Their phones jump straight into the full look detail page for this exact search result. Let the room actually sit here: real angles, a real price, reviews tied to real completed appointments, and a Book button that works. Say: "She didn\'t book Jordyn. She booked this." Give it real time before advancing, this is the moment trust gets built without a single word from the stylist.',
+    /* 5: Booking */
+    'Their phones jump to the real booking flow, starting at step 1: choose a service. Invite the room to tap through it themselves, service to time to deposit. When the room reaches the deposit screen, STOP and hold there. Freeze on "Deposit Due Today, $44." This is the strongest frame in the whole presentation. Stay here. Talk. Say: "This is the moment you stop chasing deposits."',
+    /* 6: Earnings */
 'This is 8 clicks, not one slide. Let each one land before you talk over the next. (1) "They paid two hundred and twenty dollars." Click. (2) The deposit pulls away: "They don\'t pay everything upfront." Click. (3) Zoom into the deposit: "This is the only money moving today." Click. (4) "Snooty gets paid." Click. (5) "You get the rest." Click. (6) Same booking against StyleSeat and Booksy\'s real rates: "Snooty charges five percent, every time." Click. (7) Pull back out, let the total count up: "That\'s what you earned." Click. (8) The final two numbers, then keep talking over them. Never say the word Stripe on stage; if it comes up in Q&A, that\'s a "standard payment processing fees apply, same as Square or Booksy" answer, not a stage answer.',
-    'STOP TALKING again. Hold this one longer than the first pause; this is where "what\'s the catch" comes out. Answer plainly. If someone asks something better answered at the close (the beta ask, next steps), say "one more slide and we get there."',
+    /* 7: Business */
+    'This is 7 clicks. Each one is one thing happening because of the last one, not a pile of animation. (1) The notification: "Maya booked Knotless Braids." Click. (2) "The deposit already landed, you didn\'t have to ask." Click. (3) "Your calendar just filled itself in." Click. (4) "Watch your earnings move." Click. (5) "She\'s a client on file now, forever." Click. (6) "A review request is already scheduled, you\'ll never remember to send it yourself." Click. (7) The dashboard, already caught up: "One booking. Six things happened automatically." No phones for this one, just watch the screen.',
+    /* 8: Conversation */
+    'Their phones jump into a real message thread, already pinned to the booking she just made. Let people read it, then say: "This isn\'t another DM. It\'s the conversation attached to the client who already booked." If anyone asks about pricing or the fee here, say: "We already covered that, a $220 booking nets you $209." Advance to the pause.',
+    /* 9: Q&A pause */
+    'STOP TALKING. Hold this slide. Take real questions. This is where "what\'s the catch" comes out, so don\'t rush it. If someone asks something better answered at the close (the beta ask, next steps), say "one more slide and we get there."',
+    /* 10: Close */
+    'One photo, the founding-stylist line, then the QR again. Say: "Beta opens tomorrow. Scan that same code, you\'re in." Let the last line sit in silence for a beat before you say anything else: "If this existed today, would you use it?" Then stop talking and let the room answer.',
   ];
 
   /* ---------- Engine ---------- */
@@ -835,10 +1104,11 @@ body.notes-mode #notes-panel {
       SN.countUp(el, parseInt(el.dataset.count, 10), { ms: 1100, suffix: el.dataset.suffix || '' });
     });
     if (i === 0) cascadeOpen();
-    if (i === 7) renderMoney();
+    if (i === 5) renderMoney(); /* Earnings: was slide index 7 before the Look/reorder, moved when Money relocated right after Booking */
+    if (i === 6) renderBiz(); /* Business: the domino-chain toolkit rebuild */
   }
 
-  /* ---------- Stop 4: the money, dissected live ----------
+  /* ---------- Earnings: the money, dissected live ----------
      Six full-screen beats, keynote style: only one is ever visible,
      each one owning the whole slide before the next replaces it. Beat
      1's $220 is built as two stacked, identically-clipped halves that
@@ -860,7 +1130,18 @@ body.notes-mode #notes-panel {
      deposit the moment it lands; the $50/yr flat fee is real but
      isn't a per-transaction number, so it's mentioned once, never
      baked into this booking's math. Text populates once per visit,
-     moneyBeat() drives which panel is on. */
+     moneyBeat() drives which panel is on.
+
+     Anticipation: every major reveal in this slide (the split, each
+     cut-block opening, and the full-beat conveyor swap) now fires a
+     short "prime" class first (PRIME_MS, well under the 200ms ceiling
+     that keeps it from reading as its own separate wait) before the
+     real reveal class lands. The click is still consumed synchronously
+     -- the clicker-advance contract never blocks on a timer -- the
+     prime and payoff are just sequenced a beat apart so the room's
+     eyes have already found the right spot before the number changes,
+     per the anticipation principle. */
+  const PRIME_MS = 160;
   let moneyRendered = false;
   const MONEY_BEATS = 6;
   let moneyBeatIdx = 0;
@@ -917,7 +1198,10 @@ body.notes-mode #notes-panel {
 
   /* splitReveal(): drives beat 1's own one-click slice before any full
      beat advance happens. The $220 itself is two stacked halves; on
-     this click both halves' text swaps to their real split figure
+     this click the beat gets a brief is-priming state (the whole
+     number dims and gathers inward, and the seam line brightens) so
+     the room's eyes land on the seam BEFORE it tears, then after
+     PRIME_MS both halves' text swaps to their real split figure
      (dataset.split, set in renderMoney) at the same moment #m-beat-1
      gets is-split, which is what triggers the CSS transition that
      carries each half apart and reveals its label. Returns true once
@@ -929,27 +1213,50 @@ body.notes-mode #notes-panel {
     const beat = document.getElementById('m-beat-1');
     const top = document.getElementById('ch-val-top');
     const bottom = document.getElementById('ch-val-bottom');
-    top.textContent = top.dataset.split;
-    bottom.textContent = bottom.dataset.split;
-    beat.classList.add('is-split');
+    beat.classList.add('is-priming');
+    setTimeout(() => {
+      beat.classList.remove('is-priming');
+      top.textContent = top.dataset.split;
+      bottom.textContent = bottom.dataset.split;
+      beat.classList.add('is-split');
+    }, PRIME_MS);
     return true;
   }
 
   /* cutReveal(): drives beat 3's own two-click micro-sequence without
      spending a whole beat slot per name. First click reveals Snooty's
-     block, second reveals the stylist's, narrated one at a time
-     ("Snooty gets paid" / click / "you get the rest"). Returns true
-     while it consumed the click, false once both blocks are open so
-     next() knows to fall through to the normal beat advance. */
+     block (secondary emphasis, quieter/quicker reveal), second reveals
+     the stylist's block (primary emphasis: bigger scale travel, a soft
+     gold glow, and a longer settle so it visibly outweighs Snooty's
+     entrance) -- narrated one at a time ("Snooty gets paid" / click /
+     "you keep the rest"). Each click primes its OWN block for PRIME_MS
+     (a held-breath dim+shrink on just that block, per the staging
+     principle: one thing moves at a time) before the real reveal class
+     lands, so the two blocks never appear to arrive simultaneously.
+     Returns true while it consumed the click, false once both blocks
+     are open so next() knows to fall through to the normal beat
+     advance. */
+  let cutPending = false; /* true while a prime is in flight, guards against a double-click landing inside the PRIME_MS window and re-triggering the same step */
   function cutReveal() {
-    if (cutStep >= 2) return false;
-    cutStep += 1;
+    if (cutStep >= 2 || cutPending) return cutStep >= 2 ? false : true;
+    cutPending = true;
+    const step = cutStep + 1;
     const beat = document.getElementById('m-beat-3');
-    beat.classList.remove('is-cut-1', 'is-cut-2');
-    beat.classList.add('is-cut-' + cutStep);
-    document.getElementById('m-cut-hint').textContent = cutStep === 1
-      ? 'Snooty gets paid.'
-      : 'You get the rest.';
+    const primeClass = step === 1 ? 'is-priming-snooty' : 'is-priming-you';
+    beat.classList.add(primeClass);
+    setTimeout(() => {
+      beat.classList.remove(primeClass);
+      cutStep = step;
+      cutPending = false;
+      beat.classList.remove('is-cut-1', 'is-cut-2');
+      beat.classList.add('is-cut-' + cutStep);
+      document.getElementById('m-cut-hint').textContent = cutStep === 1
+        ? 'Snooty gets paid first, straight out of the deposit.'
+        : 'Then you keep what is left of the deposit.';
+      document.getElementById('m-cut-sentence').innerHTML = cutStep === 1
+        ? 'First, <b>Snooty\'s cut</b> comes out of the deposit.'
+        : 'What is left of the deposit is <b>yours</b>.';
+    }, PRIME_MS);
     return true;
   }
 
@@ -977,27 +1284,120 @@ body.notes-mode #notes-panel {
     if (target < 0 || target >= MONEY_BEATS) return false;
     const outgoing = document.getElementById('m-beat-' + (moneyBeatIdx + 1));
     if (moneyBeatIdx === 0) {
-      outgoing.classList.remove('is-split');
+      outgoing.classList.remove('is-split', 'is-priming');
       splitStep = 0;
       const top = document.getElementById('ch-val-top');
       const bottom = document.getElementById('ch-val-bottom');
       top.textContent = SN.money(22000);
       bottom.textContent = SN.money(22000);
     }
-    if (moneyBeatIdx === 2) { outgoing.classList.remove('is-cut-1', 'is-cut-2'); cutStep = 0; document.getElementById('m-cut-hint').textContent = 'Click to open the deposit.'; }
+    if (moneyBeatIdx === 2) {
+      outgoing.classList.remove('is-cut-1', 'is-cut-2', 'is-priming-snooty', 'is-priming-you');
+      cutStep = 0;
+      cutPending = false;
+      document.getElementById('m-cut-hint').textContent = 'Click to open the deposit.';
+      document.getElementById('m-cut-sentence').textContent = 'That deposit splits two ways the moment it lands.';
+    }
     moneyBeatIdx = target;
     const incoming = document.getElementById('m-beat-' + (moneyBeatIdx + 1));
     if (moneyBeatIdx === 4) {
       const el = document.getElementById('m-recap-total');
-      setTimeout(() => SN.countUp(el, parseInt(el.dataset.target, 10), { ms: 1400, money: true }), 700);
+      /* Anticipation: the total sits at $0 through the row build, then
+         a short prime pulse on the total line right before the count-up
+         starts, so the room's eyes are already on the number when it
+         starts moving instead of catching it mid-count. The count-up
+         itself runs a beat longer than the UI cap on purpose: it is a
+         numeric tally building suspense toward the punchline, not a
+         state transition, matching how the recap rows above it stagger
+         in over ~450ms first. */
+      setTimeout(() => {
+        el.closest('.m-recap-total').classList.add('is-priming');
+        setTimeout(() => {
+          el.closest('.m-recap-total').classList.remove('is-priming');
+          SN.countUp(el, parseInt(el.dataset.target, 10), { ms: 900, money: true });
+        }, PRIME_MS);
+      }, 420);
     }
     [outgoing, incoming].forEach((el) => el.style.setProperty('--dir', String(dir)));
     outgoing.classList.remove('is-on');
     outgoing.classList.add('is-leaving');
     clearTimeout(outgoing._leaveTimer);
-    outgoing._leaveTimer = setTimeout(() => outgoing.classList.remove('is-leaving'), 650);
+    outgoing._leaveTimer = setTimeout(() => outgoing.classList.remove('is-leaving'), 400);
     incoming.classList.add('is-on');
     Array.from(document.getElementById('m-dots').children).forEach((dot, i) => dot.classList.toggle('is-on', i === moneyBeatIdx));
+    return true;
+  }
+
+  /* ---------- Business: domino-chain toolkit rebuild ----------
+     Same conveyor mechanism as moneyBeat() above, adapted for 7 beats
+     instead of 6 and with no sub-step micro-sequences (Money's split/
+     cut-open reveals don't apply here, every beat here is a single
+     click). Uses the real seeded thread client (Maya Reyes, Knotless
+     Braids - Medium, Sat 11:00 AM, $44 deposit on the same $220
+     booking the Earnings slide just dissected) so the numbers used
+     here stay consistent with both messages.html's real thread data
+     and the Earnings slide's own math ($44 deposit, $209 total kept). */
+  let bizRendered = false;
+  const BIZ_BEATS = 7;
+  let bizBeatIdx = 0;
+  function renderBiz() {
+    if (bizRendered) return;
+    bizRendered = true;
+    const T = SEED.thread;
+    document.querySelector('#biz-beat-1 .biz-notify-title').textContent = T.client.split(' ')[0] + ' booked ' + T.booking.service.split(' - ')[0];
+    document.querySelector('#biz-beat-1 .biz-notify-sub').textContent = T.booking.when + ' · ' + SEED.hero.business;
+    document.querySelector('#biz-beat-2 .biz-sentence b').textContent = 'The ' + SN.money(T.booking.depositCents) + ' deposit already landed.';
+
+    /* Beat 3: a 7x2 mini calendar grid, one cell lit gold to represent
+       the appointment landing on the day it was booked. */
+    const grid = document.getElementById('biz-cal-grid');
+    grid.innerHTML = '';
+    for (let n = 0; n < 14; n++) {
+      const cell = document.createElement('i');
+      if (n === 9) cell.dataset.litCell = '1';
+      grid.appendChild(cell);
+    }
+
+    /* Beat 4: today's earnings count up to the same $209 the Earnings
+       slide already established the stylist keeps on this booking. */
+    const price = 22000, dep = Math.round(price * SEED.platform.depositPct / 100);
+    const snootyCut = Math.round(price * SEED.platform.commissionPct / 100);
+    const totalEarned = (dep - snootyCut) + (price - dep);
+    document.getElementById('biz-earnings-val').dataset.target = totalEarned;
+    document.getElementById('biz-dash-earnings').textContent = SN.money(totalEarned);
+  }
+
+  function bizBeat(dir) {
+    const target = bizBeatIdx + dir;
+    if (target < 0 || target >= BIZ_BEATS) return false;
+    const outgoing = document.getElementById('biz-beat-' + (bizBeatIdx + 1));
+    bizBeatIdx = target;
+    const incoming = document.getElementById('biz-beat-' + (bizBeatIdx + 1));
+    if (bizBeatIdx === 2) {
+      /* light the calendar cell just after the beat becomes visible,
+         so the room sees the grid settle first, then the day light up */
+      setTimeout(() => {
+        const lit = document.querySelector('#biz-cal-grid i[data-lit-cell]');
+        if (lit) lit.classList.add('is-lit');
+      }, 300);
+    }
+    if (bizBeatIdx === 3) {
+      const el = document.getElementById('biz-earnings-val');
+      setTimeout(() => { SN.countUp(el, parseInt(el.dataset.target, 10), { ms: 900, money: true }); }, 150);
+    }
+    if (bizBeatIdx === 4) {
+      setTimeout(() => {
+        document.getElementById('biz-clients-from').style.opacity = '0.4';
+        document.getElementById('biz-clients-to').style.color = 'var(--color-accent)';
+      }, 150);
+    }
+    [outgoing, incoming].forEach((el) => el.style.setProperty('--dir', String(dir)));
+    outgoing.classList.remove('is-on');
+    outgoing.classList.add('is-leaving');
+    clearTimeout(outgoing._leaveTimer);
+    outgoing._leaveTimer = setTimeout(() => outgoing.classList.remove('is-leaving'), 400);
+    incoming.classList.add('is-on');
+    Array.from(document.getElementById('biz-dots').children).forEach((dot, i) => dot.classList.toggle('is-on', i === bizBeatIdx));
     return true;
   }
 
@@ -1016,35 +1416,42 @@ body.notes-mode #notes-panel {
   }
 
   function next() {
-    if (cur === 7 && moneyBeatIdx === 0 && splitReveal()) return;
-    if (cur === 7 && moneyBeatIdx === 2 && cutReveal()) return;
-    if (cur === 7 && moneyBeat(1)) return;
+    /* Earnings (index 5): Money's own 6-beat sequence, with its two
+       sub-step micro-reveals (the $220 split, the deposit cut-open). */
+    if (cur === 5 && moneyBeatIdx === 0 && splitReveal()) return;
+    if (cur === 5 && moneyBeatIdx === 2 && cutReveal()) return;
+    if (cur === 5 && moneyBeat(1)) return;
+    /* Business (index 6): the domino-chain toolkit rebuild, 7 beats. */
+    if (cur === 6 && bizBeat(1)) return;
     const pending = fragsOf(cur).filter((f) => !f.classList.contains('is-on'));
     if (pending.length) {
       pending[0].classList.add('is-on');
-      if (cur === 5) tueCounterStep();
       return;
     }
     show(cur + 1);
   }
   function prev() {
-    if (cur === 7 && moneyBeatIdx === 2 && cutStep > 0) {
+    if (cur === 5 && moneyBeatIdx === 2 && cutStep > 0) {
       cutStep -= 1;
       const beat = document.getElementById('m-beat-3');
-      beat.classList.remove('is-cut-1', 'is-cut-2');
+      beat.classList.remove('is-cut-1', 'is-cut-2', 'is-priming-snooty', 'is-priming-you');
       if (cutStep > 0) beat.classList.add('is-cut-' + cutStep);
-      document.getElementById('m-cut-hint').textContent = cutStep === 0 ? 'Click to open the deposit.' : 'Snooty gets paid.';
+      document.getElementById('m-cut-hint').textContent = cutStep === 0 ? 'Click to open the deposit.' : 'Snooty gets paid first, straight out of the deposit.';
+      document.getElementById('m-cut-sentence').innerHTML = cutStep === 0
+        ? 'That deposit splits two ways the moment it lands.'
+        : 'First, <b>Snooty\'s cut</b> comes out of the deposit.';
       return;
     }
-    if (cur === 7 && moneyBeatIdx === 0 && splitStep > 0) {
+    if (cur === 5 && moneyBeatIdx === 0 && splitStep > 0) {
       splitStep = 0;
       const beat = document.getElementById('m-beat-1');
-      beat.classList.remove('is-split');
+      beat.classList.remove('is-split', 'is-priming');
       document.getElementById('ch-val-top').textContent = SN.money(22000);
       document.getElementById('ch-val-bottom').textContent = SN.money(22000);
       return;
     }
-    if (cur === 7 && moneyBeatIdx > 0) { moneyBeat(-1); return; }
+    if (cur === 5 && moneyBeatIdx > 0) { moneyBeat(-1); return; }
+    if (cur === 6 && bizBeatIdx > 0) { bizBeat(-1); return; }
     const on = fragsOf(cur).filter((f) => f.classList.contains('is-on'));
     if (on.length) { on[on.length - 1].classList.remove('is-on'); return; }
     show(cur - 1);

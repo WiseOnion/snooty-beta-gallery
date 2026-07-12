@@ -163,14 +163,13 @@
   const SEED = window.SNOOTY_SEED;
   const params = new URLSearchParams(location.search);
   const inDemo = params.has('demo');
-  const scripted = params.has('script');
   const suffix = (inDemo ? '?demo=1' : '') + (params.has('session') ? (inDemo ? '&' : '?') + 'session=1' : '');
 
   SN.frameOnDesktop();
   SN.markSeen('discover');
   if (params.has('session')) SN.sync.followStops(); /* hands off to the next stop when the presenter advances again */
 
-  if (!inDemo && !scripted) {
+  if (!inDemo) {
     SN.purposeCard({
       title: 'This is what your future client sees.',
       body: 'A feed of finished work, not business listings. Scroll it, search it, press a look to see it come alive.',

@@ -153,7 +153,6 @@ body.framed .cta-bar { position: absolute; }
   const SEED = window.SNOOTY_SEED;
   const params = new URLSearchParams(location.search);
   const inDemo = params.has('demo');
-  const scripted = params.has('script');
   const H = SEED.hero;
 
   SN.frameOnDesktop();
@@ -165,7 +164,7 @@ body.framed .cta-bar { position: absolute; }
   const heroLook = H.looks.find((l) => l.id === feedLook.heroLook) || H.looks[0];
   let service = H.services.find((s) => s.id === heroLook.serviceId) || H.services[0];
 
-  if (!inDemo && !scripted) {
+  if (!inDemo) {
     SN.purposeCard({
       title: 'This is the moment you stop chasing deposits.',
       body: 'Service, time, deposit, confirmed. No DM back-and-forth, no "can I pay Friday."',

@@ -76,11 +76,11 @@
      a phone that already landed on a stop has no code left running that
      watches for further slide changes, so advancing past it does nothing. */
   const STOP_MAP = {
-    3: 'discover.html?script=1&session=1',
-    4: 'messages.html?script=1&session=1',
-    5: 'wait.html?session=1', /* Q&A pause 1: phones return to the holding screen, attention up front */
-    6: 'booking.html?script=1&session=1', /* starts at step 1 (service selection), the real beginning of the flow */
-    9: 'wait.html?session=1', /* Q&A pause 2 */
+    3: 'discover.html?script=1&session=1', /* Discovery: how clients find you */
+    4: 'look.html?i=9&script=1&session=1', /* The Look: SEED.feed[9] = "Medium knotless, chocolate brown", $220 (sv2) -- the SAME booking the Earnings slide dissects later */
+    5: 'booking.html?script=1&session=1', /* Booking: starts at step 1 (service selection), the real beginning of the flow */
+    8: 'messages.html?script=1&session=1', /* Conversation: now lands near the close, after the client has already booked */
+    9: 'wait.html?session=1', /* single Q&A pause, near the end */
   };
 
   /* Call from any scripted stop page: watches the live slide and

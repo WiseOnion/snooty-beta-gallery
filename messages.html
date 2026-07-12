@@ -121,13 +121,12 @@ body.framed .composer { position: relative; }
   const T = SEED.thread;
   const params = new URLSearchParams(location.search);
   const inDemo = params.has('demo');
-  const scripted = params.has('script');
 
   SN.frameOnDesktop();
   SN.markSeen('messages');
   if (params.has('session')) SN.sync.followStops(); /* hands off to the next stop when the presenter advances again */
 
-  if (!inDemo && !scripted) {
+  if (!inDemo) {
     SN.purposeCard({
       title: 'One thread, tied to one booking.',
       body: 'No more hunting through Instagram DMs and text messages. Every conversation already knows the appointment it belongs to.',

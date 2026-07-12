@@ -189,19 +189,19 @@
   const SEED = window.SNOOTY_SEED;
   const params = new URLSearchParams(location.search);
   const inDemo = params.has('demo');
-  const scripted = params.has('script');
   const suffix = (inDemo ? '?demo=1' : '') + (params.has('session') ? (inDemo ? '&' : '?') + 'session=1' : '');
   const H = SEED.hero;
 
   SN.frameOnDesktop();
   SN.markSeen('look');
+  if (params.has('session')) SN.sync.followStops(); /* hands off to the next stop when the presenter advances again */
 
   const i = parseInt(params.get('i'), 10);
   const feedLook = SEED.feed[!isNaN(i) ? i : 0] || SEED.feed[0];
   const heroLook = H.looks.find((l) => l.id === feedLook.heroLook) || H.looks[0];
   const service = H.services.find((s) => s.id === heroLook.serviceId);
 
-  if (!inDemo && !scripted) {
+  if (!inDemo) {
     SN.purposeCard({
       title: 'The work sold you. This closes it.',
       body: 'Real angles, a real price, reviews tied to real appointments. Everything a stranger needs before they book a stranger.',
