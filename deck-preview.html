@@ -424,25 +424,57 @@ h1.headline { font-family: var(--font-display); font-weight: 600; font-size: cla
 .m-hero-val { font-family: var(--font-display); font-weight: 700; font-size: clamp(72px, 10vw, 148px); line-height: 1; color: var(--color-text-inverse); }
 .m-hero-sub { font-family: var(--font-display); font-weight: 600; font-size: clamp(13px, 1.2vw, 16px); letter-spacing: 0.06em; color: var(--color-text-muted-inverse); margin-top: 2vh; }
 
-/* Beat 2: the deposit pulls away. Two blocks that visibly separate on
-   the vertical axis, like the payment is being physically split, not
-   two cards fading in side by side. */
-.m-split-stack { display: flex; flex-direction: column; align-items: center; gap: 0; }
+/* Beat 2: the deposit pulls away. Not a gentle side-by-side card
+   fade: the $220 visibly cracks apart along a torn, jagged edge, like
+   snapping a bill in half, with a white flash at the seam and a sharp
+   shake on impact. Impact keyframes fire once via a JS-added
+   is-cracking class (see moneyBeat) rather than a CSS transition, so
+   the shake reads as a hit, not a smooth ease. */
+.m-split-stack { display: flex; flex-direction: column; align-items: center; gap: 0; position: relative; }
+.m-split-stack.is-cracking { animation: crack-shake 420ms var(--ease-out) 260ms; }
+@keyframes crack-shake {
+  0% { transform: translate(0, 0); }
+  20% { transform: translate(-6px, 1px); }
+  40% { transform: translate(5px, -1px); }
+  60% { transform: translate(-3px, 1px); }
+  80% { transform: translate(2px, 0); }
+  100% { transform: translate(0, 0); }
+}
 .m-split-piece {
-  padding: 2.6vh 4vw; border-radius: 18px; transition: transform 1100ms var(--ease-out) 200ms, margin 1100ms var(--ease-out) 200ms;
+  padding: 4vh 5.5vw; position: relative; z-index: 1;
+  transition: transform 1100ms var(--ease-out) 200ms, margin 1100ms var(--ease-out) 200ms;
 }
 .m-split-piece .sp-label { font-family: var(--font-display); font-weight: 600; font-size: clamp(12px, 1.1vw, 15px); letter-spacing: 0.08em; text-transform: uppercase; }
 .m-split-piece .sp-val { font-family: var(--font-display); font-weight: 700; font-size: clamp(38px, 4.6vw, 64px); line-height: 1.1; margin-top: 1vh; }
-.m-split-piece.rest { background: rgba(255,255,255,0.06); color: var(--color-text-inverse); transform: translateY(0); }
+.m-split-piece.rest {
+  background: rgba(255,255,255,0.06); color: var(--color-text-inverse); transform: translateY(0);
+  border-radius: 18px 18px 0 0;
+  clip-path: polygon(0% 0%, 100% 0%, 100% 92%, 92% 88%, 84% 94%, 76% 87%, 68% 93%, 60% 88%, 52% 95%, 44% 89%, 36% 93%, 28% 87%, 20% 94%, 12% 88%, 4% 93%, 0% 89%);
+}
 .m-split-piece.rest .sp-label { color: var(--color-text-muted-inverse); }
-.m-split-piece.dep { background: var(--color-accent); color: #241505; margin-top: 14px; transform: translateY(0); }
-.m-beat.is-on .m-split-piece.dep { transform: translateY(28px); margin-top: 30px; }
-.m-beat.is-on .m-split-piece.rest { transform: translateY(-8px); }
+.m-split-piece.dep {
+  background: var(--color-accent); color: #241505; margin-top: -1px; transform: translateY(0);
+  border-radius: 0 0 18px 18px;
+  clip-path: polygon(0% 11%, 8% 5%, 16% 12%, 24% 6%, 32% 13%, 40% 5%, 48% 12%, 56% 6%, 64% 11%, 72% 5%, 80% 13%, 88% 6%, 96% 12%, 100% 8%, 100% 100%, 0% 100%);
+}
+.m-beat.is-on .m-split-piece.dep { transform: translateY(26px); margin-top: 22px; }
+.m-beat.is-on .m-split-piece.rest { transform: translateY(-10px); }
+.m-crack-flash {
+  position: absolute; left: 10%; right: 10%; top: 50%; height: 3px; transform: translateY(-50%) scaleX(0);
+  background: var(--color-text-inverse); border-radius: 2px; z-index: 2; opacity: 0;
+  transform-origin: center;
+}
+.m-split-stack.is-cracking .m-crack-flash { animation: crack-flash 380ms var(--ease-out) 200ms; }
+@keyframes crack-flash {
+  0% { opacity: 0; transform: translateY(-50%) scaleX(0); }
+  35% { opacity: 1; transform: translateY(-50%) scaleX(1); }
+  100% { opacity: 0; transform: translateY(-50%) scaleX(1); }
+}
 
 /* Beat 3: zoom into the deposit. One card grows from small to large
    as if the camera pushed in on it; everything else is already gone. */
 .m-zoom-card {
-  background: var(--color-accent); color: #241505; border-radius: 22px; padding: 5vh 6vw;
+  background: var(--color-accent); color: #241505; border-radius: 22px; padding: 6.5vh 8vw;
   transform: scale(0.88); transition: transform 1000ms var(--ease-out) 150ms;
 }
 .m-beat.is-on .m-zoom-card { transform: scale(1); }
@@ -455,7 +487,7 @@ h1.headline { font-family: var(--font-display); font-weight: 600; font-size: cla
    a time: Snooty, then the stylist. */
 .m-cut-stage { display: flex; gap: 0; width: min(640px, 84vw); }
 .m-cut-block {
-  flex: 1; padding: 4vh 2vw; border-radius: 18px; opacity: 0; transform: scale(0.94);
+  flex: 1; padding: 5vh 2.8vw; border-radius: 18px; opacity: 0; transform: scale(0.94);
   transition: opacity 700ms var(--ease-out), transform 700ms var(--ease-out);
 }
 .m-cut-block .cb-label { font-family: var(--font-display); font-weight: 600; font-size: clamp(12px, 1.1vw, 15px); letter-spacing: 0.06em; text-transform: uppercase; }
@@ -610,8 +642,9 @@ body.notes-mode #notes-panel {
       </div>
 
       <div class="m-beat" id="m-beat-2">
-        <div class="m-split-stack">
+        <div class="m-split-stack" id="m-split-stack">
           <div class="m-split-piece rest"><div class="sp-label">Remaining balance</div><div class="sp-val" id="m-rest-val"></div></div>
+          <div class="m-crack-flash"></div>
           <div class="m-split-piece dep"><div class="sp-label">Deposit today</div><div class="sp-val" id="m-dep-val"></div></div>
         </div>
         <div class="m-note">She isn't paying everything today. <b>She's paying a deposit.</b></div>
@@ -860,6 +893,16 @@ body.notes-mode #notes-panel {
     if (moneyBeatIdx === 3) { outgoing.classList.remove('is-cut-1', 'is-cut-2'); cutStep = 0; document.getElementById('m-cut-hint').textContent = 'Click to open the deposit.'; }
     moneyBeatIdx = target;
     const incoming = document.getElementById('m-beat-' + (moneyBeatIdx + 1));
+    if (moneyBeatIdx === 1) {
+      /* Re-fire the crack animation every time beat 2 is entered, not
+         just the first time: removing the class, forcing a reflow via
+         offsetWidth, then re-adding it restarts a CSS animation that
+         would otherwise stay finished if the class never left. */
+      const stack = document.getElementById('m-split-stack');
+      stack.classList.remove('is-cracking');
+      void stack.offsetWidth;
+      stack.classList.add('is-cracking');
+    }
     if (moneyBeatIdx === 5) {
       const el = document.getElementById('m-recap-total');
       setTimeout(() => SN.countUp(el, parseInt(el.dataset.target, 10), { ms: 1400, money: true }), 700);
