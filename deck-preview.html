@@ -420,46 +420,47 @@ h1.headline { font-family: var(--font-display); font-weight: 600; font-size: cla
 #m-beat-1.is-split #m-split-note { opacity: 1; }
 
 /* Beats 1+2 are ONE panel (#m-beat-1) so the $220 itself splits
-   instead of two panels swapping. Standard "split text" technique:
-   two IDENTICAL copies of the same text, absolutely stacked exactly
-   on top of each other (inset:0 inside a shared relative stage sized
-   to the text's own rendered box), each clipped with a jagged polygon
-   to show only its top or bottom half. Absolute positioning is what
-   guarantees pixel-perfect overlap at rest, reading as one solid
-   "$220"; margin-based overlap (an earlier attempt here) doesn't
-   compensate for clip-path leaving the full layout box in place, and
-   drifts out of alignment. Advancing (splitReveal, one click): the
-   top half's own text swaps to "$176" and slides up out of the
-   stage's flow (position:relative + translateY), the bottom half's
-   swaps to "$44" and slides down, each carrying its own label with
-   it, while a flash and a shake fire along the seam. The digits
-   themselves visibly tear apart, not a number shrinking aside while a
-   new panel fades in beside it. */
+   instead of two panels swapping. "Mask" split technique: the stage
+   holds two overflow:hidden windows (.m-mask.top / .bottom), each
+   exactly half the stage's height. Each mask contains the FULL text
+   at full size; the bottom mask's inner content is shifted up by the
+   whole stage height so only its own bottom half peeks through its
+   window. Together the two windows read as one solid "$220" with a
+   thin line at the seam. On split (one click): both masks grow to
+   independent full-height boxes, their inner content's offset resets
+   to 0 so each shows its whole (new) number, and the two boxes move
+   apart with room between them. A clean slice, no torn edges or
+   impact effects. */
 .m-title { position: absolute; top: 6vh; left: 50%; transform: translateX(-50%); font-family: var(--font-display); font-weight: 600; font-size: clamp(20px, 2.2vw, 30px); color: var(--color-text-muted-inverse); }
 .m-beat .m-eyebrow { margin-bottom: 3vh; }
 
 .m-crack-stage {
   position: relative; width: min(90vw, 640px); height: clamp(72px, 10vw, 148px);
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
   transition: height 1000ms var(--ease-out) 150ms;
 }
-#m-beat-1.is-split .m-crack-stage { height: 40vh; }
-.m-crack-stage.is-cracking { animation: crack-shake 420ms var(--ease-out) 260ms; }
-@keyframes crack-shake {
-  0% { transform: translate(0, 0); }
-  20% { transform: translate(-6px, 1px); }
-  40% { transform: translate(5px, -1px); }
-  60% { transform: translate(-3px, 1px); }
-  80% { transform: translate(2px, 0); }
-  100% { transform: translate(0, 0); }
-}
+#m-beat-1.is-split .m-crack-stage { height: 42vh; }
 
-.m-crack-half {
-  position: absolute; left: 0; right: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
-  padding: 0 3vw;
-  transition: top 1000ms var(--ease-out) 150ms, bottom 1000ms var(--ease-out) 150ms, padding 1000ms var(--ease-out) 150ms,
-              clip-path 1000ms var(--ease-out) 150ms, background 700ms var(--ease-out) 300ms, border-radius 700ms var(--ease-out) 150ms;
+.m-split-line {
+  position: absolute; left: 6%; right: 6%; top: 50%; height: 2px; margin-top: -1px;
+  background: rgba(255,255,255,0.35); z-index: 2;
+  transition: opacity 400ms var(--ease-out);
 }
+#m-beat-1.is-split .m-split-line { opacity: 0; }
+
+.m-mask {
+  position: absolute; left: 0; right: 0; overflow: hidden;
+  transition: top 1000ms var(--ease-out) 150ms, bottom 1000ms var(--ease-out) 150ms, height 1000ms var(--ease-out) 150ms,
+              background 700ms var(--ease-out) 300ms, border-radius 700ms var(--ease-out) 150ms;
+}
+.m-mask.top { top: 0; height: 50%; }
+.m-mask.bottom { bottom: 0; height: 50%; }
+.m-mask-inner {
+  position: absolute; left: 0; right: 0; top: 0; display: flex; flex-direction: column; align-items: center;
+  padding: 0 3vw;
+  transition: transform 1000ms var(--ease-out) 150ms;
+}
+.m-mask.top .m-mask-inner { top: 0; }
+.m-mask.bottom .m-mask-inner { top: -100%; }
 .ch-val {
   font-family: var(--font-display); font-weight: 700; font-size: clamp(72px, 10vw, 148px); line-height: 1; color: var(--color-text-inverse);
   transition: font-size 1000ms var(--ease-out) 150ms, color 600ms var(--ease-out) 300ms;
@@ -469,45 +470,28 @@ h1.headline { font-family: var(--font-display); font-weight: 600; font-size: cla
   color: var(--color-text-muted-inverse); opacity: 0; max-height: 0; overflow: hidden;
   transition: opacity 500ms var(--ease-out) 500ms, max-height 500ms var(--ease-out) 500ms, margin 500ms var(--ease-out) 500ms;
 }
-/* Rest: both halves fill the same box (top:0/bottom:0), each clipped
-   to its jagged half, reading as one solid "$220" when overlaid. */
-.m-crack-half.top { top: 0; bottom: 0; clip-path: polygon(0% 0%, 100% 0%, 100% 46%, 92% 41%, 84% 48%, 76% 40%, 68% 47%, 60% 41%, 52% 49%, 44% 40%, 36% 46%, 28% 39%, 20% 48%, 12% 41%, 4% 46%, 0% 42%); }
-.m-crack-half.top .ch-label { order: -1; margin-bottom: 0; }
-.m-crack-half.bottom { top: 0; bottom: 0; clip-path: polygon(0% 51%, 8% 57%, 16% 50%, 24% 58%, 32% 49%, 40% 59%, 48% 51%, 56% 58%, 64% 52%, 72% 59%, 80% 49%, 88% 58%, 96% 51%, 100% 56%, 100% 100%, 0% 100%); }
-.m-crack-half.bottom .ch-label { margin-top: 0; }
+.m-mask.top .ch-label { order: -1; margin-bottom: 0; }
+.m-mask.bottom .ch-label { margin-top: 0; }
 
-/* Split: top/bottom anchors move each half to opposite ends of the
-   now-tall stage (top pinned to the top edge, bottom pinned to the
-   bottom edge) while position stays absolute the whole time, so
-   top/bottom transition smoothly instead of snapping the way a
-   position-mode switch would. Full rectangle clip-path (still 16
-   points, matching the rest-state polygons so it interpolates) opens
-   each half up to show its whole new number as it settles. */
-#m-beat-1.is-split .m-crack-half.top {
-  top: 0; bottom: auto; padding: 3vh 5.5vw; background: rgba(255,255,255,0.06); border-radius: 18px;
-  clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 92% 96%, 84% 100%, 76% 96%, 68% 100%, 60% 96%, 52% 100%, 44% 96%, 36% 100%, 28% 96%, 20% 100%, 12% 96%, 4% 100%, 0% 96%);
+/* Split: each mask grows to fill the whole (now much taller) stage
+   independently, top pinned to the top edge, bottom pinned to the
+   bottom edge, so there's real space between them once open. The
+   inner content's top offset resets to 0 so its full text (already
+   swapped to the new figure in JS) sits centered in the now-tall box
+   instead of showing only half of it. */
+#m-beat-1.is-split .m-mask.top {
+  top: 0; bottom: auto; height: 46%; background: rgba(255,255,255,0.06); border-radius: 18px;
 }
-#m-beat-1.is-split .m-crack-half.top .ch-val { font-size: clamp(38px, 4.6vw, 64px); color: var(--color-text-inverse); }
-#m-beat-1.is-split .m-crack-half.top .ch-label { opacity: 1; max-height: 5vh; }
+#m-beat-1.is-split .m-mask.top .m-mask-inner { top: 0; padding: 3vh 5.5vw; justify-content: center; height: 100%; }
+#m-beat-1.is-split .m-mask.top .ch-val { font-size: clamp(38px, 4.6vw, 64px); color: var(--color-text-inverse); }
+#m-beat-1.is-split .m-mask.top .ch-label { opacity: 1; max-height: 5vh; }
 
-#m-beat-1.is-split .m-crack-half.bottom {
-  top: auto; bottom: 0; padding: 3vh 5.5vw; background: var(--color-accent); border-radius: 18px;
-  clip-path: polygon(0% 4%, 8% 0%, 16% 4%, 24% 0%, 32% 4%, 40% 0%, 48% 4%, 56% 0%, 64% 4%, 72% 0%, 80% 4%, 88% 0%, 96% 4%, 100% 0%, 100% 100%, 0% 100%);
+#m-beat-1.is-split .m-mask.bottom {
+  top: auto; bottom: 0; height: 46%; background: var(--color-accent); border-radius: 18px;
 }
-#m-beat-1.is-split .m-crack-half.bottom .ch-val { font-size: clamp(38px, 4.6vw, 64px); color: #241505; }
-#m-beat-1.is-split .m-crack-half.bottom .ch-label { opacity: 1; max-height: 5vh; color: #6b5426; }
-
-.m-crack-flash {
-  position: absolute; left: 10%; right: 10%; top: 50%; height: 3px; transform: translateY(-50%) scaleX(0);
-  background: var(--color-text-inverse); border-radius: 2px; z-index: 2; opacity: 0;
-  transform-origin: center;
-}
-.m-crack-stage.is-cracking .m-crack-flash { animation: crack-flash 380ms var(--ease-out) 200ms; }
-@keyframes crack-flash {
-  0% { opacity: 0; transform: translateY(-50%) scaleX(0); }
-  35% { opacity: 1; transform: translateY(-50%) scaleX(1); }
-  100% { opacity: 0; transform: translateY(-50%) scaleX(1); }
-}
+#m-beat-1.is-split .m-mask.bottom .m-mask-inner { top: 0; padding: 3vh 5.5vw; justify-content: center; height: 100%; }
+#m-beat-1.is-split .m-mask.bottom .ch-val { font-size: clamp(38px, 4.6vw, 64px); color: #241505; }
+#m-beat-1.is-split .m-mask.bottom .ch-label { opacity: 1; max-height: 5vh; color: #6b5426; }
 #m-hero-sub {
   font-family: var(--font-display); font-weight: 600; font-size: clamp(13px, 1.2vw, 16px);
   letter-spacing: 0.06em; color: var(--color-text-muted-inverse); margin-top: 2vh;
@@ -702,14 +686,18 @@ body.notes-mode #notes-panel {
              below both halves and is only shown at rest, since it
              describes the single un-split number. -->
         <div class="m-crack-stage" id="m-crack-stage">
-          <div class="m-crack-half top">
-            <div class="ch-label" id="ch-label-top">Remaining balance</div>
-            <div class="ch-val" id="ch-val-top"></div>
+          <div class="m-split-line"></div>
+          <div class="m-mask top">
+            <div class="m-mask-inner">
+              <div class="ch-label" id="ch-label-top">Remaining balance</div>
+              <div class="ch-val" id="ch-val-top"></div>
+            </div>
           </div>
-          <div class="m-crack-flash"></div>
-          <div class="m-crack-half bottom">
-            <div class="ch-val" id="ch-val-bottom"></div>
-            <div class="ch-label" id="ch-label-bottom">Deposit today</div>
+          <div class="m-mask bottom">
+            <div class="m-mask-inner">
+              <div class="ch-val" id="ch-val-bottom"></div>
+              <div class="ch-label" id="ch-label-bottom">Deposit today</div>
+            </div>
           </div>
         </div>
         <div class="m-hero-sub" id="m-hero-sub">Full service price</div>
@@ -927,15 +915,13 @@ body.notes-mode #notes-panel {
     document.getElementById('m-final-earned').textContent = SN.money(totalEarned);
   }
 
-  /* splitReveal(): drives beat 1's own one-click crack before any full
+  /* splitReveal(): drives beat 1's own one-click slice before any full
      beat advance happens. The $220 itself is two stacked halves; on
      this click both halves' text swaps to their real split figure
      (dataset.split, set in renderMoney) at the same moment #m-beat-1
-     gets is-split, which is what triggers the CSS transform that
-     carries each half apart and reveals its label. The crack/shake/
-     flash fires a beat later so the tear visibly lands mid-separation
-     rather than at the instant of the click. Returns true once (this
-     is a single-step reveal now, not two), false after so next()
+     gets is-split, which is what triggers the CSS transition that
+     carries each half apart and reveals its label. Returns true once
+     (this is a single-step reveal, not two), false after so next()
      falls through to the normal beat advance. */
   function splitReveal() {
     if (splitStep >= 1) return false;
@@ -946,12 +932,6 @@ body.notes-mode #notes-panel {
     top.textContent = top.dataset.split;
     bottom.textContent = bottom.dataset.split;
     beat.classList.add('is-split');
-    const stage = document.getElementById('m-crack-stage');
-    setTimeout(() => {
-      stage.classList.remove('is-cracking');
-      void stage.offsetWidth;
-      stage.classList.add('is-cracking');
-    }, 300);
     return true;
   }
 
