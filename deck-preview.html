@@ -386,44 +386,104 @@ h1.headline { font-family: var(--font-display); font-weight: 600; font-size: cla
 .close-bg::after { content: ""; position: absolute; inset: 0; background: linear-gradient(rgba(0,0,0,0.25), rgba(0,0,0,0.72)); }
 .close-line { position: relative; z-index: 2; text-align: center; }
 
-/* ============ Stop 4: money worked on screen ============
-   A single connected ledger instead of two disconnected block groups:
-   the $220 ticket splits into deposit + balance (with a visible split
-   ratio bar so the 20/80 reads at a glance), then a dark cut-away strip
-   states what Snooty takes, and the competitor number lands as a
-   direct multiple ("4x less") rather than just a crossed-out pill. */
-.money-ledger { margin-top: 4.2vh; }
-.money-ticket { display: flex; align-items: baseline; justify-content: space-between; padding: 0 0.2vw 1.6vh; border-bottom: 1px solid var(--color-border); }
-.money-ticket .mt-label { font-family: var(--font-display); font-weight: 600; font-size: clamp(12px, 1.1vw, 15px); letter-spacing: 0.06em; text-transform: uppercase; color: var(--color-text-muted); }
-.money-ticket .mt-val { font-family: var(--font-display); font-weight: 700; font-size: clamp(22px, 2.4vw, 32px); color: var(--color-text); }
+/* ============ Stop 4: money, worked on screen ============
+   A keynote-style reveal, not a scrolling list: five beats, each one
+   owning the FULL slide before the next arrives. Every beat is
+   absolutely positioned over the others; only the active one is
+   visible or interactive. Advancing crossfades out the old beat while
+   the new one's headline number punches in from slightly-large-and-
+   faded to full size and full opacity, the same "scale settles into
+   place" motion a product keynote uses when a number becomes the
+   whole point of the screen for a second. Chart beats (split bar,
+   race bars) additionally grow their fill once their beat is active,
+   so the shape of the comparison draws itself instead of appearing
+   pre-drawn. Written for a room with zero context: nothing is named
+   without also being explained in one line underneath it, and every
+   beat pushes toward the same verdict, Snooty is the cheapest and the
+   most honest about it. */
+.money-stage { position: relative; margin-top: 2vh; height: 52vh; min-height: 380px; }
+.m-beat {
+  position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center;
+  justify-content: center; text-align: center; opacity: 0; pointer-events: none;
+  transform: scale(1.06); transition: opacity 500ms var(--ease-out), transform 650ms var(--ease-brand);
+}
+.m-beat.is-on { opacity: 1; pointer-events: auto; transform: scale(1); }
+.m-beat .m-eyebrow { font-family: var(--font-display); font-weight: 600; font-size: clamp(12px, 1.15vw, 15px); letter-spacing: 0.1em; text-transform: uppercase; color: var(--color-text-muted); margin-bottom: 1.6vh; }
+.m-beat .m-note { font-size: clamp(13.5px, 1.25vw, 17px); color: var(--color-text-muted); max-width: 40ch; margin-top: 2vh; line-height: 1.5; }
+.m-beat .m-note b { color: var(--color-text); font-weight: 600; }
 
-.split-bar { display: flex; height: 10px; border-radius: 6px; overflow: hidden; margin: 2.4vh 0 0; background: var(--color-border); }
+/* Beat 1: the booking, alone. One number, nothing else competing. */
+.m-hero-val { font-family: var(--font-display); font-weight: 700; font-size: clamp(64px, 9vw, 128px); line-height: 1; color: var(--color-text); }
+
+/* Beat 2: the split. Bar draws itself left to right once the beat is
+   active; the two dollar amounts punch in a half-beat after. */
+.m-split-stage { width: min(760px, 84vw); }
+.split-bar { position: relative; display: flex; height: 20px; border-radius: 10px; overflow: hidden; background: var(--color-border); }
+.split-bar .sb-dep, .split-bar .sb-rest { height: 100%; width: 0; transition: width 1000ms var(--ease-brand) 260ms; }
 .split-bar .sb-dep { background: var(--color-accent); }
 .split-bar .sb-rest { background: var(--color-bg-dark); }
-
-.money-split { display: flex; gap: 2vw; margin-top: 2vh; }
-.money-block { flex: 1; border-radius: 18px; padding: 2.8vh 2vw; }
+.m-beat.is-on .split-bar .sb-dep { width: var(--dep-pct); }
+.m-beat.is-on .split-bar .sb-rest { width: var(--rest-pct); }
+.split-labels { display: flex; justify-content: space-between; margin-top: 1vh; font-size: clamp(11.5px, 1.05vw, 14px); color: var(--color-text-muted); }
+.split-labels b { color: var(--color-text); }
+.money-split { display: flex; gap: 2vw; margin-top: 3.2vh; opacity: 0; transform: translateY(10px); transition: opacity 500ms var(--ease-out) 500ms, transform 550ms var(--ease-brand) 500ms; }
+.m-beat.is-on .money-split { opacity: 1; transform: translateY(0); }
+.money-block { flex: 1; border-radius: 18px; padding: 2.6vh 2vw; text-align: left; }
 .money-block.dep { background: var(--color-accent-soft); border: 1px solid rgba(201,154,74,0.35); }
 .money-block.rest { background: var(--color-bg-card); border: 1px solid var(--color-border); }
 .money-block .mb-tag { display: flex; align-items: center; gap: 0.6vw; font-family: var(--font-display); font-weight: 600; font-size: clamp(11px, 1.05vw, 14px); letter-spacing: 0.06em; text-transform: uppercase; color: var(--color-text-muted); }
 .money-block .mb-tag::before { content: ""; width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
 .money-block.dep .mb-tag::before { background: var(--color-accent); }
 .money-block.rest .mb-tag::before { background: var(--color-bg-dark); }
-.money-block .mb-val { font-family: var(--font-display); font-weight: 700; font-size: clamp(32px, 4vw, 58px); line-height: 1.1; margin-top: 1vh; color: var(--color-primary); }
+.money-block .mb-val { font-family: var(--font-display); font-weight: 700; font-size: clamp(28px, 3.4vw, 48px); line-height: 1.1; margin-top: 1vh; color: var(--color-primary); }
 .money-block.dep .mb-val { color: #6b5426; }
 .money-block .mb-note { font-size: clamp(11.5px, 1.05vw, 14.5px); color: var(--color-text-muted); margin-top: 1vh; line-height: 1.5; }
 
-.money-cut { margin-top: 3vh; border-radius: 18px; background: var(--color-bg-dark); color: var(--color-text-inverse); padding: 2.6vh 2.2vw; display: flex; align-items: center; gap: 2.2vw; }
-.money-cut .mc-main { flex: 1.3; }
-.money-cut .mc-label { font-size: clamp(12px, 1.1vw, 15px); color: var(--color-text-muted-inverse); }
-.money-cut .mc-val { font-family: var(--font-display); font-weight: 700; font-size: clamp(28px, 3.2vw, 44px); color: var(--color-accent); margin-top: 0.4vh; }
-.money-cut .mc-div { width: 1px; align-self: stretch; background: rgba(255,255,255,0.14); }
-.money-cut .mc-comp { flex: 1; }
-.money-cut .mc-comp .mc-label { color: var(--color-text-muted-inverse); }
-.money-cut .mc-comp .mc-val { font-size: clamp(18px, 1.9vw, 26px); color: #b7aca0; text-decoration: line-through solid rgba(255,255,255,0.4) 1.5px; margin-top: 0.4vh; }
-.money-cut .mc-multiple { flex: 0.9; text-align: right; }
-.money-cut .mc-multiple .mc-x { font-family: var(--font-display); font-weight: 700; font-size: clamp(24px, 2.8vw, 38px); color: var(--color-success); }
-.money-cut .mc-multiple .mc-xl { font-size: clamp(11px, 1vw, 13.5px); color: var(--color-text-muted-inverse); margin-top: 0.4vh; }
+/* Beat 3: Snooty's cut, alone, in gold on dark. Its own moment before
+   any comparison exists, so it reads as a fact, not a defense. */
+.m-us-card { background: var(--color-bg-dark); color: var(--color-text-inverse); border: 2px solid var(--color-accent); border-radius: 22px; padding: 4vh 5vw; position: relative; }
+.m-us-card::before { content: "SNOOTY'S ENTIRE CUT"; position: absolute; top: -13px; left: 50%; transform: translateX(-50%); background: var(--color-accent); color: #241505; font-family: var(--font-display); font-weight: 700; font-size: 11px; letter-spacing: 0.1em; padding: 4px 14px; border-radius: 20px; white-space: nowrap; }
+.m-us-val { font-family: var(--font-display); font-weight: 700; font-size: clamp(56px, 7.2vw, 100px); line-height: 1; color: var(--color-accent); }
+
+/* Beat 4: the competitor lands right where Snooty's number just was,
+   same size and position, so the swap itself makes the contrast. */
+.m-vs-stage { display: flex; align-items: stretch; gap: 1.6vw; width: min(820px, 88vw); }
+.vs-card { flex: 1; border-radius: 20px; padding: 3vh 2vw; }
+.vs-card.us { background: var(--color-bg-dark); color: var(--color-text-inverse); border: 2px solid var(--color-accent); }
+.vs-card.them { background: var(--color-bg-card); border: 1px solid var(--color-border); }
+.vs-card .vc-label { font-size: clamp(11.5px, 1.05vw, 14.5px); line-height: 1.4; }
+.vs-card.us .vc-label { color: var(--color-text-muted-inverse); }
+.vs-card.them .vc-label { color: var(--color-text-muted); }
+.vs-card .vc-val { font-family: var(--font-display); font-weight: 700; font-size: clamp(32px, 4vw, 56px); line-height: 1.1; margin-top: 1.2vh; }
+.vs-card.us .vc-val { color: var(--color-accent); }
+.vs-card.them .vc-val { color: var(--color-primary); text-decoration: line-through solid rgba(94,35,48,0.4) 2px; opacity: 0; transition: opacity 400ms var(--ease-out) 500ms; }
+.m-beat.is-on .vs-card.them .vc-val { opacity: 1; }
+.vs-mid { flex: 0 0 auto; display: flex; align-items: center; justify-content: center; font-family: var(--font-display); font-weight: 700; font-size: clamp(15px, 1.6vw, 20px); color: var(--color-text-muted); }
+
+/* Beat 5: the payoff. Two bars race to scale, then the multiple lands
+   as the biggest text on the whole slide, colored to read as a win. */
+.money-race { width: min(760px, 86vw); }
+.race-row { display: flex; align-items: center; gap: 1.4vw; margin-bottom: 1.8vh; }
+.race-row .rr-label { flex: 0 0 clamp(110px, 12vw, 170px); font-size: clamp(12.5px, 1.15vw, 16px); font-weight: 600; font-family: var(--font-display); text-align: left; }
+.race-row.us .rr-label { color: #6b5426; }
+.race-track { flex: 1; height: clamp(30px, 3.4vh, 44px); background: var(--color-bg-card); border: 1px solid var(--color-border); border-radius: 9px; overflow: hidden; }
+.race-fill { height: 100%; width: 0; border-radius: 9px; display: flex; align-items: center; justify-content: flex-end; padding-right: 14px; transition: width 1200ms var(--ease-brand) 260ms; }
+.race-row.us .race-fill { background: var(--color-accent); }
+.race-row.them .race-fill { background: var(--color-primary); }
+.m-beat.is-on .race-fill { width: var(--race-w); }
+.race-fill span { font-family: var(--font-display); font-weight: 700; font-size: clamp(13px, 1.3vw, 17px); color: #241505; white-space: nowrap; }
+.race-row.them .race-fill span { color: var(--color-text-inverse); }
+.race-verdict {
+  margin-top: 2.6vh; text-align: center; font-family: var(--font-display); font-weight: 700;
+  font-size: clamp(30px, 3.6vw, 48px); color: var(--color-success);
+  opacity: 0; transform: scale(0.85); transition: opacity 450ms var(--ease-out) 1400ms, transform 550ms var(--ease-brand) 1400ms;
+}
+.m-beat.is-on .race-verdict { opacity: 1; transform: scale(1); }
+.race-verdict small { display: block; font-family: var(--font-display); font-weight: 400; font-size: clamp(13px, 1.15vw, 16px); color: var(--color-text-muted); margin-top: 0.8vh; letter-spacing: normal; text-transform: none; }
+
+.m-dots { position: absolute; bottom: -5vh; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; }
+.m-dots i { width: 6px; height: 6px; border-radius: 50%; background: var(--color-border); transition: background 300ms var(--ease-out), width 300ms var(--ease-out); }
+.m-dots i.is-on { background: var(--color-accent); width: 18px; border-radius: 3px; }
 
 /* ============ Q&A pause slides ============ */
 .qa-pause { align-items: center; text-align: center; }
@@ -511,12 +571,54 @@ body.notes-mode #notes-panel {
   <section class="slide light" data-title="Stop 4: How does the money work?">
     <div class="kicker">The money, on screen</div>
     <h1 class="headline">The deposit. The rest. The fee.</h1>
-    <p class="sub">One $220 booking, worked out in full. Their phone has the same math with their own numbers, but here it is where everyone can see it.</p>
-    <div class="money-ledger">
-      <div class="money-ticket" id="money-ticket"></div>
-      <div class="split-bar" id="money-split-bar"></div>
-      <div class="money-split" id="money-split"></div>
-      <div class="money-cut" id="money-cut"></div>
+    <p class="sub">One real booking, walked through step by step. Their own phone runs the same math with their own numbers, but here it is where the whole room can see it at once.</p>
+
+    <div class="money-stage">
+
+      <div class="m-beat is-on" id="m-beat-1">
+        <div class="m-eyebrow">One booking</div>
+        <div class="m-hero-val" id="m-ticket-val"></div>
+        <div class="m-note">is what one client pays for one appointment. <b>Every number after this comes out of this one total.</b></div>
+      </div>
+
+      <div class="m-beat" id="m-beat-2">
+        <div class="m-eyebrow">It splits into two payments</div>
+        <div class="m-split-stage">
+          <div class="split-bar"><div class="sb-dep"></div><div class="sb-rest"></div></div>
+          <div class="split-labels"><span id="m-split-left"></span><span id="m-split-right"></span></div>
+          <div class="money-split">
+            <div class="money-block dep"><div class="mb-tag">Paid the moment they book</div><div class="mb-val" id="m-dep-val"></div><div class="mb-note" id="m-dep-note"></div></div>
+            <div class="money-block rest"><div class="mb-tag">Paid in person, at the chair</div><div class="mb-val" id="m-rest-val"></div><div class="mb-note">Exactly how it's collected today. Nothing about this part changes.</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="m-beat" id="m-beat-3">
+        <div class="m-us-card">
+          <div class="m-us-val" id="m-us-val"></div>
+        </div>
+        <div class="m-note" id="m-us-note"></div>
+      </div>
+
+      <div class="m-beat" id="m-beat-4">
+        <div class="m-eyebrow">Now compare that to a typical booking app</div>
+        <div class="m-vs-stage">
+          <div class="vs-card us"><div class="vc-label">Snooty's entire cut</div><div class="vc-val" id="m-us-val-2"></div></div>
+          <div class="vs-mid">vs.</div>
+          <div class="vs-card them"><div class="vc-label">A typical app, one new client</div><div class="vc-val" id="m-them-val"></div></div>
+        </div>
+      </div>
+
+      <div class="m-beat" id="m-beat-5">
+        <div class="m-eyebrow">Same client. Same booking. Very different bill.</div>
+        <div class="money-race">
+          <div class="race-row us"><div class="rr-label">Snooty</div><div class="race-track"><div class="race-fill" id="m-race-us"><span id="m-race-us-val"></span></div></div></div>
+          <div class="race-row them"><div class="rr-label">Typical competitor</div><div class="race-track"><div class="race-fill" id="m-race-them"><span id="m-race-them-val"></span></div></div></div>
+        </div>
+        <div class="race-verdict" id="m-verdict"></div>
+      </div>
+
+      <div class="m-dots" id="m-dots"><i class="is-on"></i><i></i><i></i><i></i><i></i></div>
     </div>
   </section>
 
@@ -583,7 +685,7 @@ body.notes-mode #notes-panel {
     'STOP TALKING. Hold this slide. Take real questions. If a question is about booking, deposits, or the toolkit, say "great question, that\'s coming up in a minute" and name the upcoming stop. Don\'t rush this; a room that got to ask early questions listens better later.',
     'Their phones jump to the real booking flow, starting at step 1: choose a service. Invite the room to tap through it themselves, service to time to deposit. Say: "This is the moment you stop chasing deposits."',
     'Their phones jump to the stylist\'s home base and storefront, real and tappable. Invite the room to explore requests, the calendar, services, reviews. Say: "Every piece of that toolkit is yours to fill."',
-    'The numbers on THIS screen are the real math, not a promise: 20% deposit paid up front, the rest at the chair, then Snooty\'s entire cut against a typical competitor. Walk it top to bottom out loud. "Twenty percent now. Everything else, same as you collect today. And what we take for that: five percent of the deposit, plus twenty dollars a year." Let the competitor number sit crossed out next to the multiple.',
+    'This slide is five clicks, not one: click through the beats yourself, out loud. (1) The booking total. (2) It splits into deposit and balance, bar draws itself. (3) Snooty\'s cut gets its own moment, say it plainly: "five percent of the deposit, plus twenty dollars a year, that\'s the whole bill." (4) The competitor\'s number lands next to it. (5) The race bars and the multiple. Don\'t rush the clicks; each one is a beat, let it land before talking over the next.',
     'STOP TALKING again. Hold this one longer than the first pause; this is where "what\'s the catch" comes out. Answer plainly. If someone asks something better answered at the close (the beta ask, next steps), say "one more slide and we get there."',
   ];
 
@@ -609,11 +711,18 @@ body.notes-mode #notes-panel {
   }
 
   /* ---------- Stop 4: the money, worked on screen ----------
-     Same numbers and math as SEED.platform, rendered once as a fixed
-     worked example (a $220 booking) so the room sees real figures on
-     the big screen instead of only hearing "check your phone." Runs
-     once per visit to the slide; harmless to re-run. */
+     Five full-screen beats, keynote style: only one is ever visible,
+     each one owning the whole slide before the next replaces it.
+     (1) one plain number for the whole booking, (2) that number
+     visibly splits into "pay now" / "pay later" with a bar that draws
+     itself, (3) Snooty's cut gets its own uncontested moment, (4) a
+     typical competitor's number lands in the same spot for direct
+     contrast, (5) both cuts race as bars drawn to actual scale, ending
+     on a one-line verdict. Same math as SEED.platform; text populates
+     once per visit, moneyBeat() drives which panel is on. */
   let moneyRendered = false;
+  const MONEY_BEATS = 5;
+  let moneyBeatIdx = 0;
   function renderMoney() {
     if (moneyRendered) return;
     moneyRendered = true;
@@ -621,25 +730,49 @@ body.notes-mode #notes-panel {
     const price = 22000; /* cents: Knotless Braids - Medium, the hero's signature ticket */
     const dep = Math.round(price * P.depositPct / 100);
     const rest = price - dep;
-    const fee = P.annualFeeCents / 100 + (dep / 100) * (P.commissionPct / 100);
-    const comp = P.competitors.styleseat.monthly + price / 100 * (P.competitors.styleseat.newClientPct / 100);
-    const multiple = (comp * 100) / Math.round(fee * 100);
+    const fee = Math.round((P.annualFeeCents / 100 + (dep / 100) * (P.commissionPct / 100)) * 100);
+    const comp = Math.round((P.competitors.styleseat.monthly + price / 100 * (P.competitors.styleseat.newClientPct / 100)) * 100);
+    const multiple = comp / fee;
 
-    document.getElementById('money-ticket').innerHTML =
-      '<span class="mt-label">The booking</span><span class="mt-val">' + SN.money(price) + '</span>';
+    document.getElementById('m-ticket-val').textContent = SN.money(price);
 
-    document.getElementById('money-split-bar').innerHTML =
-      '<div class="sb-dep" style="width:' + P.depositPct + '%"></div><div class="sb-rest" style="width:' + (100 - P.depositPct) + '%"></div>';
+    document.getElementById('m-split-left').innerHTML = '<b>' + P.depositPct + '%</b> due to book, today';
+    document.getElementById('m-split-right').innerHTML = '<b>' + (100 - P.depositPct) + '%</b> due later, in person';
+    const beat2 = document.getElementById('m-beat-2');
+    beat2.style.setProperty('--dep-pct', P.depositPct + '%');
+    beat2.style.setProperty('--rest-pct', (100 - P.depositPct) + '%');
+    document.getElementById('m-dep-val').textContent = SN.money(dep);
+    document.getElementById('m-dep-note').textContent = 'Hers to keep even if the client never shows up.';
+    document.getElementById('m-rest-val').textContent = SN.money(rest);
 
-    document.getElementById('money-split').innerHTML =
-      '<div class="money-block dep"><div class="mb-tag">Deposit, paid today</div><div class="mb-val">' + SN.money(dep) + '</div><div class="mb-note">' + P.depositPct + '% of the booking. Hers if the client no-shows.</div></div>' +
-      '<div class="money-block rest"><div class="mb-tag">Balance, paid at the chair</div><div class="mb-val">' + SN.money(rest) + '</div><div class="mb-note">Collected the same way she collects it today. Nothing changes here.</div></div>';
+    document.getElementById('m-us-val').textContent = SN.money(fee);
+    document.getElementById('m-us-note').innerHTML = P.commissionPct + '% of the deposit, plus $' + (P.annualFeeCents / 100) + ' a year. <b>That\'s the whole bill.</b> No monthly charge, no fee on the balance.';
+    document.getElementById('m-us-val-2').textContent = SN.money(fee);
+    document.getElementById('m-them-val').textContent = '$' + (comp / 100).toFixed(2);
 
-    document.getElementById('money-cut').innerHTML =
-      '<div class="mc-main"><div class="mc-label">Snooty\'s entire cut (' + P.commissionPct + '% of the deposit + $' + (P.annualFeeCents / 100) + '/yr)</div><div class="mc-val">' + SN.money(Math.round(fee * 100)) + '</div></div>' +
-      '<div class="mc-div"></div>' +
-      '<div class="mc-comp"><div class="mc-label">A typical competitor, one new client</div><div class="mc-val">$' + comp.toFixed(2) + '</div></div>' +
-      '<div class="mc-multiple"><div class="mc-x">' + multiple.toFixed(1) + 'x</div><div class="mc-xl">less than the competitor</div></div>';
+    document.getElementById('m-race-us-val').textContent = SN.money(fee);
+    document.getElementById('m-race-them-val').textContent = '$' + (comp / 100).toFixed(2);
+    document.getElementById('m-race-us').style.setProperty('--race-w', (fee / comp * 100) + '%');
+    document.getElementById('m-race-them').style.setProperty('--race-w', '100%');
+    document.getElementById('m-verdict').innerHTML =
+      multiple.toFixed(1) + 'x cheaper for the stylist<small>Same deposit collected, same booking protected. Snooty just takes less to do it.</small>';
+  }
+
+  /* moneyBeat(dir): +1 advances to the next full-screen beat, -1 goes
+     back. Only one .m-beat carries .is-on at a time (mutually
+     exclusive, unlike the additive .frag pattern used elsewhere), and
+     the dot trail mirrors position so the room can see how much of
+     the story is left. Returns false once there's nowhere further to
+     go in that direction, so next()/prev() know to fall through to
+     the normal slide-to-slide advance. */
+  function moneyBeat(dir) {
+    const target = moneyBeatIdx + dir;
+    if (target < 0 || target >= MONEY_BEATS) return false;
+    document.getElementById('m-beat-' + (moneyBeatIdx + 1)).classList.remove('is-on');
+    moneyBeatIdx = target;
+    document.getElementById('m-beat-' + (moneyBeatIdx + 1)).classList.add('is-on');
+    Array.from(document.getElementById('m-dots').children).forEach((dot, i) => dot.classList.toggle('is-on', i === moneyBeatIdx));
+    return true;
   }
 
   function show(i, fromHash) {
@@ -657,6 +790,7 @@ body.notes-mode #notes-panel {
   }
 
   function next() {
+    if (cur === 7 && moneyBeat(1)) return;
     const pending = fragsOf(cur).filter((f) => !f.classList.contains('is-on'));
     if (pending.length) {
       pending[0].classList.add('is-on');
@@ -666,6 +800,7 @@ body.notes-mode #notes-panel {
     show(cur + 1);
   }
   function prev() {
+    if (cur === 7 && moneyBeatIdx > 0) { moneyBeat(-1); return; }
     const on = fragsOf(cur).filter((f) => f.classList.contains('is-on'));
     if (on.length) { on[on.length - 1].classList.remove('is-on'); return; }
     show(cur - 1);
