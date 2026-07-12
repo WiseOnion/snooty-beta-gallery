@@ -79,6 +79,12 @@
   opacity: 0; transform: scale(0.78) translateY(-4px);
   transition: opacity 220ms ease, transform 240ms cubic-bezier(0.34,1.4,0.64,1), background 150ms ease;
 }
+/* Enlarges the tap target to ~44px (the accessibility minimum) without
+   growing the visible 34px circle: an invisible hit area extends past
+   the button's own edges in every direction. */
+.lk-card-save::before {
+  content: ""; position: absolute; inset: -5px;
+}
 .lk-card.is-open .lk-card-save, .lk-card-save.is-saved { opacity: 1; transform: scale(1) translateY(0); }
 .lk-card-save.is-saved { background: var(--color-primary-deep); animation: lk-save-pop 360ms cubic-bezier(0.34,1.56,0.64,1); }
 .lk-card-save svg { width: 14px; height: 14px; }
