@@ -68,36 +68,6 @@
     };
   }
 
-  /* Guided-walkthrough progress pill, shown on every stop page during
-     the QR-driven presentation (?session=1). Fixed to the top of the
-     phone screen so the room always sees which chapter of the story
-     they're in: Discover -> Booking -> Your Business, filling to a
-     gold check as each stop completes. stopIndex is 1-based; pass 0
-     for "not started yet" (all hollow). */
-  const STOPS = ['Discover', 'Booking', 'Your Business'];
-  function renderWalkthroughProgress(stopIndex) {
-    let el = document.getElementById('wt-progress');
-    if (!el) {
-      el = document.createElement('div');
-      el.id = 'wt-progress';
-      el.style.cssText =
-        'position:fixed; top:calc(10px + env(safe-area-inset-top)); left:50%; transform:translateX(-50%); z-index:600;' +
-        'display:flex; align-items:center; gap:14px; background:rgba(24,24,24,0.85); backdrop-filter:blur(10px);' +
-        '-webkit-backdrop-filter:blur(10px); border-radius:9999px; padding:8px 16px; pointer-events:none;';
-      document.body.appendChild(el);
-    }
-    el.innerHTML = STOPS.map((name, i) => {
-      const done = i + 1 < stopIndex, active = i + 1 === stopIndex;
-      const dot = done
-        ? '<span style="display:inline-flex; width:14px; height:14px; border-radius:50%; background:#C99A4A; align-items:center; justify-content:center; font-size:9px; color:#241505; font-weight:700;">✓</span>'
-        : '<span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:' + (active ? '#C99A4A' : 'rgba(255,255,255,0.3)') + ';"></span>';
-      const label = 'font-family:Jost,sans-serif; font-size:10.5px; font-weight:600; letter-spacing:0.05em; text-transform:uppercase; color:' +
-        (active ? '#C99A4A' : done ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.4)') + ';';
-      return '<span style="display:flex; align-items:center; gap:6px;">' + dot + '<span style="' + label + '">' + name + '</span></span>';
-    }).join('<span style="width:16px; height:1px; background:rgba(255,255,255,0.2);"></span>');
-  }
-
   window.SN = window.SN || {};
   window.SN.sync = { setSlide: setSlide, watchSlide: watchSlide };
-  window.SN.walkthroughProgress = renderWalkthroughProgress;
 })();

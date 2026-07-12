@@ -155,9 +155,7 @@ input[type=range]::-moz-range-thumb { width: 22px; height: 22px; border-radius: 
 (function () {
   'use strict';
   const SEED = window.SNOOTY_SEED;
-  const params = new URLSearchParams(location.search);
   SN.markSeen('calculator');
-  if (params.has('session')) SN.walkthroughProgress(3); /* Stop 3: Your Business (the money tool) */
 
   document.getElementById('fx-dep').textContent = SEED.platform.depositPct + '%';
 

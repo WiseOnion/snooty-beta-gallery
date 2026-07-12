@@ -53,6 +53,10 @@
   break-inside: avoid; margin-bottom: 8px; position: relative; border-radius: 14px; overflow: hidden;
   background: var(--color-border); -webkit-tap-highlight-color: transparent; transform: translateZ(0);
 }
+/* long-press callout/select/drag are already suppressed globally on all
+   <img> (shared/snooty.css); pointer-events:none here just lets a tap
+   pass through to the card itself instead of the (non-clickable) image. */
+.lk-card img { pointer-events: none; }
 /* Real, natural aspect ratio per photo, like the real PortfolioImage's
    aspectRatio="natural" on Discover: no forced box, no object-fit crop,
    so every card is exactly as tall or short as its actual photo. */
@@ -155,7 +159,6 @@
 
   SN.frameOnDesktop();
   SN.markSeen('discover');
-  if (params.has('session')) SN.walkthroughProgress(1); /* Stop 1: Discover, in progress */
 
   if (!inDemo && !scripted) {
     SN.purposeCard({

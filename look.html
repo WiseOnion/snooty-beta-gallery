@@ -192,7 +192,6 @@
 
   SN.frameOnDesktop();
   SN.markSeen('look');
-  if (params.has('session')) SN.walkthroughProgress(2); /* Stop 2: Booking, in progress (Look is the lead-in) */
 
   const i = parseInt(params.get('i'), 10);
   const feedLook = SEED.feed[!isNaN(i) ? i : 0] || SEED.feed[0];
