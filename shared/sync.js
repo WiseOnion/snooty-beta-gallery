@@ -78,7 +78,9 @@
   const STOP_MAP = {
     3: 'discover.html?script=1&session=1',
     4: 'messages.html?script=1&session=1',
+    5: 'wait.html?session=1', /* Q&A pause 1: phones return to the holding screen, attention up front */
     6: 'booking.html?script=1&step=3&session=1',
+    9: 'wait.html?session=1', /* Q&A pause 2 */
   };
 
   /* Call from any scripted stop page: watches the live slide and
