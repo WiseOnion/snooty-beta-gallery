@@ -267,9 +267,8 @@ body.framed .cta-bar { position: absolute; }
     /* cur === 4: "Done" is a terminal state, not a link. It never navigates. */
   });
 
-  /* Deep-link straight to a step (Stop 2 lands directly on the deposit,
-     scripted) so the presenter's audience doesn't sit through service
-     and time selection they already implicitly picked via the look. */
+  /* Deep-link straight to a step when ?step=N is present; otherwise
+     start at step 1, the real beginning of the flow. */
   const startStep = parseInt(params.get('step'), 10);
   go(!isNaN(startStep) && startStep >= 1 && startStep <= 4 ? startStep : 1);
 
