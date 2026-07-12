@@ -167,7 +167,7 @@
 
   SN.frameOnDesktop();
   SN.markSeen('discover');
-  if (params.has('session')) SN.sync.followStops(); /* hands off to the next stop when the presenter advances again */
+  if (params.has('session')) { SN.sync.followStops(); SN.sync.startHeartbeat(); } /* hands off to the next stop when the presenter advances again, and keeps this phone counted as connected */
 
   if (!inDemo) {
     SN.purposeCard({

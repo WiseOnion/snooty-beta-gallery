@@ -95,6 +95,126 @@
     });
   }
 
+  /* ---------- Presence (how many phones are following along) ----------
+     There's no Firebase SDK here (no build step, plain REST + SSE), so
+     there's no real onDisconnect hook: a phone that closes its tab can't
+     tell the server it left. Instead each phone writes a heartbeat under
+     /presence/<clientId>.json every 5s; the presenter counts whatever
+     heartbeats are newer than STALE_MS and treats the rest as gone. That
+     puts departures on a ~15s lag instead of instant, the tradeoff for
+     staying dependency-free. clientId is cached in sessionStorage so a
+     phone that navigates between stops (wait -> discover -> booking...)
+     keeps writing the SAME key instead of registering as a new visitor
+     on every page. */
+  const PRESENCE_PATH = '/presence.json';
+  const HEARTBEAT_MS = 5000;
+  const STALE_MS = 15000;
+
+  function clientId() {
+    let id = sessionStorage.getItem('snooty-client-id');
+    if (!id) {
+      id = 'c' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+      sessionStorage.setItem('snooty-client-id', id);
+    }
+    return id;
+  }
+
+  /* Call once from any phone-facing page (wait.html and every scripted
+     stop) to register this phone as "following along" and keep renewing
+     that as long as the tab stays open, visible, AND in front. A phone
+     that's backgrounded (screen locked, switched to another app, or a
+     different browser tab in front) should NOT count as "connected",
+     so the beat only fires while document.visibilityState === 'visible'.
+     Going to the background simply stops renewing the timestamp, it
+     ages past STALE_MS on its own and the presenter's count drops it,
+     same as if the tab had been closed. Coming back to the foreground
+     fires an immediate beat instead of waiting out the interval, so
+     re-appearing on the presenter's count feels instant. */
+  function startHeartbeat() {
+    const id = clientId();
+    const beat = () => {
+      if (document.visibilityState !== 'visible') return;
+      fetch(DB_URL + '/presence/' + id + '.json', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(Date.now()),
+      }).catch(() => {});
+    };
+    beat();
+    setInterval(beat, HEARTBEAT_MS);
+    document.addEventListener('visibilitychange', beat);
+  }
+
+  /* Presenter side: streams /presence.json (same SSE-with-poll-fallback
+     shape as watchSlide) and reports how many entries are still fresh. */
+  function watchPresenceCount(onChange) {
+    let last = null;
+    const emit = (count) => {
+      if (count !== last) { last = count; onChange(count); }
+    };
+    const countFresh = (data) => {
+      if (!data) return 0;
+      const now = Date.now();
+      return Object.values(data).filter((ts) => typeof ts === 'number' && now - ts < STALE_MS).length;
+    };
+
+    let es = null;
+    let pollTimer = null;
+    let recheckTimer = null;
+    function startPolling() {
+      if (pollTimer) return;
+      pollTimer = setInterval(() => {
+        fetch(DB_URL + PRESENCE_PATH)
+          .then((r) => r.json())
+          .then((data) => emit(countFresh(data)))
+          .catch(() => {});
+      }, 4000);
+    }
+
+    try {
+      es = new EventSource(DB_URL + PRESENCE_PATH + '?live=true');
+      const refetch = () => {
+        fetch(DB_URL + PRESENCE_PATH)
+          .then((r) => r.json())
+          .then((data) => emit(countFresh(data)))
+          .catch(() => {});
+      };
+      es.addEventListener('put', refetch);
+      es.addEventListener('patch', refetch);
+      es.onerror = () => { es.close(); startPolling(); };
+    } catch (err) {
+      startPolling();
+    }
+
+    fetch(DB_URL + PRESENCE_PATH)
+      .then((r) => r.json())
+      .then((data) => emit(countFresh(data)))
+      .catch(() => {});
+
+    /* Heartbeats going stale (a phone closed mid-presentation) is a
+       passive fact, nothing PUTs to tell us that happened, so re-count
+       on a timer too, independent of whether Firebase sends a new event. */
+    recheckTimer = setInterval(() => {
+      fetch(DB_URL + PRESENCE_PATH)
+        .then((r) => r.json())
+        .then((data) => emit(countFresh(data)))
+        .catch(() => {});
+    }, 5000);
+
+    return function stop() {
+      if (es) es.close();
+      if (pollTimer) clearInterval(pollTimer);
+      if (recheckTimer) clearInterval(recheckTimer);
+    };
+  }
+
   window.SN = window.SN || {};
-  window.SN.sync = { setSlide: setSlide, watchSlide: watchSlide, STOP_MAP: STOP_MAP, followStops: followStops };
+  window.SN.sync = {
+    setSlide: setSlide,
+    watchSlide: watchSlide,
+    STOP_MAP: STOP_MAP,
+    followStops: followStops,
+    startHeartbeat: startHeartbeat,
+    watchPresenceCount: watchPresenceCount,
+  };
 })();

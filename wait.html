@@ -46,6 +46,7 @@ body { background: var(--color-bg-dark); color: var(--color-text-inverse); }
 (function () {
   'use strict';
   SN.markSeen('wait');
+  SN.sync.startHeartbeat(); /* this is the first page every phone lands on, so presence starts counting here */
 
   /* STOP_MAP (shared/sync.js) is the single source of truth for which
      presenter slide sends followers to which scripted stop; nothing

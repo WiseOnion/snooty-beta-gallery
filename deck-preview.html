@@ -46,6 +46,76 @@ h1.headline { font-family: var(--font-display); font-weight: 600; font-size: cla
 }
 #progress { position: fixed; bottom: 0; left: 0; height: 3px; background: var(--color-accent); width: 0; z-index: 60; transition: width 400ms var(--ease-out); }
 
+/* Live count of phones still following along (see shared/sync.js's
+   heartbeat presence). Quiet corner pill everywhere except slide 2 (see
+   .is-hero below), where it's the focal point instead. The move between
+   those two states is a real slide-into-place animation, not a class
+   swap: every property that differs (position, size, padding, colors)
+   sits on the SAME element and transitions together, so leaving slide 2
+   reads as the counter physically traveling up into the corner and
+   shrinking, not one thing disappearing while another appears.
+   `top`/`left` are used for BOTH states (not top/bottom, not
+   left/transform) specifically so they're on a single consistent axis
+   that CSS can interpolate smoothly across the whole move. Hidden until
+   the first presence read comes back, so it never flashes "0 connected"
+   while the initial fetch is still in flight. */
+#presence {
+  position: fixed; top: 18px; left: calc(100% - 22px); z-index: 50;
+  transform: translateX(-100%);
+  display: none; flex-direction: row; align-items: center; gap: 7px; text-align: left;
+  font-family: var(--font-display); letter-spacing: 0.08em;
+  color: rgba(255,255,255,0.55); user-select: none;
+  background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 999px; padding: 6px 13px 6px 10px;
+  transition:
+    top 650ms var(--ease-out), left 650ms var(--ease-out), transform 650ms var(--ease-out),
+    padding 650ms var(--ease-out), background 650ms var(--ease-out), border-color 650ms var(--ease-out),
+    gap 650ms var(--ease-out), color 400ms var(--ease-out);
+}
+#presence.is-visible { display: flex; }
+#presence .p-icon {
+  width: 13px; height: 13px; flex: none; opacity: 0.8;
+  transition: width 650ms var(--ease-out), height 650ms var(--ease-out), opacity 650ms var(--ease-out);
+}
+#presence .p-icon path { fill: currentColor; }
+#presence-count { font-size: 11.5px; font-weight: 400; letter-spacing: 0; line-height: normal; transition: font-size 650ms var(--ease-out), font-weight 650ms var(--ease-out), letter-spacing 650ms var(--ease-out); }
+#presence .p-label {
+  text-transform: lowercase; font-size: 11.5px; display: inline;
+  transition: font-size 650ms var(--ease-out), color 650ms var(--ease-out);
+}
+
+/* Slide 2 (the QR scan itself): the room is actively scanning right
+   now, so the count becomes the focal point instead of a quiet corner
+   note, centered below the QR/kicker block and blown up large enough
+   to read as its own headline. Only top/left/transform move it (same
+   three properties the base state uses), everything else (size,
+   padding, colors) rides the same transition list above, so toggling
+   .is-hero on/off is one continuous slide-and-resize in both
+   directions, not a snap. */
+#presence.is-hero {
+  top: 66vh; left: 50%; transform: translateX(-50%);
+  flex-direction: column; gap: 10px; text-align: center;
+  background: transparent; border-color: transparent; padding: 0 0 0 0;
+}
+#presence.is-hero .p-icon { width: 30px; height: 30px; opacity: 0.55; }
+#presence.is-hero #presence-count { font-size: clamp(40px, 6vw, 76px); font-weight: 600; letter-spacing: -0.01em; }
+#presence.is-hero .p-label { font-size: 12.5px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(255,255,255,0.5); }
+#presence.is-hero.on-light .p-label { color: rgba(20,16,14,0.5); }
+/* Toggled in JS (not a descendant selector) since #presence is a fixed
+   sibling of the slides, not nested inside whichever one is active. */
+#presence.on-light {
+  color: rgba(20,16,14,0.55); background: rgba(20,16,14,0.05); border-color: rgba(20,16,14,0.12);
+}
+#presence.on-light.is-hero { border-color: transparent; }
+/* Wins over .is-hero (declared after it, same specificity): the very
+   first paint of slide 2, before qrIntro()'s timeout fires, pins the
+   counter dead-center with no transition so it snaps there instantly
+   rather than visibly traveling from the corner first. Removing this
+   class (after the 1300ms beat) leaves only .is-hero's rule in effect,
+   which DOES transition, so the counter animates from center down into
+   its normal resting spot as the QR/text fade in. */
+#presence.qr2-center { top: 50%; left: 50%; transform: translate(-50%, -50%); transition: none; }
+
 /* ============ Slide 1: Opening Vision Animation ============
    Positions are computed ONCE and stay put (no re-randomizing on
    replay, no overlapping tiles). The reveal is a zoom: the camera
@@ -366,6 +436,16 @@ h1.headline { font-family: var(--font-display); font-weight: 600; font-size: cla
 
 /* ============ QR slides ============ */
 .qr-stage { display: flex; align-items: center; justify-content: center; gap: 5vw; height: 76vh; }
+/* Slide 2's opening beat: the counter is the ONLY thing on screen for a
+   moment (centered, screen-middle) before the QR/kicker/headline/sub
+   fade in around it and it settles down into its normal spot. Driven
+   from enter() adding/removing .qr2-hidden/.qr2-center, not a clicker
+   beat (nothing for the presenter to click, it's a one-time entrance
+   like slide 1's photo-wall cascade). #presence.qr2-center's rule is
+   declared AFTER #presence.is-hero further down (both are single-class
+   selectors of equal specificity, so source order decides the winner
+   when show() has already added .is-hero by the time this is live). */
+.qr-stage.qr2-hidden > * { opacity: 0; transition: opacity 550ms var(--ease-out); }
 .qr-box {
   width: clamp(240px, 30vh, 380px); aspect-ratio: 1; background: #fff; border: 6px solid var(--color-accent);
   border-radius: 22px; padding: 22px; display: flex; align-items: center; justify-content: center;
@@ -781,7 +861,7 @@ body.notes-mode #notes-panel {
   </section>
 
   <!-- 2 ▸ Scan to follow along -->
-  <section class="slide black" data-title="Scan to follow along">
+  <section class="slide black" data-title="Scan to follow along" id="slide-scan">
     <div class="qr-stage">
       <div class="qr-box" role="img" aria-label="QR code to the Snooty beta gallery"><div class="qr-inner" id="qr-real"></div></div>
       <div class="qr-cap">
@@ -1014,6 +1094,7 @@ body.notes-mode #notes-panel {
 
 <div id="progress"></div>
 <div id="hud">1 / 10</div>
+<div id="presence"><svg class="p-icon" viewBox="0 0 24 24"><path d="M16.5 12.5c1.93 0 3.5-1.57 3.5-3.5S18.43 5.5 16.5 5.5 13 7.07 13 9s1.57 3.5 3.5 3.5zM8.5 12.5C10.43 12.5 12 10.93 12 9S10.43 5.5 8.5 5.5 5 7.07 5 9s1.57 3.5 3.5 3.5zM8.5 14.5C5.66 14.5 0 15.92 0 18.75V21h17v-2.25c0-2.83-5.66-4.25-8.5-4.25zM16.5 14.5c-.34 0-.72.02-1.13.06 1.35.98 2.29 2.3 2.29 4.19V21H24v-2.25c0-2.83-5.66-4.25-7.5-4.25z"/></svg><span id="presence-count"></span><span class="p-label">Connected</span></div>
 
 <div id="notes-panel">
   <div class="np-head"><span class="np-slide">1</span><span class="np-timer">00:00</span></div>
@@ -1092,6 +1173,29 @@ body.notes-mode #notes-panel {
   const bar = document.getElementById('progress');
   let cur = -1;
 
+  /* ---------- Presence: how many phones are still following along ----------
+     Purely a presenter-side readout; phones write the heartbeats (see
+     shared/sync.js), this just counts and displays them. Stays hidden
+     until the first real count comes back (so it never flashes
+     "0 connected" while the initial Firebase read is in flight) AND
+     hidden on slide 1: nobody has seen the QR code yet at that point,
+     so a count there would be confusing. updatePresenceVisibility() is
+     re-run from show() on every slide change, since "has a count
+     arrived" and "are we past slide 1" can each flip independently. */
+  const presenceEl = document.getElementById('presence');
+  const presenceCountEl = document.getElementById('presence-count');
+  let presenceHasCount = false;
+  function updatePresenceVisibility() {
+    presenceEl.classList.toggle('is-visible', presenceHasCount && cur !== 0);
+  }
+  if (window.SN && SN.sync && SN.sync.watchPresenceCount) {
+    SN.sync.watchPresenceCount((count) => {
+      presenceCountEl.textContent = String(count);
+      presenceHasCount = true;
+      updatePresenceVisibility();
+    });
+  }
+
   const isNotes = new URLSearchParams(location.search).has('notes');
   if (isNotes) document.body.classList.add('notes-mode');
 
@@ -1104,8 +1208,39 @@ body.notes-mode #notes-panel {
       SN.countUp(el, parseInt(el.dataset.count, 10), { ms: 1100, suffix: el.dataset.suffix || '' });
     });
     if (i === 0) cascadeOpen();
+    if (i === 1) qrIntro(); /* Scan slide: the connected-count leads, QR/text follow */
     if (i === 5) renderMoney(); /* Earnings: was slide index 7 before the Look/reorder, moved when Money relocated right after Booking */
     if (i === 6) renderBiz(); /* Business: the domino-chain toolkit rebuild */
+  }
+
+  /* ---------- Slide 2 entrance: counter first, then the ask ----------
+     The room's phones are already sending heartbeats the instant they
+     land on wait.html (before this slide even loads, since scanning
+     happens on slide 2 but a phone that scanned early is already
+     counted), so there's already a real number to lead with. Opens on
+     JUST the counter, alone, center screen; after a beat the QR code,
+     kicker, headline and sub fade in around it, and the counter settles
+     down into its normal spot below them (see #presence.is-hero's own
+     650ms transition, which fires naturally once .qr2-center comes off,
+     since that's the only thing suppressing it). Nothing here consumes
+     a clicker beat: like the slide 1 photo-wall, it's a one-time
+     entrance that plays on arrival, not something the presenter clicks
+     through. Guards against re-entry (going back to slide 2 a second
+     time) by skipping straight to the settled state instead of
+     replaying the intro every time. */
+  let qrIntroPlayed = false;
+  function qrIntro() {
+    const stage = document.querySelector('#slide-scan .qr-stage');
+    if (!stage || !presenceEl) return;
+    if (qrIntroPlayed) return; /* already played once this session, just show the settled state */
+    qrIntroPlayed = true;
+    stage.classList.add('qr2-hidden');
+    presenceEl.classList.add('qr2-center'); /* transition: none, so this snaps to center instantly rather than visibly sliding in from the corner first */
+    void presenceEl.offsetHeight; /* force the browser to paint the centered, transition-less state above BEFORE the timeout below removes the class, so the eventual removal is a real transition from center, not a same-frame no-op */
+    setTimeout(() => {
+      stage.classList.remove('qr2-hidden');
+      presenceEl.classList.remove('qr2-center');
+    }, 1300);
   }
 
   /* ---------- Earnings: the money, dissected live ----------
@@ -1409,6 +1544,11 @@ body.notes-mode #notes-panel {
     enter(i);
     hud.textContent = (i + 1) + ' / ' + slides.length;
     bar.style.width = ((i + 1) / slides.length * 100) + '%';
+    if (presenceEl) {
+      presenceEl.classList.toggle('on-light', slides[i].classList.contains('light'));
+      presenceEl.classList.toggle('is-hero', i === 1); /* slide 2: the QR scan itself, blow the count up big so the room watches it climb live */
+    }
+    updatePresenceVisibility();
     if (!fromHash) history.replaceState(null, '', '#' + (i + 1));
     try { localStorage.setItem('snooty-deck-slide', String(i)); } catch (e) {}
     if (window.SN && SN.sync) SN.sync.setSlide(i + 1); /* 1-indexed, pushed to every phone that scanned the QR */
