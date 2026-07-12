@@ -416,22 +416,35 @@ h1.headline { font-family: var(--font-display); font-weight: 600; font-size: cla
 .m-beat .m-eyebrow { font-family: var(--font-display); font-weight: 600; font-size: clamp(12px, 1.15vw, 15px); letter-spacing: 0.14em; text-transform: uppercase; color: var(--color-text-muted-inverse); margin-bottom: 2vh; }
 .m-beat .m-note { font-size: clamp(14px, 1.3vw, 18px); color: var(--color-text-muted-inverse); max-width: 42ch; margin-top: 2.4vh; line-height: 1.55; }
 .m-beat .m-note b { color: var(--color-text-inverse); font-weight: 600; }
+#m-split-note { opacity: 0; transition: opacity 500ms var(--ease-out) 500ms; }
+#m-beat-1.is-split #m-split-note { opacity: 1; }
 
-/* Beat 1: the whole payment, alone. Nothing else on screen. The slide
-   title lives here instead of in a header, since this is the only
-   beat with room to spare before a number becomes the entire screen. */
+/* Beats 1+2 are ONE panel (#m-beat-1) so the $220 itself splits
+   instead of two panels swapping. Standard "split text" technique:
+   two IDENTICAL copies of the same text, absolutely stacked exactly
+   on top of each other (inset:0 inside a shared relative stage sized
+   to the text's own rendered box), each clipped with a jagged polygon
+   to show only its top or bottom half. Absolute positioning is what
+   guarantees pixel-perfect overlap at rest, reading as one solid
+   "$220"; margin-based overlap (an earlier attempt here) doesn't
+   compensate for clip-path leaving the full layout box in place, and
+   drifts out of alignment. Advancing (splitReveal, one click): the
+   top half's own text swaps to "$176" and slides up out of the
+   stage's flow (position:relative + translateY), the bottom half's
+   swaps to "$44" and slides down, each carrying its own label with
+   it, while a flash and a shake fire along the seam. The digits
+   themselves visibly tear apart, not a number shrinking aside while a
+   new panel fades in beside it. */
 .m-title { position: absolute; top: 6vh; left: 50%; transform: translateX(-50%); font-family: var(--font-display); font-weight: 600; font-size: clamp(20px, 2.2vw, 30px); color: var(--color-text-muted-inverse); }
-.m-hero-val { font-family: var(--font-display); font-weight: 700; font-size: clamp(72px, 10vw, 148px); line-height: 1; color: var(--color-text-inverse); }
-.m-hero-sub { font-family: var(--font-display); font-weight: 600; font-size: clamp(13px, 1.2vw, 16px); letter-spacing: 0.06em; color: var(--color-text-muted-inverse); margin-top: 2vh; }
+.m-beat .m-eyebrow { margin-bottom: 3vh; }
 
-/* Beat 2: the deposit pulls away. Not a gentle side-by-side card
-   fade: the $220 visibly cracks apart along a torn, jagged edge, like
-   snapping a bill in half, with a white flash at the seam and a sharp
-   shake on impact. Impact keyframes fire once via a JS-added
-   is-cracking class (see moneyBeat) rather than a CSS transition, so
-   the shake reads as a hit, not a smooth ease. */
-.m-split-stack { display: flex; flex-direction: column; align-items: center; gap: 0; position: relative; }
-.m-split-stack.is-cracking { animation: crack-shake 420ms var(--ease-out) 260ms; }
+.m-crack-stage {
+  position: relative; width: min(90vw, 640px); height: clamp(72px, 10vw, 148px);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  transition: height 1000ms var(--ease-out) 150ms;
+}
+#m-beat-1.is-split .m-crack-stage { height: 40vh; }
+.m-crack-stage.is-cracking { animation: crack-shake 420ms var(--ease-out) 260ms; }
 @keyframes crack-shake {
   0% { transform: translate(0, 0); }
   20% { transform: translate(-6px, 1px); }
@@ -440,36 +453,68 @@ h1.headline { font-family: var(--font-display); font-weight: 600; font-size: cla
   80% { transform: translate(2px, 0); }
   100% { transform: translate(0, 0); }
 }
-.m-split-piece {
-  padding: 4vh 5.5vw; position: relative; z-index: 1;
-  transition: transform 1100ms var(--ease-out) 200ms, margin 1100ms var(--ease-out) 200ms;
+
+.m-crack-half {
+  position: absolute; left: 0; right: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 0 3vw;
+  transition: top 1000ms var(--ease-out) 150ms, bottom 1000ms var(--ease-out) 150ms, padding 1000ms var(--ease-out) 150ms,
+              clip-path 1000ms var(--ease-out) 150ms, background 700ms var(--ease-out) 300ms, border-radius 700ms var(--ease-out) 150ms;
 }
-.m-split-piece .sp-label { font-family: var(--font-display); font-weight: 600; font-size: clamp(12px, 1.1vw, 15px); letter-spacing: 0.08em; text-transform: uppercase; }
-.m-split-piece .sp-val { font-family: var(--font-display); font-weight: 700; font-size: clamp(38px, 4.6vw, 64px); line-height: 1.1; margin-top: 1vh; }
-.m-split-piece.rest {
-  background: rgba(255,255,255,0.06); color: var(--color-text-inverse); transform: translateY(0);
-  border-radius: 18px 18px 0 0;
-  clip-path: polygon(0% 0%, 100% 0%, 100% 92%, 92% 88%, 84% 94%, 76% 87%, 68% 93%, 60% 88%, 52% 95%, 44% 89%, 36% 93%, 28% 87%, 20% 94%, 12% 88%, 4% 93%, 0% 89%);
+.ch-val {
+  font-family: var(--font-display); font-weight: 700; font-size: clamp(72px, 10vw, 148px); line-height: 1; color: var(--color-text-inverse);
+  transition: font-size 1000ms var(--ease-out) 150ms, color 600ms var(--ease-out) 300ms;
 }
-.m-split-piece.rest .sp-label { color: var(--color-text-muted-inverse); }
-.m-split-piece.dep {
-  background: var(--color-accent); color: #241505; margin-top: -1px; transform: translateY(0);
-  border-radius: 0 0 18px 18px;
-  clip-path: polygon(0% 11%, 8% 5%, 16% 12%, 24% 6%, 32% 13%, 40% 5%, 48% 12%, 56% 6%, 64% 11%, 72% 5%, 80% 13%, 88% 6%, 96% 12%, 100% 8%, 100% 100%, 0% 100%);
+.ch-label {
+  font-family: var(--font-display); font-weight: 600; font-size: clamp(11px, 1.05vw, 14px); letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--color-text-muted-inverse); opacity: 0; max-height: 0; overflow: hidden;
+  transition: opacity 500ms var(--ease-out) 500ms, max-height 500ms var(--ease-out) 500ms, margin 500ms var(--ease-out) 500ms;
 }
-.m-beat.is-on .m-split-piece.dep { transform: translateY(26px); margin-top: 22px; }
-.m-beat.is-on .m-split-piece.rest { transform: translateY(-10px); }
+/* Rest: both halves fill the same box (top:0/bottom:0), each clipped
+   to its jagged half, reading as one solid "$220" when overlaid. */
+.m-crack-half.top { top: 0; bottom: 0; clip-path: polygon(0% 0%, 100% 0%, 100% 46%, 92% 41%, 84% 48%, 76% 40%, 68% 47%, 60% 41%, 52% 49%, 44% 40%, 36% 46%, 28% 39%, 20% 48%, 12% 41%, 4% 46%, 0% 42%); }
+.m-crack-half.top .ch-label { order: -1; margin-bottom: 0; }
+.m-crack-half.bottom { top: 0; bottom: 0; clip-path: polygon(0% 51%, 8% 57%, 16% 50%, 24% 58%, 32% 49%, 40% 59%, 48% 51%, 56% 58%, 64% 52%, 72% 59%, 80% 49%, 88% 58%, 96% 51%, 100% 56%, 100% 100%, 0% 100%); }
+.m-crack-half.bottom .ch-label { margin-top: 0; }
+
+/* Split: top/bottom anchors move each half to opposite ends of the
+   now-tall stage (top pinned to the top edge, bottom pinned to the
+   bottom edge) while position stays absolute the whole time, so
+   top/bottom transition smoothly instead of snapping the way a
+   position-mode switch would. Full rectangle clip-path (still 16
+   points, matching the rest-state polygons so it interpolates) opens
+   each half up to show its whole new number as it settles. */
+#m-beat-1.is-split .m-crack-half.top {
+  top: 0; bottom: auto; padding: 3vh 5.5vw; background: rgba(255,255,255,0.06); border-radius: 18px;
+  clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 92% 96%, 84% 100%, 76% 96%, 68% 100%, 60% 96%, 52% 100%, 44% 96%, 36% 100%, 28% 96%, 20% 100%, 12% 96%, 4% 100%, 0% 96%);
+}
+#m-beat-1.is-split .m-crack-half.top .ch-val { font-size: clamp(38px, 4.6vw, 64px); color: var(--color-text-inverse); }
+#m-beat-1.is-split .m-crack-half.top .ch-label { opacity: 1; max-height: 5vh; }
+
+#m-beat-1.is-split .m-crack-half.bottom {
+  top: auto; bottom: 0; padding: 3vh 5.5vw; background: var(--color-accent); border-radius: 18px;
+  clip-path: polygon(0% 4%, 8% 0%, 16% 4%, 24% 0%, 32% 4%, 40% 0%, 48% 4%, 56% 0%, 64% 4%, 72% 0%, 80% 4%, 88% 0%, 96% 4%, 100% 0%, 100% 100%, 0% 100%);
+}
+#m-beat-1.is-split .m-crack-half.bottom .ch-val { font-size: clamp(38px, 4.6vw, 64px); color: #241505; }
+#m-beat-1.is-split .m-crack-half.bottom .ch-label { opacity: 1; max-height: 5vh; color: #6b5426; }
+
 .m-crack-flash {
   position: absolute; left: 10%; right: 10%; top: 50%; height: 3px; transform: translateY(-50%) scaleX(0);
   background: var(--color-text-inverse); border-radius: 2px; z-index: 2; opacity: 0;
   transform-origin: center;
 }
-.m-split-stack.is-cracking .m-crack-flash { animation: crack-flash 380ms var(--ease-out) 200ms; }
+.m-crack-stage.is-cracking .m-crack-flash { animation: crack-flash 380ms var(--ease-out) 200ms; }
 @keyframes crack-flash {
   0% { opacity: 0; transform: translateY(-50%) scaleX(0); }
   35% { opacity: 1; transform: translateY(-50%) scaleX(1); }
   100% { opacity: 0; transform: translateY(-50%) scaleX(1); }
 }
+#m-hero-sub {
+  font-family: var(--font-display); font-weight: 600; font-size: clamp(13px, 1.2vw, 16px);
+  letter-spacing: 0.06em; color: var(--color-text-muted-inverse); margin-top: 2vh;
+  transition: opacity 400ms var(--ease-out), max-height 400ms var(--ease-out), margin 400ms var(--ease-out);
+  overflow: hidden; max-height: 5vh;
+}
+#m-beat-1.is-split #m-hero-sub { opacity: 0; max-height: 0; margin-top: 0; }
 
 /* Beat 3: zoom into the deposit. One card grows from small to large
    as if the camera pushed in on it; everything else is already gone. */
@@ -634,28 +679,50 @@ body.notes-mode #notes-panel {
 
     <div class="money-stage">
 
+      <!-- Beats 1 and 2 share ONE panel: the $220 is built as two
+           stacked, identically-clipped halves that read as one solid
+           number at rest. One click (splitReveal, adds is-split) swaps
+           each half's text to its real figure and tears them apart
+           along a jagged seam, so the room watches the SAME digits
+           become two new numbers instead of one panel cutting to
+           another. -->
       <div class="m-beat is-on" id="m-beat-1">
         <div class="m-title">Watch the money move.</div>
         <div class="m-eyebrow">One client</div>
-        <div class="m-hero-val" id="m-ticket-val"></div>
-        <div class="m-hero-sub">Full service price</div>
+
+        <!-- The $220 itself is TWO stacked, identical copies of the
+             same text, each clipped to show only its top or bottom
+             half so together they read as one solid number at rest.
+             On split, the top copy's text swaps to "$176" and slides
+             up carrying the "Remaining balance" label with it; the
+             bottom copy's text swaps to "$44" and slides down
+             carrying "Deposit today". The digits themselves visibly
+             tear along the jagged seam, rather than the $220 shrinking
+             aside while a separate panel appears. m-hero-sub sits
+             below both halves and is only shown at rest, since it
+             describes the single un-split number. -->
+        <div class="m-crack-stage" id="m-crack-stage">
+          <div class="m-crack-half top">
+            <div class="ch-label" id="ch-label-top">Remaining balance</div>
+            <div class="ch-val" id="ch-val-top"></div>
+          </div>
+          <div class="m-crack-flash"></div>
+          <div class="m-crack-half bottom">
+            <div class="ch-val" id="ch-val-bottom"></div>
+            <div class="ch-label" id="ch-label-bottom">Deposit today</div>
+          </div>
+        </div>
+        <div class="m-hero-sub" id="m-hero-sub">Full service price</div>
+
+        <div class="m-note" id="m-split-note">She isn't paying everything today. <b>She's paying a deposit.</b></div>
       </div>
 
       <div class="m-beat" id="m-beat-2">
-        <div class="m-split-stack" id="m-split-stack">
-          <div class="m-split-piece rest"><div class="sp-label">Remaining balance</div><div class="sp-val" id="m-rest-val"></div></div>
-          <div class="m-crack-flash"></div>
-          <div class="m-split-piece dep"><div class="sp-label">Deposit today</div><div class="sp-val" id="m-dep-val"></div></div>
-        </div>
-        <div class="m-note">She isn't paying everything today. <b>She's paying a deposit.</b></div>
-      </div>
-
-      <div class="m-beat" id="m-beat-3">
         <div class="m-zoom-card"><div class="sp-label">Deposit</div><div class="sp-val" id="m-zoom-dep-val"></div></div>
         <div class="m-note"><b>This is the only money moving today.</b></div>
       </div>
 
-      <div class="m-beat" id="m-beat-4">
+      <div class="m-beat" id="m-beat-3">
         <div class="m-cut-stage">
           <div class="m-cut-block snooty"><div class="cb-label">Snooty</div><div class="cb-val" id="m-cut-snooty-val"></div></div>
           <div class="m-cut-block you"><div class="cb-label">You</div><div class="cb-val" id="m-cut-you-val"></div></div>
@@ -663,7 +730,7 @@ body.notes-mode #notes-panel {
         <div class="m-cut-hint" id="m-cut-hint">Click to open the deposit.</div>
       </div>
 
-      <div class="m-beat" id="m-beat-5">
+      <div class="m-beat" id="m-beat-4">
         <div class="m-eyebrow">On the same $220 booking</div>
         <div class="m-compare">
           <div class="cmp-row snooty"><div class="cmp-name">Snooty</div><div class="cmp-track"><div class="cmp-fill" id="cmp-fill-snooty"><span id="cmp-val-snooty"></span></div></div></div>
@@ -673,7 +740,7 @@ body.notes-mode #notes-panel {
         <div class="m-note">StyleSeat charges 20% on a new client's first visit. Booksy charges 30% on any booking it boosted. <b>Snooty charges 5%, every time, boosted or not.</b></div>
       </div>
 
-      <div class="m-beat" id="m-beat-6">
+      <div class="m-beat" id="m-beat-5">
         <div class="m-recap">
           <div class="m-recap-row"><span class="rr-k">Client paid</span><span class="rr-v" id="m-recap-paid"></span></div>
           <div class="m-recap-row dim"><span class="rr-k">Snooty keeps</span><span class="rr-v" id="m-recap-snooty"></span></div>
@@ -682,7 +749,7 @@ body.notes-mode #notes-panel {
         </div>
       </div>
 
-      <div class="m-beat" id="m-beat-7">
+      <div class="m-beat" id="m-beat-6">
         <div class="m-final">
           <div class="m-final-col paid"><div class="fc-k">Client paid</div><div class="fc-v" id="m-final-paid"></div></div>
           <div class="m-final-arrow">&#8594;</div>
@@ -691,7 +758,7 @@ body.notes-mode #notes-panel {
         <div class="m-final-fine">Snooty's entire fee is built into that difference. Nothing else, ever.</div>
       </div>
 
-      <div class="m-dots" id="m-dots"><i class="is-on"></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      <div class="m-dots" id="m-dots"><i class="is-on"></i><i></i><i></i><i></i><i></i><i></i></div>
     </div>
   </section>
 
@@ -785,13 +852,18 @@ body.notes-mode #notes-panel {
 
   /* ---------- Stop 4: the money, dissected live ----------
      Six full-screen beats, keynote style: only one is ever visible,
-     each one owning the whole slide before the next replaces it.
-     (1) the booking total, alone, (2) it physically pulls apart into
-     deposit + balance, (3) the camera pushes in until only the
-     deposit fills the frame, (4) the deposit itself opens into two
-     blocks, Snooty's cut then the stylist's cut, revealed one click at
-     a time (its own two-step micro-sequence inside the beat, tracked
-     by cutStep, not a fifth full beat), (5) pull back out to the full
+     each one owning the whole slide before the next replaces it. Beat
+     1's $220 is built as two stacked, identically-clipped halves that
+     read as one solid number at rest; one click (splitStep 0 -> 1,
+     splitReveal) swaps each half's own text to its real split figure
+     ($176 / $44) and triggers the CSS transform that physically tears
+     them apart along a jagged seam, so the SAME digits become the two
+     new numbers instead of one panel cutting to another. (2) the
+     camera pushes in until only the deposit fills the frame, (3) the
+     deposit itself opens into two blocks, Snooty's cut then the
+     stylist's cut, revealed one click at a time (its own two-step
+     micro-sequence, tracked by cutStep), (4) the same booking against
+     StyleSeat and Booksy's real rates, (5) pull back out to the full
      picture with the stylist's total, (6) the final reveal: just what
      the client paid and what the stylist earned. Stripe is never
      modeled or named anywhere in this story on purpose, only two
@@ -802,8 +874,9 @@ body.notes-mode #notes-panel {
      baked into this booking's math. Text populates once per visit,
      moneyBeat() drives which panel is on. */
   let moneyRendered = false;
-  const MONEY_BEATS = 7;
+  const MONEY_BEATS = 6;
   let moneyBeatIdx = 0;
+  let splitStep = 0; /* 0 = whole $220, 1 = cracked apart into the split */
   let cutStep = 0; /* 0 = nothing open, 1 = Snooty revealed, 2 = both revealed */
   function renderMoney() {
     if (moneyRendered) return;
@@ -816,10 +889,14 @@ body.notes-mode #notes-panel {
     const youFromDeposit = dep - snootyCut;
     const totalEarned = youFromDeposit + rest;
 
-    document.getElementById('m-ticket-val').textContent = SN.money(price);
+    /* Both halves start showing the same $220 text (they're clipped
+       to look like one number); splitReveal() swaps each half's text
+       to its own new figure at the moment the crack fires. */
+    document.getElementById('ch-val-top').textContent = SN.money(price);
+    document.getElementById('ch-val-bottom').textContent = SN.money(price);
+    document.getElementById('ch-val-top').dataset.split = SN.money(rest);
+    document.getElementById('ch-val-bottom').dataset.split = SN.money(dep);
 
-    document.getElementById('m-dep-val').textContent = SN.money(dep);
-    document.getElementById('m-rest-val').textContent = SN.money(rest);
     document.getElementById('m-zoom-dep-val').textContent = SN.money(dep);
 
     document.getElementById('m-cut-snooty-val').textContent = SN.money(snootyCut);
@@ -850,7 +927,35 @@ body.notes-mode #notes-panel {
     document.getElementById('m-final-earned').textContent = SN.money(totalEarned);
   }
 
-  /* cutReveal(): drives beat 4's own two-click micro-sequence without
+  /* splitReveal(): drives beat 1's own one-click crack before any full
+     beat advance happens. The $220 itself is two stacked halves; on
+     this click both halves' text swaps to their real split figure
+     (dataset.split, set in renderMoney) at the same moment #m-beat-1
+     gets is-split, which is what triggers the CSS transform that
+     carries each half apart and reveals its label. The crack/shake/
+     flash fires a beat later so the tear visibly lands mid-separation
+     rather than at the instant of the click. Returns true once (this
+     is a single-step reveal now, not two), false after so next()
+     falls through to the normal beat advance. */
+  function splitReveal() {
+    if (splitStep >= 1) return false;
+    splitStep = 1;
+    const beat = document.getElementById('m-beat-1');
+    const top = document.getElementById('ch-val-top');
+    const bottom = document.getElementById('ch-val-bottom');
+    top.textContent = top.dataset.split;
+    bottom.textContent = bottom.dataset.split;
+    beat.classList.add('is-split');
+    const stage = document.getElementById('m-crack-stage');
+    setTimeout(() => {
+      stage.classList.remove('is-cracking');
+      void stage.offsetWidth;
+      stage.classList.add('is-cracking');
+    }, 300);
+    return true;
+  }
+
+  /* cutReveal(): drives beat 3's own two-click micro-sequence without
      spending a whole beat slot per name. First click reveals Snooty's
      block, second reveals the stylist's, narrated one at a time
      ("Snooty gets paid" / click / "you get the rest"). Returns true
@@ -859,7 +964,7 @@ body.notes-mode #notes-panel {
   function cutReveal() {
     if (cutStep >= 2) return false;
     cutStep += 1;
-    const beat = document.getElementById('m-beat-4');
+    const beat = document.getElementById('m-beat-3');
     beat.classList.remove('is-cut-1', 'is-cut-2');
     beat.classList.add('is-cut-' + cutStep);
     document.getElementById('m-cut-hint').textContent = cutStep === 1
@@ -880,8 +985,9 @@ body.notes-mode #notes-panel {
      clicking) can end up with an opacity/transform that was already
      at its target value, which never fires a transitionend at all, so
      a timer is the only reliable way to guarantee cleanup. Leaving
-     beat 4 resets its own cut-open micro-state so re-entering it later
-     starts closed again. Entering beat 5 kicks off the stylist's
+     beat 1 resets its own shrink/split morph so re-entering it later
+     replays from the whole $220; leaving beat 3 resets its cut-open
+     micro-state the same way. Entering beat 5 kicks off the stylist's
      count-up. The dot trail mirrors position so the room can see how
      much of the story is left. Returns false once there's nowhere
      further to go in that direction, so next()/prev() fall through to
@@ -890,20 +996,18 @@ body.notes-mode #notes-panel {
     const target = moneyBeatIdx + dir;
     if (target < 0 || target >= MONEY_BEATS) return false;
     const outgoing = document.getElementById('m-beat-' + (moneyBeatIdx + 1));
-    if (moneyBeatIdx === 3) { outgoing.classList.remove('is-cut-1', 'is-cut-2'); cutStep = 0; document.getElementById('m-cut-hint').textContent = 'Click to open the deposit.'; }
+    if (moneyBeatIdx === 0) {
+      outgoing.classList.remove('is-split');
+      splitStep = 0;
+      const top = document.getElementById('ch-val-top');
+      const bottom = document.getElementById('ch-val-bottom');
+      top.textContent = SN.money(22000);
+      bottom.textContent = SN.money(22000);
+    }
+    if (moneyBeatIdx === 2) { outgoing.classList.remove('is-cut-1', 'is-cut-2'); cutStep = 0; document.getElementById('m-cut-hint').textContent = 'Click to open the deposit.'; }
     moneyBeatIdx = target;
     const incoming = document.getElementById('m-beat-' + (moneyBeatIdx + 1));
-    if (moneyBeatIdx === 1) {
-      /* Re-fire the crack animation every time beat 2 is entered, not
-         just the first time: removing the class, forcing a reflow via
-         offsetWidth, then re-adding it restarts a CSS animation that
-         would otherwise stay finished if the class never left. */
-      const stack = document.getElementById('m-split-stack');
-      stack.classList.remove('is-cracking');
-      void stack.offsetWidth;
-      stack.classList.add('is-cracking');
-    }
-    if (moneyBeatIdx === 5) {
+    if (moneyBeatIdx === 4) {
       const el = document.getElementById('m-recap-total');
       setTimeout(() => SN.countUp(el, parseInt(el.dataset.target, 10), { ms: 1400, money: true }), 700);
     }
@@ -932,7 +1036,8 @@ body.notes-mode #notes-panel {
   }
 
   function next() {
-    if (cur === 7 && moneyBeatIdx === 3 && cutReveal()) return;
+    if (cur === 7 && moneyBeatIdx === 0 && splitReveal()) return;
+    if (cur === 7 && moneyBeatIdx === 2 && cutReveal()) return;
     if (cur === 7 && moneyBeat(1)) return;
     const pending = fragsOf(cur).filter((f) => !f.classList.contains('is-on'));
     if (pending.length) {
@@ -943,12 +1048,20 @@ body.notes-mode #notes-panel {
     show(cur + 1);
   }
   function prev() {
-    if (cur === 7 && moneyBeatIdx === 3 && cutStep > 0) {
+    if (cur === 7 && moneyBeatIdx === 2 && cutStep > 0) {
       cutStep -= 1;
-      const beat = document.getElementById('m-beat-4');
+      const beat = document.getElementById('m-beat-3');
       beat.classList.remove('is-cut-1', 'is-cut-2');
       if (cutStep > 0) beat.classList.add('is-cut-' + cutStep);
       document.getElementById('m-cut-hint').textContent = cutStep === 0 ? 'Click to open the deposit.' : 'Snooty gets paid.';
+      return;
+    }
+    if (cur === 7 && moneyBeatIdx === 0 && splitStep > 0) {
+      splitStep = 0;
+      const beat = document.getElementById('m-beat-1');
+      beat.classList.remove('is-split');
+      document.getElementById('ch-val-top').textContent = SN.money(22000);
+      document.getElementById('ch-val-bottom').textContent = SN.money(22000);
       return;
     }
     if (cur === 7 && moneyBeatIdx > 0) { moneyBeat(-1); return; }
