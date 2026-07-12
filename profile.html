@@ -146,13 +146,13 @@
   const SEED = window.SNOOTY_SEED;
   const params = new URLSearchParams(location.search);
   const inDemo = params.has('demo');
-  const scripted = params.has('script');
   const H = SEED.hero;
 
   SN.frameOnDesktop();
   SN.markSeen('profile');
+  if (params.has('session')) { SN.sync.followStops(); SN.sync.startHeartbeat(); } /* hands off to the next stop when the presenter advances again, and keeps this phone counted as connected */
 
-  if (!inDemo && !scripted) {
+  if (!inDemo) {
     SN.purposeCard({
       title: 'What a stranger sees. What you build.',
       body: 'When your work stops the scroll, this page closes the deal, and every piece of it is yours to fill: photos, services, prices.',

@@ -218,6 +218,7 @@ body { background: var(--color-bg); }
   const inDemo = qp.has('demo');
   SN.frameOnDesktop();
   SN.markSeen('dashboard');
+  if (qp.has('session')) { SN.sync.followStops(); SN.sync.startHeartbeat(); } /* hands off to the next stop when the presenter advances again, and keeps this phone counted as connected */
 
   document.getElementById('av').src = SEED.hero.avatar;
   document.getElementById('req-av').src = SEED.av.keisha;

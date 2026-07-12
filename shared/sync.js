@@ -75,12 +75,27 @@
      stop when the presenter advances again. Without that second listener,
      a phone that already landed on a stop has no code left running that
      watches for further slide changes, so advancing past it does nothing. */
+  /* 1-indexed slide numbers, matching what show() pushes via
+     SN.sync.setSlide(i+1) in deck-preview.html. Keyed to the 7-chapter
+     restructure's slide order (23 slides total): every "Pause" beat maps
+     back to wait.html?session=1, same behavior as the single Q&A pause
+     used to have, followStops()'s own guard below already prevents a
+     phone already on wait.html from self-redirecting when consecutive
+     pauses both point here. */
   const STOP_MAP = {
-    3: 'discover.html?script=1&session=1', /* Discovery: how clients find you */
-    4: 'look.html?i=9&script=1&session=1', /* The Look: SEED.feed[9] = "Medium knotless, chocolate brown", $220 (sv2) -- the SAME booking the Earnings slide dissects later */
-    5: 'booking.html?script=1&session=1', /* Booking: starts at step 1 (service selection), the real beginning of the flow */
-    8: 'messages.html?script=1&session=1', /* Conversation: now lands near the close, after the client has already booked */
-    9: 'wait.html?session=1', /* single Q&A pause, near the end */
+    4: 'discover.html?script=1&session=1', /* Ch.1 Discovery: how clients find you */
+    5: 'look.html?i=9&script=1&session=1', /* Ch.1 The Look: SEED.feed[9] = "Medium knotless, chocolate brown", $220 (sv2) -- the SAME booking the Money chapter dissects later */
+    6: 'wait.html?session=1', /* Ch.1 Discovery, Pause */
+    8: 'profile.html?script=1&session=1', /* Ch.2 Your Storefront: profile.html, "why they choose you" */
+    9: 'wait.html?session=1', /* Ch.2 Your Storefront, Pause */
+    11: 'booking.html?script=1&session=1', /* Ch.3 Booking: starts at step 1 (service selection), the real beginning of the flow */
+    12: 'wait.html?session=1', /* Ch.3 Booking, Pause */
+    13: 'messages.html?script=1&session=1', /* Ch.4 Communication */
+    14: 'wait.html?session=1', /* Ch.4 Communication, Pause */
+    16: 'dashboard.html?script=1&session=1', /* Ch.5 Business: dashboard.html, the live Approve tap */
+    17: 'wait.html?session=1', /* Ch.5 Business, Pause */
+    19: 'wait.html?session=1', /* Ch.6 Your Money, Pause */
+    22: 'wait.html?session=1', /* Ch.7 The Future, final Q&A pause */
   };
 
   /* Call from any scripted stop page: watches the live slide and
