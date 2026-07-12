@@ -9,7 +9,7 @@
 <title>Snooty · The Look</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400;1,500&family=Inter:wght@400;500;600&family=Space+Mono:wght@700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="shared/snooty.css?d=20260716">
+<link rel="stylesheet" href="shared/snooty.css?d=20260718">
 <style>
 /* Mirrors the real hisisnooty LookDetail.tsx mobile layout (<767px):
    hero-first flex column, pill back button + bookmark save button
@@ -38,9 +38,9 @@
 .ld-save.saved { color: var(--color-primary); }
 .ld-save.saved svg { fill: currentColor; }
 
-.ld-thumbs { display: flex; gap: 8px; padding: 12px 16px 0; overflow-x: auto; }
+.ld-thumbs { display: flex; gap: 8px; padding: 12px 16px 0; }
 .ld-thumbs button {
-  width: 64px; flex-shrink: 0; padding: 0; border-radius: 8px; overflow: hidden; aspect-ratio: 3/4;
+  flex: 1 1 0; min-width: 0; padding: 0; border-radius: 8px; overflow: hidden; aspect-ratio: 3/4;
   background: var(--color-border); border: 2px solid transparent; opacity: 0.6; transition: opacity 160ms var(--ease-out), border-color 160ms var(--ease-out);
 }
 .ld-thumbs button.on { border-color: var(--color-primary); opacity: 1; }
@@ -182,9 +182,9 @@
 
 </div></div>
 
-<script src="shared/seed.js?d=20260716"></script>
-<script src="shared/snooty.js?d=20260716"></script>
-<script src="shared/sync.js?d=20260716"></script>
+<script src="shared/seed.js?d=20260718"></script>
+<script src="shared/snooty.js?d=20260718"></script>
+<script src="shared/sync.js?d=20260718"></script>
 <script>
 (function () {
   'use strict';
