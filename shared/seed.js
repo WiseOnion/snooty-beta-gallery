@@ -1,8 +1,8 @@
 /* ============================================================
    Snooty Beta Gallery: shared seed cast.
    Mirrors server/prisma/seed.ts so the gallery matches the real
-   product. Hero stylist = Jordyn Ellis (the app's showcase
-   stylist), so beta testers meet her again in the live app.
+   product. Hero stylist = Jabari Timothy (the app's showcase
+   stylist), so beta testers meet him again in the live app.
    Every image URL here was liveness-checked on 2026-07-06.
    ============================================================ */
 (function () {
@@ -12,7 +12,10 @@
   const IMG = {
     knotlessSmall: u('photo-1572955304332-bf714bd49add'),
     knotlessBoho: u('photo-1592328906746-0a3ca0bde253'),
-    knotlessMedium: u('photo-1594254773847-9fce26e950bc'),
+    knotlessMedium: u('photo-1658497735599-1834bfa6ccaa'),
+    knotlessMediumAngle2: u('photo-1658497730270-b5f4fef00ae1'),
+    knotlessMediumAngle3: u('photo-1658497728970-eba825ff0959'),
+    knotlessMediumAngle4: u('photo-1658497732841-e5f1b5016ec0'),
     knotlessJumbo: u('photo-1616166183781-0fdd2ef83374'),
     boxBurgundy: u('photo-1606416132922-22ab37c1231e'),
     boxLarge: u('photo-1638794249638-b97e05aaa900'),
@@ -55,7 +58,7 @@
   };
 
   const AV = {
-    jordyn: u('photo-1531746020798-e6953c6e8e04', 200),
+    jabari: u('photo-1531746020798-e6953c6e8e04', 200),
     maya: u('photo-1534528741775-53994a69daeb', 200),
     tasha: u('photo-1494790108377-be9c29b29330', 200),
     imani: u('photo-1522337360788-8b13dee7a37e', 200),
@@ -85,11 +88,11 @@
 
   /* The hero stylist. Same identity as the real app's showcase account. */
   const HERO = {
-    id: 'jordyn',
-    name: 'Jordyn Ellis',
+    id: 'jabari',
+    name: 'Jabari Timothy',
     business: 'Roots & Ritual',
     city: 'Fayetteville, NC',
-    avatar: AV.jordyn,
+    avatar: AV.jabari,
     rating: 4.9,
     reviewCount: 87,
     years: 11,
@@ -106,17 +109,17 @@
     ],
     looks: [
       { id: 'lk1', caption: 'Small knotless, jet black, hip length', img: IMG.knotlessSmall, slug: 'knotless-braids', likes: 2800, serviceId: 'sv1',
-        angles: [IMG.knotlessSmall, IMG.knotlessMedium, IMG.knotlessJumbo] },
+        angles: [IMG.knotlessSmall] },
       { id: 'lk2', caption: 'Boho knotless, honey blonde', img: IMG.knotlessBoho, slug: 'knotless-braids', likes: 2100, serviceId: 'sv3',
-        angles: [IMG.knotlessBoho, IMG.knotlessSmall, IMG.editorial1] },
-      { id: 'lk3', caption: 'Medium knotless, chocolate brown', img: IMG.knotlessMedium, slug: 'knotless-braids', likes: 1400, serviceId: 'sv2',
-        angles: [IMG.knotlessMedium, IMG.knotlessJumbo] },
+        angles: [IMG.knotlessBoho] },
+      { id: 'lk3', caption: 'Medium knotless, rooted caramel', img: IMG.knotlessMedium, slug: 'knotless-braids', likes: 1400, serviceId: 'sv2',
+        angles: [IMG.knotlessMedium, IMG.knotlessMediumAngle2, IMG.knotlessMediumAngle3, IMG.knotlessMediumAngle4] },
       { id: 'lk4', caption: 'Tribal braids, cowrie shells', img: IMG.boxBurgundy, slug: 'knotless-braids', likes: 980, serviceId: 'sv4',
-        angles: [IMG.boxBurgundy, IMG.stitch] },
+        angles: [IMG.boxBurgundy] },
       { id: 'lk5', caption: 'Starter locs, two-strand twists', img: IMG.starterLocs, slug: 'locs-retwist', likes: 760, serviceId: 'sv5',
-        angles: [IMG.starterLocs, IMG.starterLocsThick, IMG.retwist] },
+        angles: [IMG.starterLocs] },
       { id: 'lk6', caption: 'Fresh retwist, defined roots', img: IMG.retwistDefined, slug: 'locs-retwist', likes: 540, serviceId: 'sv6',
-        angles: [IMG.retwistDefined, IMG.retwist] },
+        angles: [IMG.retwistDefined] },
     ],
   };
 
@@ -137,11 +140,11 @@
   /* Reviews tied to completed appointments (the trust story). */
   const REVIEWS = [
     { client: 'Tasha Whitfield', avatar: AV.tasha, stars: 5, service: 'Loc Retwist', when: '2 days ago',
-      text: 'Eleven visits in and Jordyn has never rushed a single loc. My retwist lasts longer than anywhere else in Charlotte.' },
+      text: 'Eleven visits in and Jabari has never rushed a single loc. My retwist lasts longer than anywhere else in Charlotte.' },
     { client: 'Maya Reyes', avatar: AV.maya, stars: 5, service: 'Knotless Braids - Medium', when: '1 week ago',
-      text: 'She actually listens. Zero tension on my edges and the parts are immaculate. Already rebooked.', photo: IMG.knotlessMedium },
+      text: 'He actually listens. Zero tension on my edges and the parts are immaculate. Already rebooked.', photo: IMG.knotlessMedium },
     { client: 'Imani Cole', avatar: AV.imani, stars: 5, service: 'Boho Knotless w/ Curls', when: '3 weeks ago',
-      text: 'The boho curls blended perfectly with the honey blonde. I sent her page to my whole group chat.', photo: IMG.knotlessBoho },
+      text: 'The boho curls blended perfectly with the honey blonde. I sent his page to my whole group chat.', photo: IMG.knotlessBoho },
     { client: 'Keisha Banks', avatar: AV.keisha, stars: 4, service: 'Knotless Braids - Medium', when: '1 month ago',
       text: 'Found her on Snooty from one photo and the real thing matched it. Booking with the deposit felt official, no back and forth.' },
   ];
@@ -158,20 +161,20 @@
 
   /* Discover feed: looks across the platform. Hero's looks rank first in her city. */
   const FEED = [
-    { img: IMG.knotlessSmall, caption: 'Small knotless, jet black, hip length', stylist: 'Jordyn Ellis', business: 'Roots & Ritual', city: 'Fayetteville, NC', slug: 'knotless-braids', likes: 2800, cents: 28000, heroLook: 'lk1' },
+    { img: IMG.knotlessSmall, caption: 'Small knotless, jet black, hip length', stylist: 'Jabari Timothy', business: 'Roots & Ritual', city: 'Fayetteville, NC', slug: 'knotless-braids', likes: 2800, cents: 28000, heroLook: 'lk1' },
     { img: IMG.balayage, caption: 'Honey balayage, natural texture', stylist: 'Jade Rivera', business: 'Jade Color Studio', city: 'Los Angeles, CA', slug: 'hair-color', likes: 4100, cents: 28000 },
     { img: IMG.passionTwist, caption: 'Passion twists, 18 inches, auburn', stylist: 'Natasha Brown', business: 'Tasha Twists', city: 'Chicago, IL', slug: 'twists', likes: 1600, cents: 19000 },
-    { img: IMG.knotlessBoho, caption: 'Boho knotless, honey blonde', stylist: 'Jordyn Ellis', business: 'Roots & Ritual', city: 'Fayetteville, NC', slug: 'knotless-braids', likes: 2100, cents: 34000, heroLook: 'lk2' },
+    { img: IMG.knotlessBoho, caption: 'Boho knotless, honey blonde', stylist: 'Jabari Timothy', business: 'Roots & Ritual', city: 'Fayetteville, NC', slug: 'knotless-braids', likes: 2100, cents: 34000, heroLook: 'lk2' },
     { img: IMG.silkPressNyc, caption: 'Silk press, perfect edges', stylist: 'Brianna Lee', business: 'The Press Bar', city: 'New York, NY', slug: 'silk-press', likes: 2800, cents: 14000 },
-    { img: IMG.starterLocs, caption: 'Starter locs, two-strand twists', stylist: 'Jordyn Ellis', business: 'Roots & Ritual', city: 'Fayetteville, NC', slug: 'locs-retwist', likes: 760, cents: 38000, heroLook: 'lk5' },
+    { img: IMG.starterLocs, caption: 'Starter locs, two-strand twists', stylist: 'Jabari Timothy', business: 'Roots & Ritual', city: 'Fayetteville, NC', slug: 'locs-retwist', likes: 760, cents: 38000, heroLook: 'lk5' },
     { img: IMG.boxBurgundy, caption: 'Box braids, burgundy tips', stylist: 'Camille Osei', business: 'Camille Does Hair', city: 'Fayetteville, NC', slug: 'box-braids', likes: 1200, cents: 20000 },
     { img: IMG.fadeWaves, caption: 'Mid fade, waves on top', stylist: 'Marcus Webb', business: 'Webb Cuts', city: 'Houston, TX', slug: 'cuts-and-fades', likes: 4100, cents: 4500 },
     { img: IMG.washAndGo, caption: 'Wash and go, 4C curl pop', stylist: 'Amara Diallo', business: 'Crown Natural Studio', city: 'Washington, DC', slug: 'natural-styles', likes: 2800, cents: 8000 },
-    { img: IMG.knotlessMedium, caption: 'Medium knotless, chocolate brown', stylist: 'Jordyn Ellis', business: 'Roots & Ritual', city: 'Fayetteville, NC', slug: 'knotless-braids', likes: 1400, cents: 22000, heroLook: 'lk3' },
+    { img: IMG.knotlessMedium, caption: 'Medium knotless, rooted caramel', stylist: 'Jabari Timothy', business: 'Roots & Ritual', city: 'Fayetteville, NC', slug: 'knotless-braids', likes: 1400, cents: 22000, heroLook: 'lk3' },
     { img: IMG.butterflyLocs, caption: 'Butterfly locs, 22 inches', stylist: 'Deja Monroe', business: 'Deja Twist', city: 'Fayetteville, NC', slug: 'twists', likes: 990, cents: 22000 },
     { img: IMG.highlights, caption: 'Full highlights, beachy blonde', stylist: 'Jade Rivera', business: 'Jade Color Studio', city: 'Los Angeles, CA', slug: 'hair-color', likes: 3300, cents: 22000 },
     { img: IMG.updoBraided, caption: 'Braided updo for wedding day', stylist: 'Grace Okonkwo', business: 'Grace Bridal Hair', city: 'New York, NY', slug: 'updos-and-wedding', likes: 3100, cents: 28000 },
-    { img: IMG.retwistDefined, caption: 'Fresh retwist, defined roots', stylist: 'Jordyn Ellis', business: 'Roots & Ritual', city: 'Fayetteville, NC', slug: 'locs-retwist', likes: 540, cents: 9000, heroLook: 'lk6' },
+    { img: IMG.retwistDefined, caption: 'Fresh retwist, defined roots', stylist: 'Jabari Timothy', business: 'Roots & Ritual', city: 'Fayetteville, NC', slug: 'locs-retwist', likes: 540, cents: 9000, heroLook: 'lk6' },
     { img: IMG.senegalese, caption: 'Senegalese twists, waist length', stylist: 'Natasha Brown', business: 'Tasha Twists', city: 'Chicago, IL', slug: 'twists', likes: 740, cents: 25000 },
     { img: IMG.fauxLocsHoney, caption: 'Distressed faux locs, honey brown', stylist: 'Diamond Holt', business: 'Diamond Braids', city: 'Fayetteville, NC', slug: 'faux-locs', likes: 580, cents: 24000 },
     { img: IMG.blowout, caption: 'Blowout, big volume, defined ends', stylist: 'Maya Johnson', business: 'Silk & Shine', city: 'Los Angeles, CA', slug: 'silk-press', likes: 2100, cents: 12000 },
