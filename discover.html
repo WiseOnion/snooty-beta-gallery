@@ -165,6 +165,7 @@
 
   SN.frameOnDesktop();
   SN.markSeen('discover');
+  if (params.has('session')) SN.sync.followStops(); /* hands off to the next stop when the presenter advances again */
 
   if (!inDemo && !scripted) {
     SN.purposeCard({

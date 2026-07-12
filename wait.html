@@ -44,18 +44,12 @@ body { background: var(--color-bg-dark); color: var(--color-text-inverse); }
   'use strict';
   SN.markSeen('wait');
 
-  /* SLIDE_MAP keys are 1-indexed deck-preview.html slide numbers. This
-     is the single source of truth for which slide sends followers to
-     which scripted stop; nothing else on this page can be tapped, so
-     it's the only way a phone here ever goes anywhere. */
-  const SLIDE_MAP = {
-    3: 'discover.html?script=1&session=1',
-    4: 'messages.html?script=1&session=1',
-    6: 'booking.html?script=1&step=3&session=1',
-  };
-
+  /* STOP_MAP (shared/sync.js) is the single source of truth for which
+     presenter slide sends followers to which scripted stop; nothing
+     else on this page can be tapped, so it's the only way a phone here
+     ever goes anywhere. */
   SN.sync.watchSlide((slide) => {
-    const dest = SLIDE_MAP[slide];
+    const dest = SN.sync.STOP_MAP[slide];
     if (dest) location.href = dest;
   });
 })();

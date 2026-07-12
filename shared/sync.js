@@ -68,6 +68,31 @@
     };
   }
 
+  /* Single source of truth for which presenter slide sends a follower's
+     phone to which scripted stop. wait.html uses this to make the FIRST
+     jump; every stop page (discover/messages/booking) also calls
+     followStops() below so it keeps listening and hands off to the NEXT
+     stop when the presenter advances again. Without that second listener,
+     a phone that already landed on a stop has no code left running that
+     watches for further slide changes, so advancing past it does nothing. */
+  const STOP_MAP = {
+    3: 'discover.html?script=1&session=1',
+    4: 'messages.html?script=1&session=1',
+    6: 'booking.html?script=1&step=3&session=1',
+  };
+
+  /* Call from any scripted stop page: watches the live slide and
+     navigates to STOP_MAP's destination as soon as the presenter moves
+     to a DIFFERENT mapped slide than the one that sent this phone here. */
+  function followStops() {
+    watchSlide((slide) => {
+      const dest = STOP_MAP[slide];
+      if (dest && location.pathname.indexOf(dest.split('?')[0]) === -1) {
+        location.href = dest;
+      }
+    });
+  }
+
   window.SN = window.SN || {};
-  window.SN.sync = { setSlide: setSlide, watchSlide: watchSlide };
+  window.SN.sync = { setSlide: setSlide, watchSlide: watchSlide, STOP_MAP: STOP_MAP, followStops: followStops };
 })();

@@ -122,6 +122,7 @@ body.framed .composer { position: relative; }
 
   SN.frameOnDesktop();
   SN.markSeen('messages');
+  if (params.has('session')) SN.sync.followStops(); /* hands off to the next stop when the presenter advances again */
 
   if (!inDemo && !scripted) {
     SN.purposeCard({

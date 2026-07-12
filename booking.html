@@ -155,6 +155,7 @@ body.framed .cta-bar { position: absolute; }
 
   SN.frameOnDesktop();
   SN.markSeen('booking');
+  if (params.has('session')) SN.sync.followStops(); /* hands off to the next stop when the presenter advances again */
 
   const i = parseInt(params.get('i'), 10);
   const feedLook = SEED.feed[!isNaN(i) ? i : 0] || SEED.feed[0];
