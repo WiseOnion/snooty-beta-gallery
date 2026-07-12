@@ -386,23 +386,44 @@ h1.headline { font-family: var(--font-display); font-weight: 600; font-size: cla
 .close-bg::after { content: ""; position: absolute; inset: 0; background: linear-gradient(rgba(0,0,0,0.25), rgba(0,0,0,0.72)); }
 .close-line { position: relative; z-index: 2; text-align: center; }
 
-/* ============ Stop 4: money worked on screen ============ */
-.money-split { display: flex; gap: 2vw; margin-top: 5vh; }
-.money-block { flex: 1; border-radius: 18px; padding: 3.2vh 2vw; text-align: center; }
+/* ============ Stop 4: money worked on screen ============
+   A single connected ledger instead of two disconnected block groups:
+   the $220 ticket splits into deposit + balance (with a visible split
+   ratio bar so the 20/80 reads at a glance), then a dark cut-away strip
+   states what Snooty takes, and the competitor number lands as a
+   direct multiple ("4x less") rather than just a crossed-out pill. */
+.money-ledger { margin-top: 4.2vh; }
+.money-ticket { display: flex; align-items: baseline; justify-content: space-between; padding: 0 0.2vw 1.6vh; border-bottom: 1px solid var(--color-border); }
+.money-ticket .mt-label { font-family: var(--font-display); font-weight: 600; font-size: clamp(12px, 1.1vw, 15px); letter-spacing: 0.06em; text-transform: uppercase; color: var(--color-text-muted); }
+.money-ticket .mt-val { font-family: var(--font-display); font-weight: 700; font-size: clamp(22px, 2.4vw, 32px); color: var(--color-text); }
+
+.split-bar { display: flex; height: 10px; border-radius: 6px; overflow: hidden; margin: 2.4vh 0 0; background: var(--color-border); }
+.split-bar .sb-dep { background: var(--color-accent); }
+.split-bar .sb-rest { background: var(--color-bg-dark); }
+
+.money-split { display: flex; gap: 2vw; margin-top: 2vh; }
+.money-block { flex: 1; border-radius: 18px; padding: 2.8vh 2vw; }
 .money-block.dep { background: var(--color-accent-soft); border: 1px solid rgba(201,154,74,0.35); }
 .money-block.rest { background: var(--color-bg-card); border: 1px solid var(--color-border); }
-.money-block .mb-label { font-family: var(--font-display); font-weight: 600; font-size: clamp(11px, 1.05vw, 14px); letter-spacing: 0.08em; text-transform: uppercase; color: var(--color-text-muted); }
-.money-block .mb-val { font-family: var(--font-display); font-weight: 700; font-size: clamp(30px, 3.6vw, 54px); line-height: 1.1; margin-top: 1vh; color: var(--color-primary); }
+.money-block .mb-tag { display: flex; align-items: center; gap: 0.6vw; font-family: var(--font-display); font-weight: 600; font-size: clamp(11px, 1.05vw, 14px); letter-spacing: 0.06em; text-transform: uppercase; color: var(--color-text-muted); }
+.money-block .mb-tag::before { content: ""; width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+.money-block.dep .mb-tag::before { background: var(--color-accent); }
+.money-block.rest .mb-tag::before { background: var(--color-bg-dark); }
+.money-block .mb-val { font-family: var(--font-display); font-weight: 700; font-size: clamp(32px, 4vw, 58px); line-height: 1.1; margin-top: 1vh; color: var(--color-primary); }
 .money-block.dep .mb-val { color: #6b5426; }
 .money-block .mb-note { font-size: clamp(11.5px, 1.05vw, 14.5px); color: var(--color-text-muted); margin-top: 1vh; line-height: 1.5; }
-.money-fee-row { display: flex; gap: 2vw; margin-top: 2.4vh; align-items: stretch; }
-.money-fee-row .fee-pill {
-  flex: 1; display: flex; align-items: center; justify-content: space-between; gap: 1vw;
-  background: var(--color-bg-dark); color: var(--color-text-inverse); border-radius: 14px; padding: 2.2vh 1.8vw;
-}
-.money-fee-row .fee-pill .fp-label { font-size: clamp(12px, 1.15vw, 15.5px); color: var(--color-text-muted-inverse); }
-.money-fee-row .fee-pill .fp-val { font-family: var(--font-display); font-weight: 700; font-size: clamp(20px, 2.2vw, 30px); color: var(--color-accent); white-space: nowrap; }
-.money-fee-row .fee-pill.comp .fp-val { color: #b7aca0; text-decoration: line-through solid rgba(255,255,255,0.4) 1.5px; }
+
+.money-cut { margin-top: 3vh; border-radius: 18px; background: var(--color-bg-dark); color: var(--color-text-inverse); padding: 2.6vh 2.2vw; display: flex; align-items: center; gap: 2.2vw; }
+.money-cut .mc-main { flex: 1.3; }
+.money-cut .mc-label { font-size: clamp(12px, 1.1vw, 15px); color: var(--color-text-muted-inverse); }
+.money-cut .mc-val { font-family: var(--font-display); font-weight: 700; font-size: clamp(28px, 3.2vw, 44px); color: var(--color-accent); margin-top: 0.4vh; }
+.money-cut .mc-div { width: 1px; align-self: stretch; background: rgba(255,255,255,0.14); }
+.money-cut .mc-comp { flex: 1; }
+.money-cut .mc-comp .mc-label { color: var(--color-text-muted-inverse); }
+.money-cut .mc-comp .mc-val { font-size: clamp(18px, 1.9vw, 26px); color: #b7aca0; text-decoration: line-through solid rgba(255,255,255,0.4) 1.5px; margin-top: 0.4vh; }
+.money-cut .mc-multiple { flex: 0.9; text-align: right; }
+.money-cut .mc-multiple .mc-x { font-family: var(--font-display); font-weight: 700; font-size: clamp(24px, 2.8vw, 38px); color: var(--color-success); }
+.money-cut .mc-multiple .mc-xl { font-size: clamp(11px, 1vw, 13.5px); color: var(--color-text-muted-inverse); margin-top: 0.4vh; }
 
 /* ============ Q&A pause slides ============ */
 .qa-pause { align-items: center; text-align: center; }
@@ -491,8 +512,12 @@ body.notes-mode #notes-panel {
     <div class="kicker">The money, on screen</div>
     <h1 class="headline">The deposit. The rest. The fee.</h1>
     <p class="sub">One $220 booking, worked out in full. Their phone has the same math with their own numbers, but here it is where everyone can see it.</p>
-    <div class="money-split" id="money-split"></div>
-    <div class="money-fee-row" id="money-fee-row"></div>
+    <div class="money-ledger">
+      <div class="money-ticket" id="money-ticket"></div>
+      <div class="split-bar" id="money-split-bar"></div>
+      <div class="money-split" id="money-split"></div>
+      <div class="money-cut" id="money-cut"></div>
+    </div>
   </section>
 
   <!-- 9 ▸ Q&A pause 2 -->
@@ -558,7 +583,7 @@ body.notes-mode #notes-panel {
     'STOP TALKING. Hold this slide. Take real questions. If a question is about booking, deposits, or the toolkit, say "great question, that\'s coming up in a minute" and name the upcoming stop. Don\'t rush this; a room that got to ask early questions listens better later.',
     'Their phones jump to the real booking flow, starting at step 1: choose a service. Invite the room to tap through it themselves, service to time to deposit. Say: "This is the moment you stop chasing deposits."',
     'Their phones jump to the stylist\'s home base and storefront, real and tappable. Invite the room to explore requests, the calendar, services, reviews. Say: "Every piece of that toolkit is yours to fill."',
-    'The numbers on THIS screen are the real math, not a promise: 20% deposit paid up front, the rest at the chair, then Snooty\'s entire cut against a typical competitor. Walk it left to right out loud. "Twenty percent now. Everything else, same as you collect today. And what we take for that: five percent of the deposit, plus twenty dollars a year." Let the competitor number sit crossed out. Mention their own phone has the same calculator with their own numbers.',
+    'The numbers on THIS screen are the real math, not a promise: 20% deposit paid up front, the rest at the chair, then Snooty\'s entire cut against a typical competitor. Walk it top to bottom out loud. "Twenty percent now. Everything else, same as you collect today. And what we take for that: five percent of the deposit, plus twenty dollars a year." Let the competitor number sit crossed out next to the multiple.',
     'STOP TALKING again. Hold this one longer than the first pause; this is where "what\'s the catch" comes out. Answer plainly. If someone asks something better answered at the close (the beta ask, next steps), say "one more slide and we get there."',
   ];
 
@@ -584,10 +609,10 @@ body.notes-mode #notes-panel {
   }
 
   /* ---------- Stop 4: the money, worked on screen ----------
-     Same numbers and math as calculator.html/SEED.platform, rendered
-     once as a fixed worked example (a $220 booking) so the room sees
-     real figures on the big screen instead of only hearing "check your
-     phone." Runs once per visit to the slide; harmless to re-run. */
+     Same numbers and math as SEED.platform, rendered once as a fixed
+     worked example (a $220 booking) so the room sees real figures on
+     the big screen instead of only hearing "check your phone." Runs
+     once per visit to the slide; harmless to re-run. */
   let moneyRendered = false;
   function renderMoney() {
     if (moneyRendered) return;
@@ -598,14 +623,23 @@ body.notes-mode #notes-panel {
     const rest = price - dep;
     const fee = P.annualFeeCents / 100 + (dep / 100) * (P.commissionPct / 100);
     const comp = P.competitors.styleseat.monthly + price / 100 * (P.competitors.styleseat.newClientPct / 100);
+    const multiple = (comp * 100) / Math.round(fee * 100);
+
+    document.getElementById('money-ticket').innerHTML =
+      '<span class="mt-label">The booking</span><span class="mt-val">' + SN.money(price) + '</span>';
+
+    document.getElementById('money-split-bar').innerHTML =
+      '<div class="sb-dep" style="width:' + P.depositPct + '%"></div><div class="sb-rest" style="width:' + (100 - P.depositPct) + '%"></div>';
 
     document.getElementById('money-split').innerHTML =
-      '<div class="money-block dep"><div class="mb-label">Deposit, paid today</div><div class="mb-val">' + SN.money(dep) + '</div><div class="mb-note">' + P.depositPct + '% of a ' + SN.money(price) + ' booking. Hers if the client no-shows.</div></div>' +
-      '<div class="money-block rest"><div class="mb-label">Balance, paid at the chair</div><div class="mb-val">' + SN.money(rest) + '</div><div class="mb-note">Collected the same way she collects it today. Nothing changes here.</div></div>';
+      '<div class="money-block dep"><div class="mb-tag">Deposit, paid today</div><div class="mb-val">' + SN.money(dep) + '</div><div class="mb-note">' + P.depositPct + '% of the booking. Hers if the client no-shows.</div></div>' +
+      '<div class="money-block rest"><div class="mb-tag">Balance, paid at the chair</div><div class="mb-val">' + SN.money(rest) + '</div><div class="mb-note">Collected the same way she collects it today. Nothing changes here.</div></div>';
 
-    document.getElementById('money-fee-row').innerHTML =
-      '<div class="fee-pill"><span class="fp-label">Snooty\'s entire cut (' + P.commissionPct + '% of the deposit + $' + (P.annualFeeCents / 100) + '/yr)</span><span class="fp-val">' + SN.money(Math.round(fee * 100)) + '</span></div>' +
-      '<div class="fee-pill comp"><span class="fp-label">A typical competitor, one new client</span><span class="fp-val">$' + comp.toFixed(2) + '</span></div>';
+    document.getElementById('money-cut').innerHTML =
+      '<div class="mc-main"><div class="mc-label">Snooty\'s entire cut (' + P.commissionPct + '% of the deposit + $' + (P.annualFeeCents / 100) + '/yr)</div><div class="mc-val">' + SN.money(Math.round(fee * 100)) + '</div></div>' +
+      '<div class="mc-div"></div>' +
+      '<div class="mc-comp"><div class="mc-label">A typical competitor, one new client</div><div class="mc-val">$' + comp.toFixed(2) + '</div></div>' +
+      '<div class="mc-multiple"><div class="mc-x">' + multiple.toFixed(1) + 'x</div><div class="mc-xl">less than the competitor</div></div>';
   }
 
   function show(i, fromHash) {
