@@ -5,13 +5,35 @@
    (not on a polling interval), and a plain PUT is all the presenter side
    needs to write. Exposed as SN.sync alongside the rest of shared/*.js.
 
-   Data shape at /session.json: { "slide": <number>, "updatedAt": <ms> }
+   Everything lives under /sessions/<id>/..., where <id> comes from the
+   page's own ?session= param (the deck mints a fresh random one per tab
+   load and stamps it into its QR + internal links). Without this, two
+   open deck tabs -- e.g. testing on a laptop while also running the real
+   presentation -- would both read/write the same fixed path, so a phone
+   that scanned tab A's QR would start following whichever tab last wrote
+   a slide, not the tab it actually scanned.
+
+   Data shape at /sessions/<id>/session.json: { "slide": <number>, "updatedAt": <ms> }
 */
 (function () {
   'use strict';
 
   const DB_URL = 'https://snooty-beta-deck-default-rtdb.firebaseio.com';
-  const PATH = '/session.json';
+
+  /* The deck page (deck.html/deck-preview.html) mints this and puts it in
+     its own URL before anything else runs; phone-facing pages just relay
+     whatever ?session= they were sent with. Falls back to "1" only if the
+     page truly has none (e.g. opened with no query string at all), so
+     stray direct loads don't crash rather than to invite collision --
+     that legacy fixed session is a last resort, not the normal path. */
+  function getSessionId() {
+    const v = new URLSearchParams(location.search).get('session');
+    return v || '1';
+  }
+
+  const SESSION_ID = getSessionId();
+  const BASE = '/sessions/' + encodeURIComponent(SESSION_ID);
+  const PATH = BASE + '/session.json';
 
   function setSlide(slide) {
     fetch(DB_URL + PATH, {
@@ -78,24 +100,25 @@
   /* 1-indexed slide numbers, matching what show() pushes via
      SN.sync.setSlide(i+1) in deck-preview.html. Keyed to the 7-chapter
      restructure's slide order (23 slides total): every "Pause" beat maps
-     back to wait.html?session=1, same behavior as the single Q&A pause
-     used to have, followStops()'s own guard below already prevents a
-     phone already on wait.html from self-redirecting when consecutive
+     back to wait.html (same session), same behavior as the single Q&A
+     pause used to have, followStops()'s own guard below already prevents
+     a phone already on wait.html from self-redirecting when consecutive
      pauses both point here. */
+  const S = '&session=' + encodeURIComponent(SESSION_ID);
   const STOP_MAP = {
-    4: 'discover.html?script=1&session=1', /* Ch.1 Discovery: how clients find you */
-    5: 'look.html?i=9&script=1&session=1', /* Ch.1 The Look: SEED.feed[9] = "Medium knotless, chocolate brown", $220 (sv2) -- the SAME booking the Money chapter dissects later */
-    6: 'wait.html?session=1', /* Ch.1 Discovery, Pause */
-    8: 'profile.html?script=1&session=1', /* Ch.2 Your Storefront: profile.html, "why they choose you" */
-    9: 'wait.html?session=1', /* Ch.2 Your Storefront, Pause */
-    11: 'booking.html?script=1&session=1', /* Ch.3 Booking: starts at step 1 (service selection), the real beginning of the flow */
-    12: 'wait.html?session=1', /* Ch.3 Booking, Pause */
-    13: 'messages.html?script=1&session=1', /* Ch.4 Communication */
-    14: 'wait.html?session=1', /* Ch.4 Communication, Pause */
-    16: 'dashboard.html?script=1&session=1', /* Ch.5 Business: dashboard.html, the live Approve tap */
-    17: 'wait.html?session=1', /* Ch.5 Business, Pause */
-    19: 'wait.html?session=1', /* Ch.6 Your Money, Pause */
-    22: 'wait.html?session=1', /* Ch.7 The Future, final Q&A pause */
+    4: 'discover.html?script=1' + S, /* Ch.1 Discovery: how clients find you */
+    5: 'look.html?i=9&script=1' + S, /* Ch.1 The Look: SEED.feed[9] = "Medium knotless, chocolate brown", $220 (sv2) -- the SAME booking the Money chapter dissects later */
+    6: 'wait.html?' + S.slice(1), /* Ch.1 Discovery, Pause */
+    8: 'profile.html?script=1' + S, /* Ch.2 Your Storefront: profile.html, "why they choose you" */
+    9: 'wait.html?' + S.slice(1), /* Ch.2 Your Storefront, Pause */
+    11: 'booking.html?script=1' + S, /* Ch.3 Booking: starts at step 1 (service selection), the real beginning of the flow */
+    12: 'wait.html?' + S.slice(1), /* Ch.3 Booking, Pause */
+    13: 'messages.html?script=1' + S, /* Ch.4 Communication */
+    14: 'wait.html?' + S.slice(1), /* Ch.4 Communication, Pause */
+    16: 'dashboard.html?script=1' + S, /* Ch.5 Business: dashboard.html, the live Approve tap */
+    17: 'wait.html?' + S.slice(1), /* Ch.5 Business, Pause */
+    19: 'wait.html?' + S.slice(1), /* Ch.6 Your Money, Pause */
+    22: 'wait.html?' + S.slice(1), /* Ch.7 The Future, final Q&A pause */
   };
 
   /* Call from any scripted stop page: watches the live slide and
@@ -121,7 +144,7 @@
      phone that navigates between stops (wait -> discover -> booking...)
      keeps writing the SAME key instead of registering as a new visitor
      on every page. */
-  const PRESENCE_PATH = '/presence.json';
+  const PRESENCE_PATH = BASE + '/presence.json';
   const HEARTBEAT_MS = 5000;
   const STALE_MS = 15000;
 
@@ -149,7 +172,7 @@
     const id = clientId();
     const beat = () => {
       if (document.visibilityState !== 'visible') return;
-      fetch(DB_URL + '/presence/' + id + '.json', {
+      fetch(DB_URL + BASE + '/presence/' + id + '.json', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(Date.now()),
@@ -225,6 +248,7 @@
 
   window.SN = window.SN || {};
   window.SN.sync = {
+    sessionId: SESSION_ID,
     setSlide: setSlide,
     watchSlide: watchSlide,
     STOP_MAP: STOP_MAP,

@@ -1209,6 +1209,23 @@ body.notes-mode #notes-panel {
   <div class="np-next"></div>
 </div>
 
+<script>
+/* Mint (or keep) this tab's own session id BEFORE sync.js loads, so its
+   getSessionId() call reads it from the address bar like any other page.
+   Without this, every open deck tab shares the same fixed session, and a
+   phone that scans tab A's QR ends up following whichever tab last wrote
+   a slide instead of the one it actually scanned. replaceState keeps a
+   refresh of this same tab on its own session rather than minting a new
+   one and orphaning any phones already following it. */
+(function () {
+  'use strict';
+  if (!/[?&]session=/.test(location.search)) {
+    const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+    const sep = location.search ? '&' : '?';
+    history.replaceState(null, '', location.pathname + location.search + sep + 'session=' + id + location.hash);
+  }
+})();
+</script>
 <script src="shared/seed.js?d=20260711"></script>
 <script src="shared/snooty.js?d=20260711"></script>
 <script src="shared/qrcode.js?d=20260711"></script>
@@ -1233,7 +1250,7 @@ body.notes-mode #notes-panel {
   function renderQR(elId) {
     const el = document.getElementById(elId);
     if (!el || !window.qrcodegen) return;
-    const url = location.origin + location.pathname.replace(/deck-preview\.html$/, 'wait.html') + '?session=1';
+    const url = location.origin + location.pathname.replace(/deck-preview\.html$/, 'wait.html') + '?session=' + encodeURIComponent(SN.sync.sessionId);
     const qr = qrcodegen.QrCode.encodeText(url, qrcodegen.QrCode.Ecc.MEDIUM);
     const n = qr.size;
     let cells = '';
