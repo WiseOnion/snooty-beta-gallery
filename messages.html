@@ -5,7 +5,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>Snooty · Messages</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@1,400;1,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
@@ -77,7 +77,7 @@ body { background: var(--color-bg); display: flex; flex-direction: column; }
 body.framed .composer { position: relative; }
 .composer input {
   flex: 1; height: 42px; border-radius: var(--radius-full); border: 1px solid var(--color-border);
-  padding: 0 16px; font-size: 14px; outline: none; background: var(--color-bg-alt);
+  padding: 0 16px; font-size: 16px; outline: none; background: var(--color-bg-alt); /* 16px+ stops iOS auto-zooming on focus */
 }
 .composer input:focus { border-color: var(--color-accent); }
 .composer .send-btn {
@@ -194,7 +194,9 @@ body.framed .composer { position: relative; }
     }
   }
   sendBtn.addEventListener('click', send);
-  input.addEventListener('keydown', (e) => { if (e.key === 'Enter') send(); });
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { send(); input.blur(); /* dismisses the mobile keyboard */ }
+  });
 
 })();
 </script>
