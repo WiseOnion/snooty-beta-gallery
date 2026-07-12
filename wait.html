@@ -47,10 +47,12 @@ body { background: var(--color-bg-dark); color: var(--color-text-inverse); }
   /* STOP_MAP (shared/sync.js) is the single source of truth for which
      presenter slide sends followers to which scripted stop; nothing
      else on this page can be tapped, so it's the only way a phone here
-     ever goes anywhere. */
+     ever goes anywhere. Some slides (the Q&A pauses) map back to this
+     same page; skip those, or a slide that fires while already here
+     would force a full self-reload instead of a no-op. */
   SN.sync.watchSlide((slide) => {
     const dest = SN.sync.STOP_MAP[slide];
-    if (dest) location.href = dest;
+    if (dest && dest.split('?')[0] !== 'wait.html') location.href = dest;
   });
 })();
 </script>
