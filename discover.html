@@ -286,7 +286,7 @@
     document.querySelectorAll('.chip').forEach((x) => x.classList.toggle('is-active', x.dataset.slug === 'all'));
     search(qInput.value);
   });
-  qInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') qInput.blur(); /* dismisses the mobile keyboard; search already filters live */ });
+  qInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') SN.dismissKeyboard(qInput); /* search already filters live */ });
   clearBtn.addEventListener('click', () => { qInput.value = ''; clearBtn.classList.add('hidden'); render(SEED.feed, ''); qInput.focus(); });
 
   render(SEED.feed, '');

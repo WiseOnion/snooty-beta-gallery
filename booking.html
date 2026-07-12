@@ -174,12 +174,11 @@ body.framed .cta-bar { position: absolute; }
   }
 
   /* Back arrow steps backward through the wizard (deposit -> time ->
-     service), same as the step-track it sits above. Only leaves the
-     page once already on step 1. Bound after go() exists (below), so
-     it reads the live `cur` value rather than a stale one. */
+     service), same as the step-track it sits above. On step 1 there's
+     nowhere to go back to, so it's a no-op. Bound after go() exists
+     (below), so it reads the live `cur` value rather than a stale one. */
   document.getElementById('back').addEventListener('click', () => {
     if (cur > 1) go(cur - 1);
-    else location.href = 'discover.html' + (inDemo ? '?demo=1' : '');
   });
 
   /* ---------- Step 1: service list ---------- */

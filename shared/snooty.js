@@ -192,6 +192,42 @@
     if (window.matchMedia('(min-width: 700px)').matches) document.body.classList.add('framed');
   };
 
+  /* ---------- Zoom lock, JS fallback ----------
+     touch-action:pan-x pan-y (snooty.css) is the real cross-platform
+     blocker, but Safari's pinch gesture fires non-standard gesturestart/
+     gesturechange events that predate touch-action support, and some
+     older WebKit builds still act on them regardless. Belt and
+     suspenders, no user-visible cost either way. */
+  document.addEventListener('gesturestart', (e) => e.preventDefault());
+  document.addEventListener('gesturechange', (e) => e.preventDefault());
+  /* Only swallows the tap when it lands within ~30px of the previous
+     one inside the double-tap window: that's what double-tap-zoom
+     actually is. Two quick taps on two DIFFERENT buttons are far
+     enough apart to pass through untouched, so no real interaction
+     (rapidly tapping Continue twice, etc.) ever gets eaten. */
+  let lastTap = null;
+  document.addEventListener('touchend', (e) => {
+    const t = e.changedTouches[0];
+    const now = Date.now();
+    if (lastTap && now - lastTap.time <= 300 &&
+        Math.abs(t.clientX - lastTap.x) < 30 && Math.abs(t.clientY - lastTap.y) < 30) {
+      e.preventDefault();
+    }
+    lastTap = { time: now, x: t.clientX, y: t.clientY };
+  }, { passive: false });
+
+  /* ---------- Dismiss the mobile keyboard, cross-platform ----------
+     input.blur() alone reliably closes the keyboard on iOS Safari but
+     often does NOT on Android Chrome (a known, long-standing platform
+     gap). Toggling the field briefly readonly forces Android's IME to
+     release even when blur is ignored; iOS is unaffected by the extra
+     step, so the same call is safe to use everywhere. */
+  SN.dismissKeyboard = (input) => {
+    input.setAttribute('readonly', 'readonly');
+    input.blur();
+    setTimeout(() => input.removeAttribute('readonly'), 100);
+  };
+
   /* ---------- Boot ---------- */
   document.addEventListener('DOMContentLoaded', () => SN.hydrateImages(document));
 

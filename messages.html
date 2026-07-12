@@ -195,7 +195,7 @@ body.framed .composer { position: relative; }
   }
   sendBtn.addEventListener('click', send);
   input.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') { send(); input.blur(); /* dismisses the mobile keyboard */ }
+    if (e.key === 'Enter') { send(); SN.dismissKeyboard(input); }
   });
 
 })();
