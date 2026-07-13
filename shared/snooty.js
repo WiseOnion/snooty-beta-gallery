@@ -4,6 +4,27 @@
    ============================================================ */
 (function () {
   'use strict';
+
+  /* ---------- Shell guard ----------
+     Every phone-facing screen must live inside app-shell.html's
+     sandboxed iframe: that iframe is what keeps the browser's real
+     back button / Backspace from exiting the demo. If one of these
+     screens is ever opened as the top-level page (an old QR scan, a
+     typed URL, a forwarded link), re-wrap it in the shell right away,
+     carrying its own query string (?session=, ?script=, ...) through
+     untouched. deck-preview.html loads this file too but is the
+     presenter's own view and must stay top-level, so only the screens
+     the shell itself whitelists ever redirect. */
+  const SHELL_SCREENS = [
+    'discover.html', 'look.html', 'booking.html', 'profile.html',
+    'dashboard.html', 'messages.html', 'wait.html',
+  ];
+  const pageName = location.pathname.split('/').pop();
+  if (window.self === window.top && SHELL_SCREENS.indexOf(pageName) !== -1) {
+    location.replace('app-shell.html?screen=' + pageName +
+      (location.search ? '&' + location.search.slice(1) : ''));
+  }
+
   const SN = {};
 
   /* ---------- Money / format helpers ---------- */

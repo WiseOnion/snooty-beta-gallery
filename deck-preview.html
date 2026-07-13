@@ -1227,7 +1227,7 @@ body.notes-mode #notes-panel {
 })();
 </script>
 <script src="shared/seed.js?d=20260718"></script>
-<script src="shared/snooty.js?d=20260718"></script>
+<script src="shared/snooty.js?d=20260719"></script>
 <script src="shared/qrcode.js?d=20260718"></script>
 <script src="shared/sync.js?d=20260718"></script>
 <script>
@@ -1244,13 +1244,15 @@ body.notes-mode #notes-panel {
   /* Real, scannable QR, factored into one reusable function so both the
      opening "scan to follow along" slide AND the closing slide can each
      render their own instance of the SAME mechanism rather than
-     duplicating the qrcodegen wiring. Both point at the locked waiting
-     room (wait.html), not a browsable hub: followers only ever see the
-     presenter-driven stops, there's nothing here for them to tap. */
+     duplicating the qrcodegen wiring. Both point at app-shell.html
+     wrapping the locked waiting room (wait.html): the shell's sandboxed
+     iframe is what keeps browser back/Backspace from exiting the demo,
+     so every scanned phone must enter through it, and followers still
+     only ever see the presenter-driven stops. */
   function renderQR(elId) {
     const el = document.getElementById(elId);
     if (!el || !window.qrcodegen) return;
-    const url = location.origin + location.pathname.replace(/deck-preview\.html$/, 'wait.html') + '?session=' + encodeURIComponent(SN.sync.sessionId);
+    const url = location.origin + location.pathname.replace(/deck-preview\.html$/, 'app-shell.html') + '?screen=wait.html&session=' + encodeURIComponent(SN.sync.sessionId);
     const qr = qrcodegen.QrCode.encodeText(url, qrcodegen.QrCode.Ecc.MEDIUM);
     const n = qr.size;
     let cells = '';
