@@ -41,7 +41,7 @@ body { background: var(--color-bg-dark); color: var(--color-text-inverse); }
 
 <script src="shared/seed.js?d=20260718"></script>
 <script src="shared/snooty.js?d=20260719"></script>
-<script src="shared/sync.js?d=20260718"></script>
+<script src="shared/sync.js?d=20260719"></script>
 <script>
 (function () {
   'use strict';
@@ -53,10 +53,12 @@ body { background: var(--color-bg-dark); color: var(--color-text-inverse); }
      else on this page can be tapped, so it's the only way a phone here
      ever goes anywhere. Some slides (the Q&A pauses) map back to this
      same page; skip those, or a slide that fires while already here
-     would force a full self-reload instead of a no-op. */
+     would force a full self-reload instead of a no-op. replace(), not
+     href=, so this doesn't leave a history entry the phone's back
+     button could flicker to before being forced forward again. */
   SN.sync.watchSlide((slide) => {
     const dest = SN.sync.STOP_MAP[slide];
-    if (dest && dest.split('?')[0] !== 'wait.html') location.href = dest;
+    if (dest && dest.split('?')[0] !== 'wait.html') location.replace(dest);
   });
 })();
 </script>

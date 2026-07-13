@@ -123,12 +123,18 @@
 
   /* Call from any scripted stop page: watches the live slide and
      navigates to STOP_MAP's destination as soon as the presenter moves
-     to a DIFFERENT mapped slide than the one that sent this phone here. */
+     to a DIFFERENT mapped slide than the one that sent this phone here.
+     Uses replace(), not href=, so each stop overwrites the iframe's
+     current history entry instead of pushing a new one: with href=,
+     pressing the phone's back button would flicker back to the PREVIOUS
+     stop for an instant before this same listener caught the still-live
+     slide and forced it forward again. replace() leaves nothing there
+     to go back to. */
   function followStops() {
     watchSlide((slide) => {
       const dest = STOP_MAP[slide];
       if (dest && location.pathname.indexOf(dest.split('?')[0]) === -1) {
-        location.href = dest;
+        location.replace(dest);
       }
     });
   }
