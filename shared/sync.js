@@ -98,27 +98,34 @@
      a phone that already landed on a stop has no code left running that
      watches for further slide changes, so advancing past it does nothing. */
   /* 1-indexed slide numbers, matching what show() pushes via
-     SN.sync.setSlide(i+1) in deck-preview.html. Keyed to the 18-slide
-     "Restarting the Deck" structure: Welcome/Problem/Why
-     Failed/Philosophy/How Tonight Works/Discovery(explain)/STOP
-     1/Booking(explain)/STOP 2/Running Your Business(explain)/STOP
-     3/Who We Work With/Money pt.1/Money pt.2/Why This
-     Matters/What's Next/Questions. Only the 3 numbered "Stop" slides
-     release a phone from wait.html; every other slide (including
-     Welcome, which now carries the QR itself) keeps phones parked on
-     the wait screen so attention stays on the presenter until a Stop
-     slide deliberately releases them. The final Questions slide also
-     maps back to wait.html: phones stay "available to keep exploring"
-     per that slide's own copy, on whatever stop they last visited,
-     rather than being yanked to a new page during open Q&A. */
+     SN.sync.setSlide(i+1) in deck-preview.html. Keyed to the CURRENT
+     7-stop route (Discovery/Style Page/Storefront/Booking/Business/
+     Messaging/Money), each stop being 3 slides (intro "explain" ->
+     phone-preview "Stop N" -> pause) except Money, which has two
+     intro slides back to back and no phone-preview of its own. Only
+     the 6 numbered "Stop N" phone-preview slides release a phone from
+     wait.html; every other slide (intros, pauses, Money, and
+     everything before/after the 7-stop route, including Welcome,
+     which carries the QR itself) keeps phones parked on the wait
+     screen so attention stays on the presenter until a Stop slide
+     deliberately releases them. re-derive these numbers from
+     deck-preview.html's own ENTRY_SLIDE_FOR_STOP/PAUSE_SLIDE_FOR_STOP
+     (1-indexed here vs 0-indexed there) if the slide order ever
+     changes again -- this map does NOT update itself. */
   const S = '&session=' + encodeURIComponent(SESSION_ID);
   const STOP_MAP = {
-    8: 'discover.html?script=1' + S, /* Stop 1: Discovery -- discover.html, tap into a card to see the look overlay */
-    9: 'wait.html?' + S.slice(1), /* Booking (explain), back to wait until Stop 2 */
-    10: 'booking.html?script=1' + S, /* Stop 2: Booking -- starts at step 1 (service selection) */
-    11: 'wait.html?' + S.slice(1), /* Running Your Business (explain), back to wait until Stop 3 */
-    12: 'dashboard.html?script=1' + S, /* Stop 3: Running Your Business -- dashboard.html, the live Approve tap */
-    13: 'wait.html?' + S.slice(1), /* Who We Work With, back to wait for the rest of the close */
+    9: 'discover.html?script=1' + S, /* Stop 1: Discovery -- discover.html, tap into a card to see the look overlay */
+    10: 'wait.html?' + S.slice(1), /* Style Page (explain), back to wait until Stop 2 */
+    12: 'look.html?script=1' + S, /* Stop 2: Style Page -- look.html */
+    13: 'wait.html?' + S.slice(1), /* Storefront (explain), back to wait until Stop 3 */
+    15: 'profile.html?script=1' + S, /* Stop 3: Storefront -- profile.html */
+    16: 'wait.html?' + S.slice(1), /* Booking (explain), back to wait until Stop 4 */
+    18: 'booking.html?script=1' + S, /* Stop 4: Booking -- starts at step 1 (service selection) */
+    19: 'wait.html?' + S.slice(1), /* Business (explain), back to wait until Stop 5 */
+    21: 'dashboard.html?script=1' + S, /* Stop 5: Business -- dashboard.html, the live Approve tap */
+    22: 'wait.html?' + S.slice(1), /* Messaging (explain), back to wait until Stop 6 */
+    24: 'messages.html?script=1' + S, /* Stop 6: Messaging -- messages.html */
+    25: 'wait.html?' + S.slice(1), /* Money pt.1, back to wait for the rest of the close (Money has no phone stop) */
   };
 
   /* Call from any scripted stop page: watches the live slide and
