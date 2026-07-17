@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Snooty: Opening Vision Animation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400;1,500;1,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared/snooty.css?d=20260718">
+<style>
+html, body { height: 100%; overflow: hidden; background: #000; margin: 0; padding: 0; }
+
+.vision-stage {
+  position: relative; height: 100vh; width: 100vw; margin: 0; overflow: hidden;
+  background: #000;
+}
+.vision-field {
+  position: absolute; inset: 0; transform-origin: var(--hero-cx, 50%) var(--hero-cy, 50%);
+  transform: scale(var(--vf-scale, 6));
+  filter: blur(0px);
+  /* no transition here by default: setting --vf-scale/--hero-cx/cy in JS during
+     setup must NOT animate, or the punched-in start snaps/eases unexpectedly.
+     .vision-field.anim adds the transition, applied only once setup is done. */
+}
+.vision-field.anim { transition: transform 4600ms cubic-bezier(0.16, 0.7, 0.15, 1); } /* keep 4600ms in sync with ZOOM_MS in cascadeOpen() */
+.vision-field.revealed { transform: scale(1); }
+.vtile {
+  position: absolute; border-radius: 14px; overflow: hidden;
+  box-shadow: 0 20px 46px rgba(0,0,0,0.5);
+  opacity: 0; /* every tile starts hidden except the hero (see .vtile.hero-visible) */
+  transition: opacity 700ms var(--ease-out); /* soft arrival, short enough that few tiles overlap mid-fade */
+  will-change: opacity; /* own compositor layer while fading, so 70+ box-shadows don't repaint together */
+}
+.vtile.hero-visible { opacity: 1; } /* the hero is visible from frame one, alone */
+.vtile.wall-in { opacity: 1; will-change: auto; } /* settled: drop the layer hint, tile just sits still */
+.vtile img { display: block; width: 100%; height: 100%; object-fit: cover; }
+/* Discover's hover scrim, held permanently rather than on :hover, so the
+   wall reads like a grid of cards caught mid-browse instead of a bare
+   photo backdrop. Same gradient as .lk-card::after in discovery.css. */
+.vtile .vtile-scrim {
+  position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(0deg, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.55) 35%, rgba(0,0,0,0.18) 60%, rgba(0,0,0,0) 80%);
+}
+/* The full LookCard chrome (like badge, save button, tag, stylist/rating
+   overlay, Book button, from discovery.css/LookCard.tsx), reproduced on
+   every wall tile so the backdrop reads as real app texture, not a bare
+   photo grid. Everything is dimmed and softly blurred: present enough to
+   recognize, quiet enough that SNOOTY stays the only thing in focus. */
+.vtile .vtile-chrome { position: absolute; inset: 0; opacity: 0.5; filter: blur(0.6px); pointer-events: none; }
+/* the hero's badge stays crisp (not dimmed/blurred like the resting wall
+   chrome), since the punch-in is meant to read as the one full-quality,
+   in-focus shot on the whole screen. Same pixel sizing as a wall tile's
+   badge, though: the ancestor .vision-field transform already scales it
+   up along with the photo, so re-sizing it here would double-scale it
+   off-frame (see the comment on .vtile-chrome-hero-dulled below). */
+.vtile-chrome-hero { opacity: 1; filter: none; }
+.vtile-likes-hero { background: rgba(255,255,255,0.9); }
+.vtile .vtile-tag {
+  position: absolute; bottom: 8px; left: 9px; right: 9px;
+  font-family: var(--font-display); font-weight: 600; font-size: 10px;
+  letter-spacing: 0.06em; text-transform: uppercase; color: rgba(255,255,255,0.7);
+  text-shadow: 0 1px 4px rgba(0,0,0,0.5); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.vtile .vtile-likes {
+  position: absolute; top: 7px; left: 7px; display: flex; align-items: center; gap: 3px;
+  background: rgba(255,255,255,0.5); border-radius: 9999px; padding: 3px 7px;
+  font-family: var(--font-display); font-size: 9px; font-weight: 600; color: rgba(24,24,24,0.75);
+}
+.vtile .vtile-likes svg { width: 8px; height: 8px; }
+.vtile .vtile-save {
+  position: absolute; top: 7px; right: 7px; width: 18px; height: 18px; border-radius: 50%;
+  background: rgba(94,35,48,0.55); display: flex; align-items: center; justify-content: center;
+}
+.vtile .vtile-save svg { width: 9px; height: 9px; }
+.vtile .vtile-info {
+  position: absolute; left: 9px; right: 9px; bottom: 8px; display: flex; align-items: center; gap: 5px;
+}
+.vtile .vtile-stylist {
+  font-family: var(--font-display); font-weight: 700; font-size: 9.5px; color: rgba(255,255,255,0.75);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; min-width: 0;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+}
+.vtile .vtile-book {
+  flex-shrink: 0; font-family: var(--font-display); font-weight: 700; font-size: 8.5px;
+  color: rgba(24,24,24,0.7); background: rgba(255,255,255,0.55); border-radius: 9999px; padding: 3px 7px;
+}
+/* only the largest wall tiles get the full stylist/Book row; smaller
+   ones keep just the tag, or the row would overflow into illegibility */
+.vtile .vtile-info { display: none; }
+.vtile.vtile-lg .vtile-info { display: flex; }
+.vtile.vtile-lg .vtile-tag { display: none; } /* real card hides the resting tag once the fuller row is shown */
+/* the hero's save/tag/stylist/book chrome: same dulled treatment AND
+   same pixel sizing as the wall tiles. The hero tile's own box is a
+   small wall-slot size just like every other tile; it only LOOKS
+   viewport-sized because the whole .vision-field is CSS-scaled up
+   during the punch-in. That ancestor transform already magnifies these
+   pixel offsets along with everything else, so sizing them again here
+   would double-scale and push them off-frame. */
+.vtile-chrome-hero-dulled .vtile-tag-hero { display: none; } /* hero always shows the fuller info row instead */
+.vtile-chrome-hero-dulled .vtile-info-hero { display: flex; }
+/* Row wrappers: whole rows drift up/down once the wall has settled.
+   Blur lives HERE, per row, not on .vision-field: a parent-level blur
+   over moving children would re-blur the entire screen every frame,
+   while a blurred row that merely translates is a cached raster the
+   compositor slides around for free. */
+.vrow { position: absolute; inset: 0; transition: filter 900ms var(--ease-out); }
+.vision-field.blurred .vrow { filter: blur(18px); }
+.vision-field.drift .vrow {
+  will-change: transform;
+  animation: vrow-drift var(--vr-dur, 12s) ease-in-out infinite;
+}
+@keyframes vrow-drift {
+  0%, 100% { transform: translateY(0); }
+  25% { transform: translateY(var(--vr-drift, 14px)); }
+  75% { transform: translateY(calc(var(--vr-drift, 14px) * -1)); }
+}
+.vision-scrim {
+  position: absolute; inset: 0; z-index: 5; pointer-events: none; opacity: 0;
+  background: rgba(8,8,8,0.28); /* light dimming only, the blur behind it does the real work */
+  transition: opacity 1000ms var(--ease-out);
+}
+.vision-scrim.show { opacity: 1; }
+.vision-word {
+  position: absolute; inset: 0; z-index: 6; display: flex; align-items: center; justify-content: center;
+  pointer-events: none; opacity: 0; transform: scale(0.94);
+  transition: opacity 700ms var(--ease-out), transform 700ms var(--ease-brand);
+}
+.vision-word.show { opacity: 1; transform: scale(1); }
+.vision-word { flex-direction: column; gap: 18px; }
+.vision-word span.wordmark {
+  font-family: var(--font-display); font-weight: 400; font-size: clamp(90px, 16vw, 240px);
+  color: #fff; letter-spacing: 0.32em; text-transform: uppercase; /* the wordmark is always set in all caps per style guide */
+  text-shadow: 0 8px 40px rgba(0,0,0,0.6);
+}
+.vision-word span.vision-tagline {
+  font-family: var(--font-editorial); font-style: italic; font-weight: 500; font-size: clamp(22px, 2.6vw, 32px);
+  color: rgba(246,241,232,0.88); letter-spacing: 0.01em; text-align: center;
+  max-width: 50ch; text-shadow: 0 4px 20px rgba(0,0,0,0.6);
+  opacity: 0; transform: translateY(8px);
+  transition: opacity 700ms var(--ease-out) 350ms, transform 700ms var(--ease-out) 350ms; /* lands just after the wordmark itself */
+}
+.vision-word.show span.vision-tagline { opacity: 1; transform: translateY(0); }
+</style>
+</head>
+<body>
+
+<section class="vision-stage">
+  <div class="vision-field" id="vision-field"></div>
+  <div class="vision-scrim" id="vision-scrim"></div>
+  <div class="vision-word" id="vision-word">
+    <span class="wordmark">Snooty</span>
+    <span class="vision-tagline">The first look, built for our beta testers: everything the app can do, before anyone else sees it.</span>
+  </div>
+</section>
+
+<script src="../shared/seed.js?d=20260718"></script>
+<script>
+(function () {
+  'use strict';
+  const SEED = window.SNOOTY_SEED;
+
+  /* Every tile requests an Unsplash width matched to how big it will
+     actually render (times device pixel ratio, capped), instead of the
+     800px default baked into ../shared/seed.js. The hero tile fills the
+     whole viewport at the punched-in start, so it gets the highest cap;
+     everything else is a small wall tile and needs far less. Dozens of
+     800px images animating under a 6x CSS scale was the lag. */
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  function sizedSrc(url, displayW, isHero) {
+    const cap = isHero ? 1600 : 500;
+    const w = Math.min(cap, Math.round(displayW * dpr));
+    return url.replace(/([?&])w=\d+/, '$1w=' + w);
+  }
+
+  /* kebab-case slug -> a short display label, standing in for the real
+     app's styleName field on the LookCard tag. */
+  function slugToTag(slug) {
+    return slug.split('-').map((w) => w[0].toUpperCase() + w.slice(1)).join(' ');
+  }
+
+  let visionLayout = null; /* cached so replays reuse the exact same positions */
+  function cascadeOpen() {
+    const field = document.getElementById('vision-field');
+    const scrim = document.getElementById('vision-scrim');
+    const word = document.getElementById('vision-word');
+
+    /* reset visual state for a replay, but keep the cached layout.
+       'anim' comes off FIRST so the punched-in starting scale below
+       is set instantly, with no transition riding along with it. */
+    field.classList.remove('anim', 'revealed', 'blurred', 'drift');
+    scrim.classList.remove('show');
+    word.classList.remove('show');
+
+    if (!visionLayout) visionLayout = buildLayout();
+    field.innerHTML = '';
+    /* One wrapper per spatial row so whole rows can drift after the
+       reveal (see .vision-field.drift .vrow). Even rows start upward,
+       odd rows downward; rows farther from center get a bigger swing
+       and their own period, so the float reads as loose parallax
+       rather than a lockstep bob. */
+    const rowEls = new Map();
+    function rowEl(t) {
+      let el = rowEls.get(t.row);
+      if (el) return el;
+      el = document.createElement('div');
+      el.className = 'vrow';
+      el.style.zIndex = String(t.z);
+      const dir = t.row % 2 === 0 ? -1 : 1;
+      const amp = 12 + Math.abs(t.row - visionLayout.centerRow) * 5;
+      el.style.setProperty('--vr-drift', (dir * amp) + 'px');
+      el.style.setProperty('--vr-dur', (10 + ((t.row * 2.3) % 5)).toFixed(1) + 's');
+      field.appendChild(el);
+      rowEls.set(t.row, el);
+      return el;
+    }
+    const HEART_SVG = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21s-6.7-4.35-9.5-8.28C.6 9.86 1.4 6 5 5c2-.55 3.7.3 5 2 1.3-1.7 3-2.55 5-2 3.6 1 4.4 4.86 2.5 7.72C18.7 16.65 12 21 12 21z"/></svg>';
+    const SAVE_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4h12v17l-6-4-6 4V4z"/></svg>';
+    function formatLikes(n) { return n >= 1000 ? (n / 1000).toFixed(1).replace(/\.0$/, '') + 'k' : String(n); }
+
+    const tiles = visionLayout.tiles.map((t, i) => {
+      const isHero = i === visionLayout.heroIndex;
+      const tile = document.createElement('div');
+      tile.className = 'vtile' + (isHero ? ' hero-visible' : '') + (!isHero && t.w >= 180 ? ' vtile-lg' : '');
+      tile.style.width = t.w + 'px'; tile.style.height = t.h + 'px';
+      tile.style.left = t.x + 'px'; tile.style.top = t.y + 'px';
+      tile.style.zIndex = String(t.z);
+      const img = document.createElement('img');
+      /* the hero tile is a small wall slot at rest, but fills the whole
+         viewport during the punch-in zoom: request its source at
+         viewport width, not wall-tile width, or it visibly softens
+         under a 6-9x CSS scale on the one shot meant to look sharpest */
+      img.src = sizedSrc(t.src, isHero ? window.innerWidth : t.w, t.isHero); img.alt = '';
+      tile.appendChild(img);
+      const tileScrim = document.createElement('div');
+      tileScrim.className = 'vtile-scrim';
+      tile.appendChild(tileScrim);
+
+      if (isHero) {
+        /* the hero fills the whole viewport at punch-in: the like badge
+           carries over crisp and sized up to match the full-quality
+           photo, but the rest of the card chrome (save/tag/stylist/
+           book) stays in the same dulled wall-tile treatment, just
+           scaled up, so it reads as texture rather than active UI. */
+        const chrome = document.createElement('div');
+        chrome.className = 'vtile-chrome vtile-chrome-hero';
+        const likes = document.createElement('div');
+        likes.className = 'vtile-likes vtile-likes-hero';
+        likes.innerHTML = HEART_SVG + '<span>' + formatLikes(t.likes) + '</span>';
+        chrome.appendChild(likes);
+        tile.appendChild(chrome);
+
+        const dulled = document.createElement('div');
+        dulled.className = 'vtile-chrome vtile-chrome-hero-dulled';
+
+        const save = document.createElement('div');
+        save.className = 'vtile-save vtile-save-hero';
+        save.innerHTML = SAVE_SVG;
+        dulled.appendChild(save);
+
+        const tag = document.createElement('div');
+        tag.className = 'vtile-tag vtile-tag-hero';
+        tag.textContent = t.tag;
+        dulled.appendChild(tag);
+
+        const info = document.createElement('div');
+        info.className = 'vtile-info vtile-info-hero';
+        const stylist = document.createElement('div');
+        stylist.className = 'vtile-stylist vtile-stylist-hero';
+        stylist.textContent = t.stylist;
+        info.appendChild(stylist);
+        const book = document.createElement('div');
+        book.className = 'vtile-book vtile-book-hero';
+        book.textContent = 'Book';
+        info.appendChild(book);
+        dulled.appendChild(info);
+
+        tile.appendChild(dulled);
+      } else if (t.w >= 90) {
+        /* skip all chrome on any tile too narrow for a badge or label
+           to read cleanly */
+        const chrome = document.createElement('div');
+        chrome.className = 'vtile-chrome';
+
+        const likes = document.createElement('div');
+        likes.className = 'vtile-likes';
+        likes.innerHTML = HEART_SVG + '<span>' + formatLikes(t.likes) + '</span>';
+        chrome.appendChild(likes);
+
+        const save = document.createElement('div');
+        save.className = 'vtile-save';
+        save.innerHTML = SAVE_SVG;
+        chrome.appendChild(save);
+
+        const tag = document.createElement('div');
+        tag.className = 'vtile-tag';
+        tag.textContent = t.tag;
+        chrome.appendChild(tag);
+
+        const info = document.createElement('div');
+        info.className = 'vtile-info';
+        const stylist = document.createElement('div');
+        stylist.className = 'vtile-stylist';
+        stylist.textContent = t.stylist;
+        info.appendChild(stylist);
+        const book = document.createElement('div');
+        book.className = 'vtile-book';
+        book.textContent = 'Book';
+        info.appendChild(book);
+        chrome.appendChild(info);
+
+        tile.appendChild(chrome);
+      }
+      rowEl(t).appendChild(tile);
+      return tile;
+    });
+
+    /* Punch the camera into the hero tile: scale so it fills the
+       viewport, transform-origin centered on the hero. Every other
+       tile stays invisible (opacity: 0) through the whole zoom, so
+       the pull-back reveals empty space first, and only once it
+       settles does the rest of the wall fade in as one beat. */
+    const hero = tiles[visionLayout.heroIndex];
+    const W = window.innerWidth, H = window.innerHeight;
+    const heroW = parseFloat(hero.style.width), heroH = parseFloat(hero.style.height);
+    const heroCx = parseFloat(hero.style.left) + heroW / 2;
+    const heroCy = parseFloat(hero.style.top) + heroH / 2;
+    const fillScale = Math.max(W / heroW, H / heroH) * 1.08;
+    field.style.setProperty('--hero-cx', heroCx + 'px');
+    field.style.setProperty('--hero-cy', heroCy + 'px');
+    field.style.setProperty('--vf-scale', fillScale.toFixed(2));
+    hero.style.zIndex = 20;
+    /* Force the browser to paint the punched-in starting scale BEFORE
+       any transition exists on the element, so there is nothing to
+       animate yet. Only after this paint do we turn transitions on
+       (.anim) and, a beat later, flip to scale(1) (.revealed). Without
+       this order, the very first style write can get batched with the
+       transition-enabling class and the browser eases from its old
+       scale (or the CSS fallback) instead of holding punched-in. */
+    void field.offsetHeight;
+    requestAnimationFrame(() => {
+      field.classList.add('anim');
+
+      /* Timing:
+         Act 1  0.0s -> 1.5s    hold on the hero alone, in silence
+         Act 2  1.5s -> 6.1s    camera pulls back (4600ms, matches CSS
+                                transition)
+         Act 3  ~4.9s onward    the camera is most of the way pulled
+                                back before any other tile appears;
+                                only then do tiles reveal ONE AT A TIME
+                                on a fixed beat, ordered outward from
+                                the hero, nearest first, so the spread
+                                still reads as organic. The rate is
+                                enforced by a single queue, not by
+                                branching, so nothing can ever arrive
+                                in a clump.
+         Act 4  blur + wordmark follow shortly after the zoom settles */
+      const HOLD_MS = 1500;
+      const ZOOM_MS = 4600; /* must match the .vision-field.anim transition-duration */
+      const REVEAL_START = HOLD_MS + ZOOM_MS * 0.75; /* fade-in waits until the zoom is mostly (not just half) done */
+
+      setTimeout(() => { field.classList.add('revealed'); }, HOLD_MS);
+
+      /* Order every non-hero tile by distance from the hero, then drain
+         that order as a queue on a fixed tick. One tile reveals per
+         tick, full stop. The pacing is a property of the queue, not of
+         how many "neighbors" a tile happens to have, so it cannot run away. */
+      const heroCx2 = parseFloat(hero.style.left) + heroW / 2;
+      const heroCy2 = parseFloat(hero.style.top) + heroH / 2;
+      const queue = tiles
+        .filter((img) => img !== hero)
+        .map((img) => {
+          const cx = parseFloat(img.style.left) + parseFloat(img.style.width) / 2;
+          const cy = parseFloat(img.style.top) + parseFloat(img.style.height) / 2;
+          return { img, dist: Math.hypot(cx - heroCx2, cy - heroCy2) };
+        })
+        .sort((a, b) => a.dist - b.dist);
+
+      /* Driven by requestAnimationFrame rather than setInterval: ticks
+         are tied to the browser's own paint cadence, so under load the
+         reveal simply falls a beat behind instead of a stalled timer
+         firing several queued callbacks back-to-back (the batch-pop
+         that read as glitchy). The gap between tiles is NOT fixed: it
+         starts wide (the spread eases in slowly near the center) and
+         narrows as it goes (picking up speed toward the outer edge),
+         so the reveal itself feels like it ramps up rather than
+         running at one flat rate from the first tile to the last. */
+      const TICK_START_MS = 150; /* gap between the first tiles */
+      const TICK_END_MS = 6; /* gap between the last tiles, near-instant so the outer edges don't drag */
+      function gapAt(i) {
+        const frac = queue.length > 1 ? i / (queue.length - 1) : 1;
+        /* plain square: no dead zone up front, so the gap is already
+           visibly shrinking well before the halfway point instead of
+           sitting flat near TICK_START_MS until late in the run */
+        const eased = frac * frac;
+        return TICK_START_MS + (TICK_END_MS - TICK_START_MS) * eased;
+      }
+      /* Blur, drift and the wordmark fire off the reveal loop's own
+         completion (qi reaching queue.length) rather than a precomputed
+         timestamp. The drip loop runs on requestAnimationFrame, which
+         is tied to the browser's actual paint rate: under load (slower
+         hardware, many images decoding at once, a backgrounded tab)
+         rAF can fall behind wall-clock time, so a setTimeout scheduled
+         against the ideal total would fire the finale while tiles are
+         still mid-reveal. Triggering from the loop itself means the
+         finale always waits for the real last tile, whatever the
+         actual pace turned out to be. */
+      let qi = 0;
+      let lastTick = 0;
+      let nextGap = TICK_START_MS;
+      function drip(now) {
+        if (qi >= queue.length) return;
+        if (now - lastTick >= nextGap) {
+          queue[qi].img.classList.add('wall-in');
+          qi++;
+          lastTick = now;
+          if (qi >= queue.length) {
+            field.classList.add('blurred'); scrim.classList.add('show');
+            setTimeout(() => { field.classList.add('drift'); }, 250);
+            setTimeout(() => { word.classList.add('show'); }, 550);
+            return;
+          }
+          nextGap = gapAt(qi);
+        }
+        requestAnimationFrame(drip);
+      }
+      setTimeout(() => requestAnimationFrame((t) => { lastTick = t - nextGap; drip(t); }), REVEAL_START - HOLD_MS);
+
+      hero.classList.add('wall-in'); /* let the hero start breathing too, right as the pull-back begins */
+    });
+  }
+
+  /* Deterministic layout, computed once and cached in visionLayout.
+     Rows alternate outward from a center row; each row is placed
+     against the previous row's real measured height so nothing
+     can ever overlap. Uses a seeded PRNG so results are stable
+     across reloads within a session but still look organic. */
+  function buildLayout() {
+    const W = window.innerWidth, H = window.innerHeight;
+    const pool = SEED.feed;
+    let seed = 42;
+    const rand = () => { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; };
+
+    const tiles = [];
+    let n = 0;
+    const rowGapY = 10;
+    const baseRowH = Math.max(150, H * 0.24);
+    const TOTAL_ROWS = 9;
+    let heroIndex = null;
+
+    function layoutRow(rowY, rowH, zIndex, isCenter, spatialRow) {
+      let x = -40 - rand() * 80;
+      let tallest = 0;
+      while (x < W + 80) {
+        const portrait = rand() > 0.55;
+        const tw = portrait ? (rowH * (0.62 + rand() * 0.18)) : (rowH * (1.15 + rand() * 0.55));
+        const th = rowH * (0.82 + rand() * 0.2); /* clamped below 1.0 so no tile exceeds the row's own band */
+        const gap = 10 + rand() * 10;
+        const isHero = isCenter && x <= W / 2 && x + tw >= W / 2 && heroIndex === null;
+        if (isHero) heroIndex = tiles.length;
+        const look = pool[n % pool.length];
+        tiles.push({ src: look.img, tag: slugToTag(look.slug), likes: look.likes, stylist: look.stylist, x, y: rowY, w: tw, h: th, z: zIndex, isHero: isHero, row: spatialRow });
+        n++;
+        tallest = Math.max(tallest, th);
+        x += tw + gap;
+      }
+      return tallest;
+    }
+
+    const centerRow = Math.floor(TOTAL_ROWS / 2); /* spatial index, top row = 0 */
+    const centerH = layoutRow(H / 2 - baseRowH / 2, baseRowH, 10, true, centerRow);
+    let belowY = H / 2 - baseRowH / 2 + centerH + rowGapY;
+    let aboveY = H / 2 - baseRowH / 2 - rowGapY;
+    for (let depth = 1; depth <= Math.ceil((TOTAL_ROWS - 1) / 2); depth++) {
+      const rowHDown = baseRowH * (0.75 + rand() * 0.5);
+      const downH = layoutRow(belowY, rowHDown, 10 - depth, false, centerRow + depth);
+      belowY += downH + rowGapY;
+
+      const rowHUp = baseRowH * (0.75 + rand() * 0.5);
+      const upH = layoutRow(aboveY - rowHUp, rowHUp, 10 - depth, false, centerRow - depth);
+      aboveY -= upH + rowGapY;
+    }
+    if (heroIndex === null) heroIndex = 0;
+    return { tiles, heroIndex, centerRow };
+  }
+
+  cascadeOpen();
+})();
+</script>
+</body>
+</html>

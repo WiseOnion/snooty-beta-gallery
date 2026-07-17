@@ -1,0 +1,1148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Snooty: Deck Preview (Slides 1-2)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400;1,500;1,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared/snooty.css?d=20260718">
+<style>
+/* ============ Deck chrome ============ */
+html, body { height: 100%; overflow: hidden; background: #000; }
+#deck { position: relative; width: 100vw; height: 100vh; }
+
+.slide {
+  position: absolute; inset: 0; padding: 6vh 7vw;
+  display: flex; flex-direction: column; justify-content: center;
+  opacity: 0; visibility: hidden; overflow-y: auto;
+}
+.slide.is-active { opacity: 1; visibility: visible; z-index: 2; }
+/* Bare-bones restart: every slide except slide 1 is plain black text on
+   white, no color/dark themes, no fragments, no motion. Slide 1 (the
+   opening vision animation) is the one exception and keeps its own
+   dedicated black stage/styling below, untouched. */
+.slide:not(.vision-slide) { background: #fff; color: #000; font-family: var(--font-body, sans-serif); }
+
+.kicker { font-weight: 600; font-size: 14px; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 1.2em; }
+h1.headline { font-weight: 600; font-size: clamp(24px, 3.2vw, 44px); line-height: 1.2; }
+.editorial-line { font-size: clamp(20px, 2.6vw, 32px); line-height: 1.3; }
+.sub { font-size: 16px; line-height: 1.55; max-width: 78ch; margin-top: 1em; }
+
+#hud {
+  position: fixed; bottom: 18px; right: 22px; z-index: 50;
+  font-size: 12px; color: #000; user-select: none;
+}
+#progress { position: fixed; bottom: 0; left: 0; height: 3px; background: #000; width: 0; z-index: 60; }
+
+/* Live count of phones still following along (see shared/sync.js's
+   heartbeat presence). Plain static corner readout, no motion, no
+   per-slide hero treatment: hidden until the first presence read comes
+   back so it never flashes "0 connected" while the initial fetch is
+   still in flight. */
+#presence {
+  position: fixed; top: 18px; right: 22px; z-index: 50;
+  display: none; flex-direction: row; align-items: center; gap: 7px; text-align: left;
+  color: #000; user-select: none;
+  background: #fff; border: 1px solid #000;
+  border-radius: 6px; padding: 6px 13px 6px 10px;
+}
+#presence.is-visible { display: flex; }
+#presence .p-icon { width: 13px; height: 13px; flex: none; }
+#presence .p-icon path { fill: currentColor; }
+#presence-count { font-size: 12px; font-weight: 600; }
+#presence .p-label { text-transform: lowercase; font-size: 12px; display: inline; }
+
+/* ============ Slide 1: Opening Vision Animation ============
+   Positions are computed ONCE and stay put (no re-randomizing on
+   replay, no overlapping tiles). The reveal is a zoom: the camera
+   starts punched in close on one hero tile, alone, then pulls back
+   WHILE the rest of the wall fades in one tile at a time (spreading
+   outward from the hero), so the fade and the zoom finish together.
+   Once settled, the wall blurs and the "snooty" wordmark fades in,
+   centered, in front of it. See cascadeOpen() for exact timing.
+   ============================================================ */
+.vision-stage {
+  /* the vision slide zeroes its own padding inline, so no negative
+     margins here: they'd shove the stage off the right/bottom edges */
+  position: relative; height: 100vh; width: 100vw; margin: 0; overflow: hidden;
+  background: #000;
+}
+.vision-field {
+  position: absolute; inset: 0; transform-origin: var(--hero-cx, 50%) var(--hero-cy, 50%);
+  transform: scale(var(--vf-scale, 6));
+  filter: blur(0px);
+  /* no transition here by default: setting --vf-scale/--hero-cx/cy in JS during
+     setup must NOT animate, or the punched-in start snaps/eases unexpectedly.
+     .vision-field.anim adds the transition, applied only once setup is done. */
+}
+.vision-field.anim { transition: transform 4600ms cubic-bezier(0.16, 0.7, 0.15, 1); } /* keep 4600ms in sync with ZOOM_MS in cascadeOpen() */
+.vision-field.revealed { transform: scale(1); }
+.vtile {
+  position: absolute; border-radius: 14px; overflow: hidden;
+  box-shadow: 0 20px 46px rgba(0,0,0,0.5);
+  opacity: 0; /* every tile starts hidden except the hero (see .vtile.hero-visible) */
+  transition: opacity 700ms var(--ease-out); /* soft arrival, short enough that few tiles overlap mid-fade */
+  will-change: opacity; /* own compositor layer while fading, so 70+ box-shadows don't repaint together */
+}
+.vtile.hero-visible { opacity: 1; } /* the hero is visible from frame one, alone */
+.vtile.wall-in { opacity: 1; will-change: auto; } /* settled: drop the layer hint, tile just sits still */
+.vtile img { display: block; width: 100%; height: 100%; object-fit: cover; }
+/* Discover's hover scrim, held permanently rather than on :hover, so the
+   wall reads like a grid of cards caught mid-browse instead of a bare
+   photo backdrop. Same gradient as .lk-card::after in discovery.css. */
+.vtile .vtile-scrim {
+  position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(0deg, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.55) 35%, rgba(0,0,0,0.18) 60%, rgba(0,0,0,0) 80%);
+}
+/* The full LookCard chrome (like badge, save button, tag, stylist/rating
+   overlay, Book button, from discovery.css/LookCard.tsx), reproduced on
+   every wall tile so the backdrop reads as real app texture, not a bare
+   photo grid. Everything is dimmed and softly blurred: present enough to
+   recognize, quiet enough that SNOOTY stays the only thing in focus. */
+.vtile .vtile-chrome { position: absolute; inset: 0; opacity: 0.5; filter: blur(0.6px); pointer-events: none; }
+/* the hero's badge stays crisp (not dimmed/blurred like the resting wall
+   chrome), since the punch-in is meant to read as the one full-quality,
+   in-focus shot on the whole screen. Same pixel sizing as a wall tile's
+   badge, though: the ancestor .vision-field transform already scales it
+   up along with the photo, so re-sizing it here would double-scale it
+   off-frame (see the comment on .vtile-chrome-hero-dulled below). */
+.vtile-chrome-hero { opacity: 1; filter: none; }
+.vtile-likes-hero { background: rgba(255,255,255,0.9); }
+.vtile .vtile-tag {
+  position: absolute; bottom: 8px; left: 9px; right: 9px;
+  font-family: var(--font-display); font-weight: 600; font-size: 10px;
+  letter-spacing: 0.06em; text-transform: uppercase; color: rgba(255,255,255,0.7);
+  text-shadow: 0 1px 4px rgba(0,0,0,0.5); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.vtile .vtile-likes {
+  position: absolute; top: 7px; left: 7px; display: flex; align-items: center; gap: 3px;
+  background: rgba(255,255,255,0.5); border-radius: 9999px; padding: 3px 7px;
+  font-family: var(--font-display); font-size: 9px; font-weight: 600; color: rgba(24,24,24,0.75);
+}
+.vtile .vtile-likes svg { width: 8px; height: 8px; }
+.vtile .vtile-save {
+  position: absolute; top: 7px; right: 7px; width: 18px; height: 18px; border-radius: 50%;
+  background: rgba(94,35,48,0.55); display: flex; align-items: center; justify-content: center;
+}
+.vtile .vtile-save svg { width: 9px; height: 9px; }
+.vtile .vtile-info {
+  position: absolute; left: 9px; right: 9px; bottom: 8px; display: flex; align-items: center; gap: 5px;
+}
+.vtile .vtile-stylist {
+  font-family: var(--font-display); font-weight: 700; font-size: 9.5px; color: rgba(255,255,255,0.75);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; min-width: 0;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+}
+.vtile .vtile-book {
+  flex-shrink: 0; font-family: var(--font-display); font-weight: 700; font-size: 8.5px;
+  color: rgba(24,24,24,0.7); background: rgba(255,255,255,0.55); border-radius: 9999px; padding: 3px 7px;
+}
+/* only the largest wall tiles get the full stylist/Book row; smaller
+   ones keep just the tag, or the row would overflow into illegibility */
+.vtile .vtile-info { display: none; }
+.vtile.vtile-lg .vtile-info { display: flex; }
+.vtile.vtile-lg .vtile-tag { display: none; } /* real card hides the resting tag once the fuller row is shown */
+/* the hero's save/tag/stylist/book chrome: same dulled treatment AND
+   same pixel sizing as the wall tiles. The hero tile's own box is a
+   small wall-slot size just like every other tile; it only LOOKS
+   viewport-sized because the whole .vision-field is CSS-scaled up
+   during the punch-in. That ancestor transform already magnifies these
+   pixel offsets along with everything else, so sizing them again here
+   would double-scale and push them off-frame. */
+.vtile-chrome-hero-dulled .vtile-tag-hero { display: none; } /* hero always shows the fuller info row instead */
+.vtile-chrome-hero-dulled .vtile-info-hero { display: flex; }
+/* Row wrappers: whole rows drift up/down once the wall has settled.
+   Blur lives HERE, per row, not on .vision-field: a parent-level blur
+   over moving children would re-blur the entire screen every frame,
+   while a blurred row that merely translates is a cached raster the
+   compositor slides around for free. */
+.vrow { position: absolute; inset: 0; transition: filter 900ms var(--ease-out); }
+.vision-field.blurred .vrow { filter: blur(18px); }
+.vision-field.drift .vrow {
+  will-change: transform;
+  animation: vrow-drift var(--vr-dur, 12s) ease-in-out infinite;
+}
+@keyframes vrow-drift {
+  0%, 100% { transform: translateY(0); }
+  25% { transform: translateY(var(--vr-drift, 14px)); }
+  75% { transform: translateY(calc(var(--vr-drift, 14px) * -1)); }
+}
+.vision-scrim {
+  position: absolute; inset: 0; z-index: 5; pointer-events: none; opacity: 0;
+  background: rgba(8,8,8,0.28); /* light dimming only, the blur behind it does the real work */
+  transition: opacity 1000ms var(--ease-out);
+}
+.vision-scrim.show { opacity: 1; }
+.vision-word {
+  position: absolute; inset: 0; z-index: 6; display: flex; align-items: center; justify-content: center;
+  pointer-events: none; opacity: 0; transform: scale(0.94);
+  transition: opacity 700ms var(--ease-out), transform 700ms var(--ease-brand);
+}
+.vision-word.show { opacity: 1; transform: scale(1); }
+.vision-word { flex-direction: column; gap: 18px; }
+.vision-word span.wordmark {
+  font-family: var(--font-display); font-weight: 400; font-size: clamp(90px, 16vw, 240px);
+  color: #fff; letter-spacing: 0.32em; text-transform: uppercase; /* the wordmark is always set in all caps per style guide */
+  text-shadow: 0 8px 40px rgba(0,0,0,0.6);
+}
+.vision-word span.vision-tagline {
+  font-family: var(--font-editorial); font-style: italic; font-weight: 500; font-size: clamp(22px, 2.6vw, 32px);
+  color: rgba(246,241,232,0.88); letter-spacing: 0.01em; text-align: center;
+  max-width: 50ch; text-shadow: 0 4px 20px rgba(0,0,0,0.6);
+  opacity: 0; transform: translateY(8px);
+  transition: opacity 700ms var(--ease-out) 350ms, transform 700ms var(--ease-out) 350ms; /* lands just after the wordmark itself */
+}
+.vision-word.show span.vision-tagline { opacity: 1; transform: translateY(0); }
+
+/* ============ QR slides: bare functional QR, no chrome ============ */
+.qr-stage { display: flex; align-items: center; gap: 40px; }
+.qr-box { width: 220px; height: 220px; background: #fff; border: 1px solid #000; padding: 10px; }
+.qr-inner { width: 100%; height: 100%; display: grid; }
+.qr-inner i { background: #000; }
+.qr-inner i.o { background: transparent; }
+
+/* ============ Plain buttons: same barebones treatment as everything else ============ */
+.btn-add-contact {
+  font: inherit; font-size: 16px; font-weight: 600; color: #fff; background: #000;
+  border: 1px solid #000; padding: 14px 24px; cursor: pointer;
+}
+.btn-add-contact:active { background: #333; }
+
+/* ============ Notes mode ============ */
+body.notes-mode #deck { display: none; }
+#notes-panel { display: none; }
+body.notes-mode { overflow: auto; background: #111; }
+body.notes-mode #notes-panel {
+  display: block; padding: 5vh 8vw; color: #eee; font-size: 20px; line-height: 1.7; min-height: 100vh;
+}
+#notes-panel .np-head { display: flex; justify-content: space-between; align-items: baseline; border-bottom: 1px solid #333; padding-bottom: 2vh; margin-bottom: 3vh; }
+#notes-panel .np-slide { font-family: var(--font-display); font-weight: 700; font-size: 44px; color: var(--color-accent); }
+#notes-panel .np-timer { font-family: var(--font-display); font-size: 30px; color: #888; }
+#notes-panel .np-title { font-family: var(--font-display); font-weight: 600; font-size: 26px; margin-bottom: 2vh; color: #fff; }
+#notes-panel .np-next { margin-top: 4vh; padding-top: 2vh; border-top: 1px dashed #333; color: #888; font-size: 16px; }
+</style>
+</head>
+<body>
+<div id="deck">
+
+  <!-- 1 ▸ Opening Vision Animation: the work comes first (UNTOUCHED) -->
+  <section class="slide black vision-slide" data-title="Opening: the work comes first" style="padding:0;">
+    <div class="vision-stage">
+      <div class="vision-field" id="vision-field"></div>
+      <div class="vision-scrim" id="vision-scrim"></div>
+      <div class="vision-word" id="vision-word">
+        <span class="wordmark">Snooty</span>
+        <span class="vision-tagline">The first look, built for our beta testers: everything the app can do, before anyone else sees it.</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2 ▸ Welcome to Snooty (QR lives here: earliest possible slide, so phones lock to the wait screen immediately and stay off until a Stop slide releases them) -->
+  <section class="slide" data-title="Welcome to Snooty" id="slide-scan">
+    <div class="kicker">Welcome</div>
+    <h1 class="headline">Welcome to Snooty</h1>
+    <p class="sub">
+      Snooty is a two-sided marketplace where clients discover and book beauty professionals &mdash; hair, nails, lashes, makeup &mdash; by searching the finished look itself, not the stylist's name.<br>
+      We're building it because the current way clients find you (Instagram, word of mouth, TikTok) only works for people who already know who you are. Snooty is built to get you found by people who don't.<br>
+      Tonight, the screen up front tells the story. Your phone shows you a working preview of the website at three points along the way &mdash; built to match the real product screen-for-screen, so what you're doing is what a client would actually see and do.<br><br>
+      Scan the code below now. Your phone will sit quietly until it's time; nothing to tap yet.
+    </p>
+    <div class="qr-stage" style="margin-top:2em;">
+      <div class="qr-box" role="img" aria-label="QR code to the Snooty beta gallery"><div class="qr-inner" id="qr-real"></div></div>
+    </div>
+  </section>
+
+  <!-- 3 ▸ The Problem -->
+  <section class="slide" data-title="The Problem">
+    <div class="kicker">The Problem</div>
+    <h1 class="headline">How beauty professionals work today</h1>
+    <p class="sub">
+      Booking and running a client business today means stitching together tools that were never built for it:<br>
+      &bull; Instagram DMs for booking requests<br>
+      &bull; Text messages for confirmations and reminders<br>
+      &bull; A notes app for tracking client history<br>
+      &bull; Cash App for deposits, with no enforcement if a client backs out<br>
+      &bull; Square for the appointment and the charge itself<br><br>
+      The real workflow, for many stylists, looks like this: someone finds your work on Instagram or TikTok, slides into your DMs, asks "how much for this," negotiates a price and date over text, and hopes the deposit gets mentioned before appointment day. No calendar, no guaranteed slot, no enforced policy on either side.<br>
+      That's not a hypothetical: industry data puts no-show and last-minute-cancellation rates for beauty appointments at 10&ndash;20% when nothing enforces a deposit.<br><br>
+      The result: constant back-and-forth questions, deposits that have to be manually chased, cancellations with no real policy behind them, double bookings from juggling several tools at once, and real time lost every single day to admin that isn't cutting hair.<br><br>
+      We're not showing you a fix yet. We're naming the problem first.
+    </p>
+  </section>
+
+  <!-- 4 ▸ Why Existing Platforms Failed -->
+  <section class="slide" data-title="Why Existing Platforms Failed">
+    <div class="kicker">Why Existing Platforms Failed</div>
+    <h1 class="headline">Why StyleSeat, Booksy, Fresha, and Vagaro don't solve this</h1>
+    <p class="sub">
+      These platforms exist and plenty of stylists already use one. They still don't solve the actual problem:<br>
+      &bull; Built around a calendar and a booking widget, not around getting found by someone new.<br>
+      &bull; A client still has to already know your name or handle to search for you on them &mdash; they manage existing demand, they don't generate new demand.<br>
+      &bull; Their real competitor is Instagram, and Instagram already wins on discovery. None of them solve the operational side either: scheduling, enforced deposits, no-show protection, or reviews tied to a real completed appointment instead of just a star count.<br>
+      &bull; Pricing: StyleSeat $35/mo flat plus a 20% new-client fee (a recurring public complaint). Booksy $29.99/mo plus a "Boost" feature that takes 30% of first-time bookings. Fresha's core plan is free but takes 20% on marketplace-driven new clients, with a $20/mo fee reportedly rolling out. Vagaro starts at $23.99/mo plus $10 per extra calendar. Most bill every month whether or not a stylist gets booked that month.<br>
+      &bull; Wrong incentive: several of these get paid on a subscription regardless of whether the stylist actually earns anything that month.
+    </p>
+  </section>
+
+  <!-- 5 ▸ Our Philosophy -->
+  <section class="slide" data-title="Our Philosophy">
+    <div class="kicker">Our Philosophy</div>
+    <h1 class="headline">Clients don't search for stylists. They search for looks.</h1>
+    <p class="sub">
+      Snooty starts with inspiration, not a directory. A client may not know exactly what style she wants, but she knows she wants to leave looking and feeling better than she came in.<br>
+      Why this matters more here than in most beauty categories: these are often multi-hour, higher-cost appointments where trust in the specific stylist's actual work matters more than almost anywhere else &mdash; a client isn't picking a stylist off a generic list, she's evaluating real finished photos before committing hours and real money.<br>
+      Everything else in the product follows from that one idea: search by hairstyle instead of by name, a profile that proves the work is real once she's interested, a booking flow that turns interest into a committed appointment, and a business toolkit that runs itself once she's booked.
+    </p>
+  </section>
+
+  <!-- 6 ▸ How Tonight Works -->
+  <section class="slide" data-title="How Tonight Works">
+    <div class="kicker">How Tonight Works</div>
+    <h1 class="headline">How tonight works</h1>
+    <p class="sub">
+      Each section of this presentation introduces one part of the product. Then your phone opens that exact part &mdash; a working preview built to match the real screens, not a static image or a screenshot.<br>
+      Explore while it's explained. We'll stop between sections for questions before moving to the next part.<br>
+      There are 6 phone stops tonight: Discovery, Style, Storefront, Booking, Business, and Messaging.
+    </p>
+  </section>
+
+  <!-- 7 ▸ Discovery -->
+  <section class="slide" data-title="Discovery">
+    <div class="kicker">Discovery</div>
+    <h1 class="headline">Clients don't search for your name. They search for the style they want.</h1>
+    <p class="sub">
+      Discover is the client's home screen. It's where people in your local area browse real finished looks, search for services like "balayage," "layered cut," or "silk press," and discover stylists they haven't met yet.<br><br>
+      Every photo in the feed leads back to the stylist who created it. When someone taps a look, they see the price, appointment length, portfolio, reviews from real completed appointments, and everything they need to decide whether to book.<br><br>
+      This page exists for one reason: to help new clients find you.<br><br>
+      You don't need a large Instagram following. You don't need someone to recommend you first. If your work is strong, it can be discovered by people nearby who are already looking for that service.<br><br>
+      The more high quality work you upload, the more opportunities you have to appear when someone searches for the styles you offer. Your portfolio becomes your storefront, and every new client starts here.
+    </p>
+  </section>
+
+  <!-- 8 ▸ Stop 1: Discovery (discover.html -> look.html) -->
+  <section class="slide" data-title="Stop 1: Discovery">
+    <div class="kicker">Stop 1</div>
+    <h1 class="headline">Explore Discovery on your phone</h1>
+    <p class="sub">
+      Your phone has opened a live preview of Snooty's Discover feed. This is where clients in your local area find new beauty professionals through their work.<br><br>
+      Take a minute to explore. Search for a hairstyle, browse different categories, save a look, and open a stylist's profile. Follow the same path a new client would.<br><br>
+      <b>What to notice</b><br>
+      A search bar and category row at the top, then a grid of finished-look photos below it. Each photo card shows a save button, the style name, the stylist's name with a verified badge, a star rating, and a Book button, all before you ever tap into the full profile.<br><br>
+      <b>Why it matters</b><br>
+      Most booking apps organize people by business name. Snooty organizes them by the work they create. That gives talented stylists a chance to be discovered by people who have never heard of them before. Every photo you upload becomes another opportunity for a new client in your area to find you.
+    </p>
+  </section>
+
+  <!-- 8b ▸ Pause: Discovery -->
+  <section class="slide" data-title="Pause: questions on Discovery">
+    <div class="kicker">Pause</div>
+    <h1 class="headline">Any questions on Discovery?</h1>
+    <p class="sub">How clients find you before they know your name. Ask anything.</p>
+  </section>
+
+  <!-- 8c ▸ Style -->
+  <section class="slide" data-title="Style">
+    <div class="kicker">Style</div>
+    <h1 class="headline">What is a Style page?</h1>
+    <p class="sub">
+      Every look in the Discover feed opens its own Style page. This is where a client decides if this is exactly what she wants.<br><br>
+      View the style from multiple angles, browse the photos, read what the appointment includes, see the price, session length, and deposit, then continue to the stylist who created it or book it right there.<br><br>
+      <b>Why does it matter?</b><br>
+      Clients aren't booking a business. They're booking a specific look. Every photo, angle, and detail helps answer the question, "Is this exactly what I want?" A single great style can introduce your work to someone who has never heard of you before, and Snooty connects that interest directly to you.
+    </p>
+  </section>
+
+  <!-- 8c2 ▸ Stop 2: Style (look.html) -->
+  <section class="slide" data-title="Stop 2: Style">
+    <div class="kicker">Stop 2</div>
+    <h1 class="headline">Explore a Style page on your phone</h1>
+    <p class="sub">
+      Your phone has opened a working preview of a Style page, built to match the real thing. View the style from multiple angles, read the price, session length, and deposit, then continue to the stylist who created it or book it right there.<br><br>
+      <b>What to notice</b><br>
+      Everything here is about the look, not the business: the photos, the angles, the details of the appointment. This is the moment a client falls in love with a specific style, not a stylist's name.
+    </p>
+  </section>
+
+  <!-- 8c3 ▸ Pause: Style -->
+  <section class="slide" data-title="Pause: questions on Style">
+    <div class="kicker">Pause</div>
+    <h1 class="headline">Any questions on Style?</h1>
+    <p class="sub">Why the Style page exists, and what it's meant to prove. Ask anything.</p>
+  </section>
+
+  <!-- 8d ▸ Storefront -->
+  <section class="slide" data-title="Storefront">
+    <div class="kicker">Storefront</div>
+    <h1 class="headline">What is a storefront?</h1>
+    <p class="sub">
+      A storefront is your public page on Snooty. It's what every potential client sees before deciding whether to book with you.<br><br>
+      Unlike Instagram, everything a client needs is in one place:<br>
+      &bull; Your portfolio<br>
+      &bull; Your services<br>
+      &bull; Your prices<br>
+      &bull; Your reviews<br>
+      &bull; Your availability<br>
+      &bull; Your booking button<br><br>
+      <b>Why does it matter?</b><br>
+      Most new clients ask the same questions before they book: how much do you charge, what services do you offer, can I trust your work, when are you available.<br>
+      Instead of answering those questions over and over through DMs, your storefront answers them automatically. Clients who decide to book already know your prices, have seen your work, and understand your services before they ever contact you.
+    </p>
+  </section>
+
+  <!-- 8d2 ▸ Stop 3: Storefront (profile view) -->
+  <section class="slide" data-title="Stop 3: Storefront">
+    <div class="kicker">Stop 3</div>
+    <h1 class="headline">Explore a storefront on your phone</h1>
+    <p class="sub">
+      Your phone has opened a working preview of a stylist's storefront, built to match the real experience. Browse the portfolio, read reviews from completed appointments, explore the services, prices, and availability, then imagine you're seeing this stylist for the first time.<br><br>
+      <b>What to notice</b><br>
+      Everything a potential client needs to make a booking decision is in one place. There are no DMs asking for prices, no sending portfolio photos one by one, and no answering the same questions over and over.<br><br>
+      <b>Why it matters</b><br>
+      Your storefront works for you even when you're busy with another client or away from your phone. It answers questions, builds trust, and gives new clients everything they need to book with confidence.
+    </p>
+  </section>
+
+  <!-- 8d3 ▸ Pause: Storefront -->
+  <section class="slide" data-title="Pause: questions on Storefront">
+    <div class="kicker">Pause</div>
+    <h1 class="headline">Any questions on Storefront?</h1>
+    <p class="sub">Why it exists, and what belongs on it. Ask anything.</p>
+  </section>
+
+  <!-- 9 ▸ Booking -->
+  <section class="slide" data-title="Booking">
+    <div class="kicker">Booking</div>
+    <h1 class="headline">Booking</h1>
+    <p class="sub">
+      Why deposits: every booking requires a deposit at the moment of booking, charged immediately, not chased afterward in a DM. If the stylist cancels, it refunds automatically; if the client no-shows, the stylist keeps it. Enforced deposits are documented to cut no-show rates significantly compared to platforms that leave it optional.<br>
+      Why availability: the calendar only ever shows times the stylist has actually marked as open, enforced by the system, so a client can't request a time that isn't real and two clients can't be placed in the same slot.<br>
+      Why pricing: the price a client sees and pays is the exact price the stylist set on their own profile &mdash; nothing renegotiated in messages.<br>
+      Why clients choose services, not just "book me": the client picks the specific service she wants (with its real duration and price) before ever picking a time, so both sides know exactly what's being booked.<br>
+      Why this removes friction: a confirmed booking exists as a real record the instant it's made &mdash; nothing about it depends on a reply, a follow-up text, or someone remembering to confirm.
+    </p>
+  </section>
+
+  <!-- 10 ▸ Stop 2: Booking (booking.html) -->
+  <section class="slide" data-title="Stop 4: Booking">
+    <div class="kicker">Stop 4</div>
+    <h1 class="headline">Book a service on your phone</h1>
+    <p class="sub">
+      Your phone has opened a working preview of the booking flow, built to match the real thing. Walk through all 4 steps: choose a service, pick a real opening, secure it with a deposit, get confirmed. No card is actually charged tonight.<br><br>
+      Notice how the deposit screen matches what was just explained &mdash; nothing hidden, nothing sprung on you at the last step.
+    </p>
+  </section>
+
+  <!-- 10b ▸ Pause: Booking -->
+  <section class="slide" data-title="Pause: questions on Booking">
+    <div class="kicker">Pause</div>
+    <h1 class="headline">Any questions on Booking?</h1>
+    <p class="sub">Deposits, policies, and how she actually commits. Ask anything.</p>
+  </section>
+
+  <!-- 11 ▸ Business -->
+  <section class="slide" data-title="Business">
+    <div class="kicker">Business</div>
+    <h1 class="headline">Running your business</h1>
+    <p class="sub">
+      This is the stylist side of the website &mdash; the dashboard, messages, calendar, portfolio, reviews, clients, and analytics, working together in one place. Bookings, Clients, Portfolio, and Home are the four sections the stylist toolkit is actually built around, in that priority order.<br>
+      &bull; <b>Dashboard</b> &mdash; today's earnings, upcoming bookings, and pending requests waiting on an Approve or Decline.<br>
+      &bull; <b>Messages</b> &mdash; every thread is pinned to the specific booking it belongs to, not a general inbox.<br>
+      &bull; <b>Calendar</b> &mdash; fills itself in the moment a booking is confirmed, no manual entry.<br>
+      &bull; <b>Portfolio</b> &mdash; the stylist's own uploaded work, the same photos that determine what shows up in Discovery.<br>
+      &bull; <b>Reviews</b> &mdash; can only attach to a completed, paid appointment, so every review is tied to a real client.<br>
+      &bull; <b>Clients</b> &mdash; every booked client is added automatically, building a real client list without manual data entry.<br>
+      &bull; <b>Analytics</b> &mdash; profile views, saves, where those views are coming from, and which of a stylist's own looks are performing best.<br>
+      How they work together: one confirmed booking updates all of it at once &mdash; the calendar, the earnings total, the client list, and the message thread &mdash; without the stylist logging anything by hand.
+    </p>
+  </section>
+
+  <!-- 12 ▸ Stop 3: Business (dashboard.html) -->
+  <section class="slide" data-title="Stop 5: Business">
+    <div class="kicker">Stop 5</div>
+    <h1 class="headline">Explore the stylist toolkit on your phone</h1>
+    <p class="sub">
+      Your phone has opened a working preview of the stylist dashboard, built to match the real thing. Look through today's earnings, upcoming bookings, recent activity, and the pending booking request.<br><br>
+      Try tapping Approve on the request and watch what updates: the calendar, the earnings total, and the client list, all at once, live.
+    </p>
+  </section>
+
+  <!-- 12b ▸ Pause: Business -->
+  <section class="slide" data-title="Pause: questions on Business">
+    <div class="kicker">Pause</div>
+    <h1 class="headline">Any questions on Business?</h1>
+    <p class="sub">Everything that runs itself once she's booked. Ask anything.</p>
+  </section>
+
+  <!-- 12c ▸ Messaging -->
+  <section class="slide" data-title="Messaging">
+    <div class="kicker">Messaging</div>
+    <h1 class="headline">Every message stays tied to the booking it belongs to.</h1>
+    <p class="sub">
+      This isn't another DM. Once she's booked, the conversation is pinned to that specific appointment, not buried in a general inbox.<br><br>
+      Why this matters: no more hunting through Instagram DMs to remember which client asked what, or which thread was about which date. Open the booking, and the whole conversation is right there with it.
+    </p>
+  </section>
+
+  <!-- 12c2 ▸ Stop: Messaging (messages.html) -->
+  <section class="slide" data-title="Stop 6: Messaging">
+    <div class="kicker">Stop 6</div>
+    <h1 class="headline">Open the message thread on your phone</h1>
+    <p class="sub">
+      Your phone has opened a working preview of the messages screen, built to match the real thing. Find the thread already pinned to the booking you just made.<br><br>
+      What to notice: there's nothing to hunt for. The conversation is exactly where the booking is, not scattered across a separate inbox.
+    </p>
+  </section>
+
+  <!-- 12d ▸ Pause: Messaging -->
+  <section class="slide" data-title="Pause: questions on Messaging">
+    <div class="kicker">Pause</div>
+    <h1 class="headline">Any questions on Messaging?</h1>
+    <p class="sub">Why every message stays tied to the booking it belongs to. Ask anything.</p>
+  </section>
+
+  <!-- 14 ▸ The Money, Part 1: the per-booking split -->
+  <section class="slide" data-title="The Money: the per-booking split">
+    <div class="kicker">The Money</div>
+    <h1 class="headline">One booking, dollar by dollar</h1>
+    <p class="sub">
+      Worked example on a $100 service, at the platform's default 25% deposit (a stylist can set their own deposit anywhere from 15% to 100%; this is the default):<br>
+      Client pays a $25 deposit today.<br>
+      Stylist keeps $18.97 from that deposit today.<br>
+      Snooty's Booking Share is a flat $5.00 &mdash; 5% of the full $100 appointment value, collected out of that same $25 deposit, not billed separately.<br>
+      Stripe's own card-processing fee is $1.03 (its standard 2.9% + $0.30); Snooty does not mark this up, and it comes out of the stylist's payout, not Snooty's share.<br>
+      The remaining $75.00 balance is paid at the chair, same as it always would be.<br><br>
+      Total to the stylist on this booking: <b>$93.97</b>.<br>
+      Remember StyleSeat's and Booksy's fees from a few slides back &mdash; on this same $100 booking, either one would have taken several times what Snooty just did. And the $5.00 Booking Share holds flat no matter what deposit percentage a stylist sets, from 15% up to 100%.
+    </p>
+  </section>
+
+  <!-- 15 ▸ The Money, Part 2: the Annual Listing Fee, framed small -->
+  <section class="slide" data-title="The Money: the Annual Listing Fee">
+    <div class="kicker">The Money</div>
+    <h1 class="headline">The only other charge</h1>
+    <p class="sub">
+      The one other cost on Snooty is a $50 Annual Listing Fee &mdash; paid once a year, at onboarding, to go live.<br>
+      Broken down small: that's about $0.14 a day. Less than a dollar a week. One completed booking at any price point pays it back several times over.<br>
+      It is not a monthly subscription and it does not change based on how many bookings come in &mdash; unlike the competitor monthly fees named earlier, which bill every month whether or not the stylist gets booked that month.<br>
+      After the $50/year is paid, Snooty only makes money when the stylist gets booked. No booking, no other charge.
+    </p>
+  </section>
+
+  <!-- 15b ▸ Pause: Money -->
+  <section class="slide" data-title="Pause: questions on Money">
+    <div class="kicker">Pause</div>
+    <h1 class="headline">Any questions on Money?</h1>
+    <p class="sub">Deposits, the split, and exactly what Snooty keeps. Ask anything.</p>
+  </section>
+
+  <!-- 16 ▸ Why This Matters -->
+  <section class="slide" data-title="Why This Matters">
+    <div class="kicker">Why This Matters</div>
+    <h1 class="headline">Why this matters</h1>
+    <p class="sub">
+      &bull; You're buying back time &mdash; the hours currently spent chasing deposits, answering the same DMs, and manually tracking who booked what.<br>
+      &bull; You're getting discovered &mdash; by clients who never would have found you through Instagram or word of mouth alone.<br>
+      &bull; You're protecting your income &mdash; enforced deposits and cancellation policy mean fewer no-shows and less unpaid time in the chair.<br>
+      &bull; You're not just building a real business, you're building a branding empire &mdash; a real client list, real earnings records, and a real portfolio that compounds over time, all in one place instead of scattered across five different tools.
+    </p>
+  </section>
+
+  <!-- 18 ▸ What We Need From You -->
+  <section class="slide" data-title="What We Need From You">
+    <div class="kicker">What We Need From You</div>
+    <h1 class="headline">What we need from you as a beta tester</h1>
+    <p class="sub">
+      Thank you for helping build Snooty. As a founding beta tester, your feedback will directly shape the product before it's released publicly.<br><br>
+      &bull; <b>Use your real business.</b> Add your actual services, prices, availability, and portfolio. Avoid placeholder information. The more realistic your profile is, the more valuable your feedback becomes.<br>
+      &bull; <b>Bring your real clients.</b> Invite existing clients to book their next appointment through Snooty instead of sending you a DM or text. Keep it personal. Send individual texts or DMs to clients you already trust. Please don't post Snooty publicly or add it to your Instagram bio or story yet. We're intentionally keeping the beta small while we improve the product.<br>
+      &bull; <b>Report bugs immediately.</b> The most valuable thing you can do is tell us when something doesn't work. Report anything broken, confusing, slow, or unexpected as soon as you notice it. Tell us what you were trying to do, what happened instead, and what screen you were on. Even small things matter, including typos, awkward wording, buttons that feel off, or numbers that don't look right.<br>
+      &bull; <b>Tell us what doesn't make sense.</b> Not every issue is a bug. If something feels confusing, difficult to find, or doesn't match how you normally run your business, tell us. Those conversations often lead to our biggest improvements.<br>
+      &bull; <b>Expect things to change.</b> Snooty will evolve throughout the beta. Features will improve, screens will change, and new functionality will be added. That's the purpose of this stage.<br><br>
+      Save Snooty's contact information now so reporting a bug or sharing feedback is always one text away.
+    </p>
+  </section>
+
+  <!-- 19 ▸ Founding Stylist Benefits -->
+  <section class="slide" data-title="Founding Stylist Benefits">
+    <div class="kicker">Founding Stylist Benefits</div>
+    <h1 class="headline">What you get for being first</h1>
+    <p class="sub">
+      &bull; <b>No Annual Listing Fee for 3 years.</b> Founding stylists are waived from the $50/year Annual Listing Fee for three years &mdash; that's a benefit no one joining later will get.<br>
+      &bull; <b>The deposit still applies.</b> Clients still pay the deposit on every booking, same as always &mdash; that's what protects your time and income. The waiver is only on the fee you'd otherwise pay Snooty.
+    </p>
+  </section>
+
+  <!-- 20 ▸ Questions -->
+  <section class="slide" data-title="Questions">
+    <div class="kicker">Questions</div>
+    <h1 class="headline">Questions</h1>
+    <p class="sub">
+      Open discussion. Your phone stays available if you want to keep exploring while we talk &mdash; no pressure, just conversation.
+    </p>
+  </section>
+
+</div>
+
+<div id="progress"></div>
+<div id="hud">1 / 10</div>
+<div id="presence"><svg class="p-icon" viewBox="0 0 24 24"><path d="M16.5 12.5c1.93 0 3.5-1.57 3.5-3.5S18.43 5.5 16.5 5.5 13 7.07 13 9s1.57 3.5 3.5 3.5zM8.5 12.5C10.43 12.5 12 10.93 12 9S10.43 5.5 8.5 5.5 5 7.07 5 9s1.57 3.5 3.5 3.5zM8.5 14.5C5.66 14.5 0 15.92 0 18.75V21h17v-2.25c0-2.83-5.66-4.25-8.5-4.25zM16.5 14.5c-.34 0-.72.02-1.13.06 1.35.98 2.29 2.3 2.29 4.19V21H24v-2.25c0-2.83-5.66-4.25-7.5-4.25z"/></svg><span id="presence-count"></span><span class="p-label">Connected</span></div>
+
+<div id="notes-panel">
+  <div class="np-head"><span class="np-slide">1</span><span class="np-timer">00:00</span></div>
+  <div class="np-title"></div>
+  <div class="np-body"></div>
+  <div class="np-next"></div>
+</div>
+
+<script>
+/* Mint (or keep) this tab's own session id BEFORE sync.js loads, so its
+   getSessionId() call reads it from the address bar like any other page.
+   Without this, every open deck tab shares the same fixed session, and a
+   phone that scans tab A's QR ends up following whichever tab last wrote
+   a slide instead of the one it actually scanned. replaceState keeps a
+   refresh of this same tab on its own session rather than minting a new
+   one and orphaning any phones already following it. */
+(function () {
+  'use strict';
+  if (!/[?&]session=/.test(location.search)) {
+    const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+    const sep = location.search ? '&' : '?';
+    history.replaceState(null, '', location.pathname + location.search + sep + 'session=' + id + location.hash);
+  }
+})();
+</script>
+<script src="shared/seed.js?d=20260718"></script>
+<script src="shared/snooty.js?d=20260719"></script>
+<script src="shared/qrcode.js?d=20260718"></script>
+<script src="shared/sync.js?d=20260720"></script>
+<script>
+(function () {
+  'use strict';
+  const SEED = window.SNOOTY_SEED;
+
+  /* Resolve data-seed image slots from the shared seed pack */
+  document.querySelectorAll('img[data-seed]').forEach((img) => {
+    img.dataset.src = SEED.img[img.dataset.seed] || '';
+  });
+
+  SN.hydrateImages(document);
+
+  /* Real, scannable QR, factored into one reusable function so both the
+     opening "scan to follow along" slide AND the closing slide can each
+     render their own instance of the SAME mechanism rather than
+     duplicating the qrcodegen wiring. Both point at app-shell.html
+     wrapping the locked waiting room (wait.html): the shell's sandboxed
+     iframe is what keeps browser back/Backspace from exiting the demo,
+     so every scanned phone must enter through it, and followers still
+     only ever see the presenter-driven stops. */
+  function renderQR(elId) {
+    const el = document.getElementById(elId);
+    if (!el || !window.qrcodegen) return;
+    const url = location.origin + location.pathname.replace(/deck-preview\.html$/, 'phone/app-shell.html') + '?screen=wait.html&session=' + encodeURIComponent(SN.sync.sessionId);
+    const qr = qrcodegen.QrCode.encodeText(url, qrcodegen.QrCode.Ecc.MEDIUM);
+    const n = qr.size;
+    let cells = '';
+    for (let y = 0; y < n; y++) {
+      for (let x = 0; x < n; x++) {
+        cells += '<i class="' + (qr.getModule(x, y) ? '' : 'o') + '"></i>';
+      }
+    }
+    el.style.gridTemplateColumns = 'repeat(' + n + ', 1fr)';
+    el.style.gap = '0';
+    el.innerHTML = cells;
+  }
+  renderQR('qr-real');
+
+  /* ---------- Presenter notes ----------
+     28 entries, 1:1 with the slides array (see the "Restarting the
+     Deck" structure). Plain factual cue per slide, matching the
+     barebones/factual copy on screen. */
+  const NOTES = [
+    'Opening vision animation. No narration required.',
+    'State: what Snooty is, why it exists, and what tonight covers. Ask the room to scan the QR code now.',
+    'State: how beauty professionals currently run their business (Instagram DMs, texts, notes app, Cash App, Square) and what it costs them. No solution yet.',
+    'State: why StyleSeat, Booksy, Fresha, and Vagaro don\'t solve this (built around calendars, still require knowing the stylist\'s name, expensive, wrong incentive).',
+    'State: the core philosophy. Clients search for looks, not stylists.',
+    'State: how the phone hand-offs work tonight. 6 stops: Discovery, Style, Storefront, Booking, Business, Messaging.',
+'Explain the Discover feed and why it exists, before phones open it.',
+    'STOP 1. Phones open the real Discover feed. Let the room search and explore. Explain how a client finds someone she\'s never heard of.',
+    'Pause. Any questions on Discovery? Ask the room.',
+    'Explain Style: why a single look\'s page is what makes a client fall for a specific style, not a business.',
+    'STOP 2. Phones open a real Style page. Let the room browse the angles, price, and appointment details.',
+    'Pause. Any questions on Style? Ask the room.',
+    'Explain Storefront: why a profile is the thing that turns a cute photo into trust.',
+    'STOP 3. Phones open the real storefront. Let the room look through the portfolio, reviews, services, and prices.',
+    'Pause. Any questions on Storefront? Ask the room.',
+    'Explain the booking philosophy: deposits, availability, pricing, friction removal, before phones open it.',
+    'STOP 4. Phones open the real booking flow. Walk through all 4 steps together, especially the deposit screen.',
+    'Pause. Any questions on Booking? Ask the room.',
+    'Explain the stylist toolkit (dashboard, messages, calendar, portfolio, reviews, clients, analytics), before phones open it.',
+    'STOP 5. Phones open the real dashboard. Have someone tap Approve on the booking request and watch everything update live.',
+    'Pause. Any questions on Business? Ask the room.',
+    'Explain Messaging: every message stays pinned to the booking it belongs to, not a general inbox.',
+    'STOP 6. Phones open the real message thread, already pinned to the booking they just made.',
+    'Pause. Any questions on Messaging? Ask the room.',
+    'Walk through the $100 booking split, dollar by dollar: $25 deposit, $18.97 to the stylist, $5 Booking Share, $1.03 Stripe fee, $75 balance at the chair.',
+    'Walk through the $50/year Annual Listing Fee, framed small (about $0.14/day), against competitor monthly subscriptions.',
+    'Pause. Any questions on Money? Ask the room.',
+    'State: why this matters. Time back, discovery, income protection, a branding empire.',
+    'State all 5 asks: use your real business (real prices/portfolio), bring real clients in personally (not a public post, stays quiet during beta), report bugs immediately, tell us what\'s confusing even if not a bug, and expect the product to keep changing. Remind the room to save Snooty\'s contact info on their own phones.',
+    'State the founding-stylist benefit: no Annual Listing Fee for 3 years. Make clear the deposit still applies to every booking, the waiver is only on the fee paid to Snooty.',
+    'Open floor. Phones stay available if anyone wants to keep exploring.',
+  ];
+
+  /* ---------- Engine ---------- */
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  const hud = document.getElementById('hud');
+  const bar = document.getElementById('progress');
+  let cur = -1;
+
+  /* ---------- Presence: how many phones are still following along ----------
+     Purely a presenter-side readout; phones write the heartbeats (see
+     shared/sync.js), this just counts and displays them. Stays hidden
+     until the first real count comes back (so it never flashes
+     "0 connected" while the initial Firebase read is in flight) AND
+     hidden on slide 1: nobody has seen the QR code yet at that point,
+     so a count there would be confusing. updatePresenceVisibility() is
+     re-run from show() on every slide change, since "has a count
+     arrived" and "are we past slide 1" can each flip independently. */
+  const presenceEl = document.getElementById('presence');
+  const presenceCountEl = document.getElementById('presence-count');
+  let presenceHasCount = false;
+  function updatePresenceVisibility() {
+    presenceEl.classList.toggle('is-visible', presenceHasCount && cur !== 0);
+  }
+  if (window.SN && SN.sync && SN.sync.watchPresenceCount) {
+    SN.sync.watchPresenceCount((count) => {
+      presenceCountEl.textContent = String(count);
+      presenceHasCount = true;
+      updatePresenceVisibility();
+    });
+  }
+
+  const isNotes = new URLSearchParams(location.search).has('notes');
+  if (isNotes) document.body.classList.add('notes-mode');
+
+  function enter(i) {
+    slides[i].classList.add('is-active');
+    if (i === 0) cascadeOpen(); /* slide 1 only: opening vision animation, untouched */
+  }
+
+  function show(i, fromHash) {
+    i = Math.max(0, Math.min(slides.length - 1, i));
+    if (i === cur) return;
+    if (cur >= 0) slides[cur].classList.remove('is-active');
+    cur = i;
+    enter(i);
+    hud.textContent = (i + 1) + ' / ' + slides.length;
+    bar.style.width = ((i + 1) / slides.length * 100) + '%';
+    updatePresenceVisibility();
+    if (!fromHash) history.replaceState(null, '', '#' + (i + 1));
+    try { localStorage.setItem('snooty-deck-slide', String(i)); } catch (e) {}
+    if (window.SN && SN.sync) SN.sync.setSlide(i + 1); /* 1-indexed, pushed to every phone that scanned the QR */
+    renderNotes(i);
+  }
+
+  function next() { show(cur + 1); }
+  function prev() { show(cur - 1); }
+
+  /* Keyboard + clicker (clickers send PageDown/PageUp or arrows) */
+  document.addEventListener('keydown', (e) => {
+    if (['ArrowRight', 'ArrowDown', 'PageDown', ' ', 'Enter'].includes(e.key)) { e.preventDefault(); next(); }
+    else if (['ArrowLeft', 'ArrowUp', 'PageUp'].includes(e.key)) { e.preventDefault(); prev(); }
+    else if (e.key === 'Home') show(0);
+    else if (e.key === 'End') show(slides.length - 1);
+  });
+  /* Click advances; swipe for touch rehearsal. Excludes the QR/add-contact
+     buttons, which have their own tap action and shouldn't also flip the slide. */
+  document.getElementById('deck').addEventListener('click', (e) => { if (!e.target.closest('iframe, button, a')) next(); });
+  let tx = null;
+  document.addEventListener('touchstart', (e) => { tx = e.touches[0].clientX; }, { passive: true });
+  document.addEventListener('touchend', (e) => {
+    if (tx == null) return;
+    const dx = e.changedTouches[0].clientX - tx;
+    if (Math.abs(dx) > 60) (dx < 0 ? next() : prev());
+    tx = null;
+  }, { passive: true });
+
+  /* ---------- Slide 0: Opening Vision Animation ----------
+     Layout is computed ONCE (seeded, deterministic) and cached, so
+     replaying the slide never moves a single tile, and nothing ever
+     overlaps: rows alternate outward from a center row, mixed
+     portrait/landscape, irregular gaps, each row placed against the
+     previous row's real measured height.
+     Act 1 (0.0 - 0.8s):  camera punched in close on the hero tile
+                          alone, full-bleed, silent.
+     Act 2 (0.8 - 3.4s):  camera pulls back to scale(1) while the rest
+                          of the wall fades in tile by tile, ordered by
+                          distance from the hero, one arrival after
+                          another at a steady beat across the zoom.
+     Act 3 (~3.15s):      the wall blurs on the zoom's tail.
+     Act 4 (~3.55s):      the "snooty" wordmark fades in, centered, and
+                          the rows start drifting: alternate rows float
+                          up and down, gently, forever.
+  ---------------------------------------------------------- */
+  /* Every tile requests an Unsplash width matched to how big it will
+     actually render (times device pixel ratio, capped), instead of the
+     800px default baked into shared/seed.js. The hero tile fills the
+     whole viewport at the punched-in start, so it gets the highest cap;
+     everything else is a small wall tile and needs far less. Dozens of
+     800px images animating under a 6x CSS scale was the lag. */
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  function sizedSrc(url, displayW, isHero) {
+    const cap = isHero ? 1600 : 500;
+    const w = Math.min(cap, Math.round(displayW * dpr));
+    return url.replace(/([?&])w=\d+/, '$1w=' + w);
+  }
+
+  /* kebab-case slug -> a short display label, standing in for the real
+     app's styleName field on the LookCard tag. */
+  function slugToTag(slug) {
+    return slug.split('-').map((w) => w[0].toUpperCase() + w.slice(1)).join(' ');
+  }
+
+  let visionLayout = null; /* cached so replays reuse the exact same positions */
+  function cascadeOpen() {
+    const field = document.getElementById('vision-field');
+    const scrim = document.getElementById('vision-scrim');
+    const word = document.getElementById('vision-word');
+
+    /* reset visual state for a replay, but keep the cached layout.
+       'anim' comes off FIRST so the punched-in starting scale below
+       is set instantly, with no transition riding along with it. */
+    field.classList.remove('anim', 'revealed', 'blurred', 'drift');
+    scrim.classList.remove('show');
+    word.classList.remove('show');
+
+    if (!visionLayout) visionLayout = buildLayout();
+    field.innerHTML = '';
+    /* One wrapper per spatial row so whole rows can drift after the
+       reveal (see .vision-field.drift .vrow). Even rows start upward,
+       odd rows downward; rows farther from center get a bigger swing
+       and their own period, so the float reads as loose parallax
+       rather than a lockstep bob. */
+    const rowEls = new Map();
+    function rowEl(t) {
+      let el = rowEls.get(t.row);
+      if (el) return el;
+      el = document.createElement('div');
+      el.className = 'vrow';
+      el.style.zIndex = String(t.z);
+      const dir = t.row % 2 === 0 ? -1 : 1;
+      const amp = 12 + Math.abs(t.row - visionLayout.centerRow) * 5;
+      el.style.setProperty('--vr-drift', (dir * amp) + 'px');
+      el.style.setProperty('--vr-dur', (10 + ((t.row * 2.3) % 5)).toFixed(1) + 's');
+      field.appendChild(el);
+      rowEls.set(t.row, el);
+      return el;
+    }
+    const HEART_SVG = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21s-6.7-4.35-9.5-8.28C.6 9.86 1.4 6 5 5c2-.55 3.7.3 5 2 1.3-1.7 3-2.55 5-2 3.6 1 4.4 4.86 2.5 7.72C18.7 16.65 12 21 12 21z"/></svg>';
+    const SAVE_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4h12v17l-6-4-6 4V4z"/></svg>';
+    function formatLikes(n) { return n >= 1000 ? (n / 1000).toFixed(1).replace(/\.0$/, '') + 'k' : String(n); }
+
+    const tiles = visionLayout.tiles.map((t, i) => {
+      const isHero = i === visionLayout.heroIndex;
+      const tile = document.createElement('div');
+      tile.className = 'vtile' + (isHero ? ' hero-visible' : '') + (!isHero && t.w >= 180 ? ' vtile-lg' : '');
+      tile.style.width = t.w + 'px'; tile.style.height = t.h + 'px';
+      tile.style.left = t.x + 'px'; tile.style.top = t.y + 'px';
+      tile.style.zIndex = String(t.z);
+      const img = document.createElement('img');
+      /* the hero tile is a small wall slot at rest, but fills the whole
+         viewport during the punch-in zoom: request its source at
+         viewport width, not wall-tile width, or it visibly softens
+         under a 6-9x CSS scale on the one shot meant to look sharpest */
+      img.src = sizedSrc(t.src, isHero ? window.innerWidth : t.w, t.isHero); img.alt = '';
+      tile.appendChild(img);
+      const tileScrim = document.createElement('div');
+      tileScrim.className = 'vtile-scrim';
+      tile.appendChild(tileScrim);
+
+      if (isHero) {
+        /* the hero fills the whole viewport at punch-in: the like badge
+           carries over crisp and sized up to match the full-quality
+           photo, but the rest of the card chrome (save/tag/stylist/
+           book) stays in the same dulled wall-tile treatment, just
+           scaled up, so it reads as texture rather than active UI. */
+        const chrome = document.createElement('div');
+        chrome.className = 'vtile-chrome vtile-chrome-hero';
+        const likes = document.createElement('div');
+        likes.className = 'vtile-likes vtile-likes-hero';
+        likes.innerHTML = HEART_SVG + '<span>' + formatLikes(t.likes) + '</span>';
+        chrome.appendChild(likes);
+        tile.appendChild(chrome);
+
+        const dulled = document.createElement('div');
+        dulled.className = 'vtile-chrome vtile-chrome-hero-dulled';
+
+        const save = document.createElement('div');
+        save.className = 'vtile-save vtile-save-hero';
+        save.innerHTML = SAVE_SVG;
+        dulled.appendChild(save);
+
+        const tag = document.createElement('div');
+        tag.className = 'vtile-tag vtile-tag-hero';
+        tag.textContent = t.tag;
+        dulled.appendChild(tag);
+
+        const info = document.createElement('div');
+        info.className = 'vtile-info vtile-info-hero';
+        const stylist = document.createElement('div');
+        stylist.className = 'vtile-stylist vtile-stylist-hero';
+        stylist.textContent = t.stylist;
+        info.appendChild(stylist);
+        const book = document.createElement('div');
+        book.className = 'vtile-book vtile-book-hero';
+        book.textContent = 'Book';
+        info.appendChild(book);
+        dulled.appendChild(info);
+
+        tile.appendChild(dulled);
+      } else if (t.w >= 90) {
+        /* skip all chrome on any tile too narrow for a badge or label
+           to read cleanly */
+        const chrome = document.createElement('div');
+        chrome.className = 'vtile-chrome';
+
+        const likes = document.createElement('div');
+        likes.className = 'vtile-likes';
+        likes.innerHTML = HEART_SVG + '<span>' + formatLikes(t.likes) + '</span>';
+        chrome.appendChild(likes);
+
+        const save = document.createElement('div');
+        save.className = 'vtile-save';
+        save.innerHTML = SAVE_SVG;
+        chrome.appendChild(save);
+
+        const tag = document.createElement('div');
+        tag.className = 'vtile-tag';
+        tag.textContent = t.tag;
+        chrome.appendChild(tag);
+
+        const info = document.createElement('div');
+        info.className = 'vtile-info';
+        const stylist = document.createElement('div');
+        stylist.className = 'vtile-stylist';
+        stylist.textContent = t.stylist;
+        info.appendChild(stylist);
+        const book = document.createElement('div');
+        book.className = 'vtile-book';
+        book.textContent = 'Book';
+        info.appendChild(book);
+        chrome.appendChild(info);
+
+        tile.appendChild(chrome);
+      }
+      rowEl(t).appendChild(tile);
+      return tile;
+    });
+
+    /* Punch the camera into the hero tile: scale so it fills the
+       viewport, transform-origin centered on the hero. Every other
+       tile stays invisible (opacity: 0) through the whole zoom, so
+       the pull-back reveals empty space first, and only once it
+       settles does the rest of the wall fade in as one beat. */
+    const hero = tiles[visionLayout.heroIndex];
+    const W = window.innerWidth, H = window.innerHeight;
+    const heroW = parseFloat(hero.style.width), heroH = parseFloat(hero.style.height);
+    const heroCx = parseFloat(hero.style.left) + heroW / 2;
+    const heroCy = parseFloat(hero.style.top) + heroH / 2;
+    const fillScale = Math.max(W / heroW, H / heroH) * 1.08;
+    field.style.setProperty('--hero-cx', heroCx + 'px');
+    field.style.setProperty('--hero-cy', heroCy + 'px');
+    field.style.setProperty('--vf-scale', fillScale.toFixed(2));
+    hero.style.zIndex = 20;
+    /* Force the browser to paint the punched-in starting scale BEFORE
+       any transition exists on the element, so there is nothing to
+       animate yet. Only after this paint do we turn transitions on
+       (.anim) and, a beat later, flip to scale(1) (.revealed). Without
+       this order, the very first style write can get batched with the
+       transition-enabling class and the browser eases from its old
+       scale (or the CSS fallback) instead of holding punched-in. */
+    void field.offsetHeight;
+    requestAnimationFrame(() => {
+      field.classList.add('anim');
+
+      /* Timing:
+         Act 1  0.0s -> 1.5s    hold on the hero alone, in silence
+         Act 2  1.5s -> 6.1s    camera pulls back (4600ms, matches CSS
+                                transition)
+         Act 3  ~4.9s onward    the camera is most of the way pulled
+                                back before any other tile appears;
+                                only then do tiles reveal ONE AT A TIME
+                                on a fixed beat, ordered outward from
+                                the hero, nearest first, so the spread
+                                still reads as organic. The rate is
+                                enforced by a single queue, not by
+                                branching, so nothing can ever arrive
+                                in a clump.
+         Act 4  blur + wordmark follow shortly after the zoom settles */
+      const HOLD_MS = 1500;
+      const ZOOM_MS = 4600; /* must match the .vision-field.anim transition-duration */
+      const REVEAL_START = HOLD_MS + ZOOM_MS * 0.75; /* fade-in waits until the zoom is mostly (not just half) done */
+
+      setTimeout(() => { field.classList.add('revealed'); }, HOLD_MS);
+
+      /* Order every non-hero tile by distance from the hero, then drain
+         that order as a queue on a fixed tick. One tile reveals per
+         tick, full stop. The pacing is a property of the queue, not of
+         how many "neighbors" a tile happens to have, so it cannot run away. */
+      const heroCx2 = parseFloat(hero.style.left) + heroW / 2;
+      const heroCy2 = parseFloat(hero.style.top) + heroH / 2;
+      const queue = tiles
+        .filter((img) => img !== hero)
+        .map((img) => {
+          const cx = parseFloat(img.style.left) + parseFloat(img.style.width) / 2;
+          const cy = parseFloat(img.style.top) + parseFloat(img.style.height) / 2;
+          return { img, dist: Math.hypot(cx - heroCx2, cy - heroCy2) };
+        })
+        .sort((a, b) => a.dist - b.dist);
+
+      /* Driven by requestAnimationFrame rather than setInterval: ticks
+         are tied to the browser's own paint cadence, so under load the
+         reveal simply falls a beat behind instead of a stalled timer
+         firing several queued callbacks back-to-back (the batch-pop
+         that read as glitchy). The gap between tiles is NOT fixed: it
+         starts wide (the spread eases in slowly near the center) and
+         narrows as it goes (picking up speed toward the outer edge),
+         so the reveal itself feels like it ramps up rather than
+         running at one flat rate from the first tile to the last. */
+      const TICK_START_MS = 150; /* gap between the first tiles */
+      const TICK_END_MS = 6; /* gap between the last tiles, near-instant so the outer edges don't drag */
+      function gapAt(i) {
+        const frac = queue.length > 1 ? i / (queue.length - 1) : 1;
+        /* plain square: no dead zone up front, so the gap is already
+           visibly shrinking well before the halfway point instead of
+           sitting flat near TICK_START_MS until late in the run */
+        const eased = frac * frac;
+        return TICK_START_MS + (TICK_END_MS - TICK_START_MS) * eased;
+      }
+      /* Blur, drift and the wordmark fire off the reveal loop's own
+         completion (qi reaching queue.length) rather than a precomputed
+         timestamp. The drip loop runs on requestAnimationFrame, which
+         is tied to the browser's actual paint rate: under load (slower
+         hardware, many images decoding at once, a backgrounded tab)
+         rAF can fall behind wall-clock time, so a setTimeout scheduled
+         against the ideal total would fire the finale while tiles are
+         still mid-reveal. Triggering from the loop itself means the
+         finale always waits for the real last tile, whatever the
+         actual pace turned out to be. */
+      let qi = 0;
+      let lastTick = 0;
+      let nextGap = TICK_START_MS;
+      function drip(now) {
+        if (qi >= queue.length) return;
+        if (now - lastTick >= nextGap) {
+          queue[qi].img.classList.add('wall-in');
+          qi++;
+          lastTick = now;
+          if (qi >= queue.length) {
+            field.classList.add('blurred'); scrim.classList.add('show');
+            setTimeout(() => { field.classList.add('drift'); }, 250);
+            setTimeout(() => { word.classList.add('show'); }, 550);
+            return;
+          }
+          nextGap = gapAt(qi);
+        }
+        requestAnimationFrame(drip);
+      }
+      setTimeout(() => requestAnimationFrame((t) => { lastTick = t - nextGap; drip(t); }), REVEAL_START - HOLD_MS);
+
+      hero.classList.add('wall-in'); /* let the hero start breathing too, right as the pull-back begins */
+    });
+  }
+
+  /* Deterministic layout, computed once and cached in visionLayout.
+     Rows alternate outward from a center row; each row is placed
+     against the previous row's real measured height so nothing
+     can ever overlap. Uses a seeded PRNG so results are stable
+     across reloads within a session but still look organic. */
+  function buildLayout() {
+    const W = window.innerWidth, H = window.innerHeight;
+    const pool = SEED.feed;
+    let seed = 42;
+    const rand = () => { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; };
+
+    const tiles = [];
+    let n = 0;
+    const rowGapY = 10;
+    const baseRowH = Math.max(150, H * 0.24);
+    const TOTAL_ROWS = 9;
+    let heroIndex = null;
+
+    function layoutRow(rowY, rowH, zIndex, isCenter, spatialRow) {
+      let x = -40 - rand() * 80;
+      let tallest = 0;
+      while (x < W + 80) {
+        const portrait = rand() > 0.55;
+        const tw = portrait ? (rowH * (0.62 + rand() * 0.18)) : (rowH * (1.15 + rand() * 0.55));
+        const th = rowH * (0.82 + rand() * 0.2); /* clamped below 1.0 so no tile exceeds the row's own band */
+        const gap = 10 + rand() * 10;
+        const isHero = isCenter && x <= W / 2 && x + tw >= W / 2 && heroIndex === null;
+        if (isHero) heroIndex = tiles.length;
+        const look = pool[n % pool.length];
+        tiles.push({ src: look.img, tag: slugToTag(look.slug), likes: look.likes, stylist: look.stylist, x, y: rowY, w: tw, h: th, z: zIndex, isHero: isHero, row: spatialRow });
+        n++;
+        tallest = Math.max(tallest, th);
+        x += tw + gap;
+      }
+      return tallest;
+    }
+
+    const centerRow = Math.floor(TOTAL_ROWS / 2); /* spatial index, top row = 0 */
+    const centerH = layoutRow(H / 2 - baseRowH / 2, baseRowH, 10, true, centerRow);
+    let belowY = H / 2 - baseRowH / 2 + centerH + rowGapY;
+    let aboveY = H / 2 - baseRowH / 2 - rowGapY;
+    for (let depth = 1; depth <= Math.ceil((TOTAL_ROWS - 1) / 2); depth++) {
+      const rowHDown = baseRowH * (0.75 + rand() * 0.5);
+      const downH = layoutRow(belowY, rowHDown, 10 - depth, false, centerRow + depth);
+      belowY += downH + rowGapY;
+
+      const rowHUp = baseRowH * (0.75 + rand() * 0.5);
+      const upH = layoutRow(aboveY - rowHUp, rowHUp, 10 - depth, false, centerRow - depth);
+      aboveY -= upH + rowGapY;
+    }
+    if (heroIndex === null) heroIndex = 0;
+    return { tiles, heroIndex, centerRow };
+  }
+
+  /* ---------- Notes mode ---------- */
+  const npSlide = document.querySelector('#notes-panel .np-slide');
+  const npTitle = document.querySelector('#notes-panel .np-title');
+  const npBody = document.querySelector('#notes-panel .np-body');
+  const npNext = document.querySelector('#notes-panel .np-next');
+  const npTimer = document.querySelector('#notes-panel .np-timer');
+
+  function renderNotes(i) {
+    if (!isNotes) return;
+    npSlide.textContent = (i + 1) + ' / ' + slides.length;
+    npTitle.textContent = slides[i].dataset.title || '';
+    npBody.textContent = NOTES[i] || '';
+    npNext.textContent = i + 1 < slides.length ? 'Next: ' + (slides[i + 1].dataset.title || '') : 'Last slide.';
+  }
+  if (isNotes) {
+    const t0 = Date.now();
+    setInterval(() => {
+      const s = Math.floor((Date.now() - t0) / 1000);
+      npTimer.textContent = String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
+    }, 1000);
+    /* follow the presenting window */
+    window.addEventListener('storage', (e) => {
+      if (e.key === 'snooty-deck-slide') {
+        const i = parseInt(e.newValue, 10);
+        if (!isNaN(i)) { renderNotes(i); npSlide.textContent = (i + 1) + ' / ' + slides.length; }
+      }
+    });
+  }
+
+  /* ---------- Boot from hash ---------- */
+  const h = parseInt(location.hash.slice(1), 10);
+  show(!isNaN(h) && h >= 1 ? h - 1 : 0, true);
+})();
+</script>
+</body>
+</html>

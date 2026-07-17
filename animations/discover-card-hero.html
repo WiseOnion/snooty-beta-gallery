@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Snooty · Discover Grid Reveal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600;700&family=Space+Mono:wght@700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/Flip.min.js"></script>
+<style>
+  :root {
+    --color-primary: #5E2330;
+    --color-accent: #C99A4A;
+    --font-display: 'Jost', sans-serif;
+    --color-bg: #0b0a0a;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body {
+    width: 100%; height: 100%; background: var(--color-bg); font-family: var(--font-display); color: #fff;
+    overflow: hidden; /* fixed stage: no scrolling, nothing scroll-driven */
+  }
+  img { display: block; width: 100%; height: auto; }
+  button { border: 0; background: none; font: inherit; color: inherit; }
+
+  .stage {
+    position: relative; width: 100vw; height: 100vh; overflow: hidden;
+    background:
+      radial-gradient(120% 70% at 50% 0%, rgba(255,255,255,0.04) 0%, rgba(0,0,0,0) 55%),
+      radial-gradient(140% 90% at 50% 100%, rgba(94,35,48,0.28) 0%, rgba(0,0,0,0) 60%),
+      var(--color-bg);
+  }
+
+  /* ---------------- Phase A: search only. Nothing else exists on
+     screen or in layout until typing finishes. ---------------- */
+  .search-phase {
+    position: absolute; inset: 0; z-index: 5;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px;
+    text-align: center; padding: 0 24px;
+  }
+  .kicker { font-size: 12px; font-weight: 600; letter-spacing: 0.32em; text-transform: uppercase; color: var(--color-accent); }
+  .search-phase h1 { font-size: clamp(24px, 4vw, 34px); font-weight: 700; letter-spacing: -0.01em; max-width: 640px; }
+  .search-bar {
+    margin-top: 6px;
+    display: flex; align-items: center; gap: 10px;
+    background: #1a1616; border: 1px solid #332C29; border-radius: 9999px;
+    padding: 0 18px; height: 52px; width: min(360px, 84vw);
+  }
+  .search-bar svg { width: 18px; height: 18px; stroke: #8A7E72; flex: 0 0 auto; }
+  .search-bar .typed {
+    font-size: 16px; color: #F6F1E8; white-space: nowrap; overflow: hidden;
+    border-right: 2px solid var(--color-accent);
+  }
+  .result-line { font-size: 12px; color: rgba(255,255,255,0.5); opacity: 0; }
+
+  /* ---------------- Phase B: the grid. Does not exist visually or
+     spatially until the search phase has fully faded out. ---------------- */
+  .grid-phase {
+    position: absolute; inset: 0; z-index: 2;
+    opacity: 0; pointer-events: none;
+  }
+  .gallery {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate3d(-50%, -50%, 0);
+    width: min(760px, 92vw);
+  }
+  .gallery__grid {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    column-gap: 16px; row-gap: 20px;
+  }
+  .gallery__item {
+    position: relative; width: 100%; aspect-ratio: 1; border-radius: 16px; overflow: hidden;
+    background: #1c1616;
+    box-shadow: 0 20px 40px -14px rgba(0,0,0,0.6);
+  }
+  .gallery__image { width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
+  .gallery__scrim {
+    position: absolute; inset: 0; pointer-events: none;
+    background: linear-gradient(0deg, rgba(0,0,0,0.42) 0%, rgba(0,0,0,0.05) 32%, rgba(0,0,0,0) 55%);
+  }
+  .gallery__tag {
+    position: absolute; bottom: 9px; left: 10px; right: 10px; z-index: 2;
+    font-size: 9.5px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase;
+    color: rgba(255,255,255,0.85); text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+
+  .gallery__item.is-target { z-index: 3; }
+  .target-scrim {
+    position: absolute; inset: 0; z-index: 2; pointer-events: none;
+    background: linear-gradient(0deg, rgba(0,0,0,0.86) 0%, rgba(0,0,0,0.55) 35%, rgba(0,0,0,0.15) 60%, rgba(0,0,0,0) 80%);
+    opacity: 0;
+  }
+  .target-ring {
+    position: absolute; inset: 0; z-index: 3; pointer-events: none; border-radius: 16px;
+    box-shadow: 0 0 0 0 rgba(201,154,74,0);
+  }
+  .target-overlay {
+    position: absolute; left: 0; right: 0; bottom: 0; z-index: 4;
+    padding: 18px 11px 11px;
+    display: flex; align-items: flex-end; justify-content: space-between; gap: 6px;
+    opacity: 0; transform: translateY(10px);
+  }
+  .gallery__item.is-target.is-revealing .gallery__tag { opacity: 0; }
+  .target-overlay-info { min-width: 0; flex: 1 1 auto; }
+  .target-overlay .tag {
+    font-size: 8.5px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+    color: rgba(255,255,255,0.6); margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .target-overlay .stylist { font-size: 12px; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 4px; }
+  .target-overlay .verified {
+    display: inline-flex; align-items: center; justify-content: center; width: 11px; height: 11px;
+    border-radius: 50%; background: var(--color-primary); flex-shrink: 0;
+  }
+  .target-overlay .verified svg { width: 6px; height: 6px; }
+  .target-overlay .meta { font-size: 10px; color: rgba(255,255,255,0.85); display: flex; align-items: center; gap: 3px; margin-top: 3px; }
+  .target-overlay .meta svg { width: 8px; height: 8px; }
+  .target-overlay .book-btn {
+    flex-shrink: 0; height: 26px; padding: 0 12px; border-radius: 9999px; background: #fff; color: #181818;
+    font-size: 10px; font-weight: 700;
+  }
+
+  /* position:fixed + living on document.body (not inside .gallery__item,
+     which clips via overflow:hidden) so the cursor and click-ring are
+     never cut off as they move near/past a card's edge toward the Book
+     button, regardless of z-index - overflow:hidden clips descendants
+     no matter how high their stacking order is. */
+  .pointer {
+    position: fixed; z-index: 999; width: 46px; height: 46px; pointer-events: none;
+    margin-left: -23px; margin-top: -23px; opacity: 0;
+    filter: drop-shadow(0 3px 8px rgba(0,0,0,0.5));
+  }
+  .pointer svg { width: 100%; height: 100%; }
+  .click-ring {
+    position: fixed; z-index: 999; width: 54px; height: 54px;
+    margin-left: -27px; margin-top: -27px;
+    border-radius: 50%; border: 2px solid rgba(201,154,74,0.9);
+    opacity: 0;
+  }
+
+  /* ---------------- Phase C: the booked card scales up to cover the
+     screen (see bookRevealTimeline), then hero-scrim -- a plain fixed
+     black layer, full viewport, above everything -- fades in to cut
+     the photo to black, and the wordmark lands on top of that. ---------------- */
+  .hero-scrim {
+    position: fixed; inset: 0; z-index: 21; pointer-events: none;
+    background: #000;
+    opacity: 0;
+  }
+  .hero-word {
+    position: fixed; inset: 0; z-index: 22; pointer-events: none;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px;
+    opacity: 0; transform: scale(0.94);
+  }
+  .hero-word .wordmark {
+    font-family: var(--font-display); font-weight: 400; font-size: clamp(64px, 12vw, 160px);
+    color: #fff; letter-spacing: 0.32em; text-transform: uppercase;
+    text-shadow: 0 8px 40px rgba(0,0,0,0.6);
+  }
+  .hero-word .hero-tagline {
+    font-family: var(--font-display); font-style: italic; font-weight: 500; font-size: clamp(15px, 1.8vw, 22px);
+    color: rgba(246,241,232,0.88); letter-spacing: 0.01em; text-align: center;
+    max-width: 46ch; padding: 0 24px; text-shadow: 0 4px 20px rgba(0,0,0,0.6);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="stage">
+
+  <div class="search-phase" id="searchPhase">
+    <div class="kicker">Snooty · Discover</div>
+    <h1>Search it. Watch it. Book it.</h1>
+    <div class="search-bar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <span class="typed" id="typed"></span>
+    </div>
+    <div class="result-line" id="resultLine">"knotless" &middot; 14 looks</div>
+  </div>
+
+  <div class="grid-phase" id="gridPhase">
+    <div class="gallery">
+      <ul class="gallery__grid" id="galleryGrid"><!-- injected --></ul>
+    </div>
+  </div>
+
+  <div class="hero-scrim" id="heroScrim"></div>
+  <div class="hero-word" id="heroWord">
+    <span class="wordmark">Snooty</span>
+    <span class="hero-tagline">The first look, built for our beta testers: everything the app can do, before anyone else sees it.</span>
+  </div>
+
+</div>
+
+<script>
+(function () {
+  'use strict';
+  gsap.registerPlugin(Flip);
+
+  var LOOKS = [
+    { img: 'https://images.unsplash.com/photo-1592328906746-0a3ca0bde253?w=500&q=80', tag: 'Boho knotless, honey blonde' },
+    { img: 'https://images.unsplash.com/photo-1658497735599-1834bfa6ccaa?w=500&q=80', tag: 'Medium knotless, caramel' },
+    { img: 'https://images.unsplash.com/photo-1616166183781-0fdd2ef83374?w=500&q=80', tag: 'Jumbo knotless, quick install' },
+    { img: 'https://images.unsplash.com/photo-1638794249638-b97e05aaa900?w=500&q=80', tag: 'Box braids, burgundy tips' },
+    { img: 'https://images.unsplash.com/photo-1606416132922-22ab37c1231e?w=500&q=80', tag: 'Tribal braids, cowrie shells',
+      target: true, stylist: 'Jabari Timothy', rating: '4.9', fullTag: 'Tribal braids, cowrie shells' },
+    { img: 'https://images.unsplash.com/photo-1673470907547-1c0c6a996095?w=500&q=80', tag: 'Stitch braids, clean parts' },
+    { img: 'https://images.unsplash.com/photo-1658497730270-b5f4fef00ae1?w=500&q=80', tag: 'Rooted caramel, angle two' },
+    { img: 'https://images.unsplash.com/photo-1608913906628-1ba9839d7c90?w=500&q=80', tag: 'Passion twists, auburn' },
+    { img: 'https://images.unsplash.com/photo-1729960363960-e744e9dd3a0c?w=500&q=80', tag: 'Senegalese twists, waist length' },
+    { img: 'https://images.unsplash.com/photo-1720010944710-01161d017608?w=500&q=80', tag: 'Butterfly locs, 22 inches' },
+    { img: 'https://images.unsplash.com/photo-1653263169788-9332cdbf07f5?w=500&q=80', tag: 'Starter locs, two-strand twists' },
+    { img: 'https://images.unsplash.com/photo-1622995812138-ffc78b02b653?w=500&q=80', tag: 'Fresh retwist, defined roots' }
+  ];
+
+  var verifiedSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+  var starSvg = '<svg viewBox="0 0 24 24" fill="#C99A4A" stroke="none"><path d="M12 2l2.9 6.1 6.7.9-4.9 4.6 1.2 6.6-5.9-3.2-5.9 3.2 1.2-6.6L2.4 9l6.7-.9z"/></svg>';
+
+  var grid = document.getElementById('galleryGrid');
+  LOOKS.forEach(function (look) {
+    var li = document.createElement('li');
+    li.className = 'gallery__item' + (look.target ? ' is-target' : '');
+    var html = '<img class="gallery__image" src="' + look.img + '" alt="' + look.tag + '">' +
+      '<div class="gallery__scrim"></div>' +
+      '<div class="gallery__tag">' + look.tag + '</div>';
+    if (look.target) {
+      html += '<div class="target-scrim"></div><div class="target-ring"></div>' +
+        '<div class="target-overlay">' +
+        '<div class="target-overlay-info">' +
+        '<div class="tag">' + look.fullTag + '</div>' +
+        '<div class="stylist"><span>' + look.stylist + '</span><span class="verified">' + verifiedSvg + '</span></div>' +
+        '<div class="meta">' + starSvg + '<b style="font-family:\'Space Mono\',monospace;">' + look.rating + '</b></div>' +
+        '</div>' +
+        '<button class="book-btn" type="button">Book</button>' +
+        '</div>';
+      li.dataset.target = '1';
+    }
+    li.innerHTML = html;
+    grid.appendChild(li);
+  });
+
+  var typedEl = document.getElementById('typed');
+  var resultLine = document.getElementById('resultLine');
+  var searchPhase = document.getElementById('searchPhase');
+  var gridPhase = document.getElementById('gridPhase');
+  var galleryGrid = document.querySelector('.gallery__grid');
+  var items = document.querySelectorAll('.gallery__item');
+  var targetItem = document.querySelector('.gallery__item.is-target');
+  var targetScrim = targetItem.querySelector('.target-scrim');
+  var targetRing = targetItem.querySelector('.target-ring');
+  var targetOverlay = targetItem.querySelector('.target-overlay');
+  var heroScrim = document.getElementById('heroScrim');
+  var heroWord = document.getElementById('heroWord');
+
+  /* Pointer/click-ring live on document.body, not inside the (clipped)
+     target card, so they're never cut off as they move toward the
+     card's edge. Positioned via fixed left/top set live each time
+     targetInteractionTimeline plays, not baked into markup. */
+  var pointer = document.createElement('div');
+  pointer.className = 'pointer';
+  pointer.innerHTML = '<svg viewBox="0 0 24 24" fill="rgba(255,255,255,0.95)" stroke="#181818" stroke-width="1"><path d="M4 2l14 12-6 1 3 7-3 1-3-7-4 4z"/></svg>';
+  document.body.appendChild(pointer);
+
+  var clickRing = document.createElement('div');
+  clickRing.className = 'click-ring';
+  document.body.appendChild(clickRing);
+
+  var numColumns = 3;
+  var columns = Array.from({ length: numColumns }, function () { return []; });
+  items.forEach(function (item, i) { columns[i % numColumns].push(item); });
+
+  /* Permanent per-column vertical rest offset: column 1 (center, holds
+     the target) stays at 0 so it's never touched. Columns 0 and 2 each
+     get their OWN different offset so they land staggered against each
+     other too, not mirrored - a real masonry misalignment instead of
+     both outer columns moving as a matched pair. */
+  var COLUMN_REST_Y = [-34, 0, 22];
+  var GRID_ZOOM_SCALE = 2.4; /* shared with bookRevealTimeline's cover-scale math below */
+
+  function gridRevealTimeline() {
+    var timeline = gsap.timeline();
+    var wh = window.innerHeight;
+    var dy = wh - (wh - galleryGrid.offsetHeight) / 2;
+
+    columns.forEach(function (column, colIndex) {
+      var fromTop = colIndex % 2 === 0;
+      timeline.fromTo(column,
+        { y: dy * (fromTop ? -1 : 1) },
+        {
+          y: COLUMN_REST_Y[colIndex],
+          stagger: { each: 0.06, from: fromTop ? 'end' : 'start' },
+          ease: 'power1.inOut'
+        }, 'grid-reveal');
+    });
+    return timeline;
+  }
+
+  /* The whole grid scales up together, no column burst on the target
+     itself: it zooms in place with everything else, right where it
+     naturally sits. .gallery__grid defaults to scaling from its own
+     center (50% 50%), and the target card sits in row 2, not the
+     grid's actual center row, so a default-origin scale swings it up
+     and off-screen proportional to how scaled it gets. Fix: scale from
+     the target card's own position (so it stays anchored during the
+     zoom), then translate the grid by exactly the amount needed to
+     land the target at the true viewport center.
+
+     getBoundingClientRect() INCLUDES the reveal's transform, so reading
+     it while gridRevealTimeline is still mid-flight (or before it's
+     even started) captures the card at some arbitrary off-screen
+     translateY, not its true resting position - that's what broke
+     every previous attempt at deferring this measurement to "the right
+     moment" in the timeline. Sidestepping the whole timing problem:
+     read the position with the transform temporarily neutralized, so
+     it reflects pure CSS grid layout (which doesn't change once the
+     grid itself is built) regardless of what the reveal is doing. */
+  function measureTargetRestingCenter() {
+    /* galleryGrid can still be carrying the PREVIOUS loop's end-of-zoom
+       transform (scale 2.4 + translate) at the exact instant this runs,
+       since playSequence() builds a brand new timeline synchronously
+       inside the prior loop's onComplete - before the browser has
+       applied this new loop's own reset .set() calls (those are
+       themselves just-scheduled tweens inside the timeline being
+       built, not yet-executed DOM writes). Neutralizing both elements'
+       transforms here, not just the target's, guarantees a true
+       from-CSS-grid-layout measurement regardless of what state either
+       was left in. */
+    var prevGridTransform = galleryGrid.style.transform;
+    var prevTargetTransform = targetItem.style.transform;
+    galleryGrid.style.transform = 'none';
+    targetItem.style.transform = 'none';
+    var gridRect = galleryGrid.getBoundingClientRect();
+    var targetRect = targetItem.getBoundingClientRect();
+    galleryGrid.style.transform = prevGridTransform;
+    targetItem.style.transform = prevTargetTransform;
+
+    return {
+      originX: targetRect.left + targetRect.width / 2 - gridRect.left,
+      originY: targetRect.top + targetRect.height / 2 - gridRect.top,
+      centerX: targetRect.left + targetRect.width / 2,
+      centerY: targetRect.top + targetRect.height / 2
+    };
+  }
+
+  function gridZoomTimeline() {
+    var pos = measureTargetRestingCenter();
+
+    var timeline = gsap.timeline({ defaults: { duration: 1, ease: 'power3.inOut' } });
+    timeline.set(galleryGrid, { transformOrigin: pos.originX + 'px ' + pos.originY + 'px' });
+    timeline.to(galleryGrid, {
+      scale: GRID_ZOOM_SCALE,
+      x: window.innerWidth / 2 - pos.centerX,
+      y: window.innerHeight / 2 - pos.centerY
+    });
+    /* Left/right columns drift sideways so those cards land staggered,
+       in-between grid slots, rather than a rigid straight line - the
+       center column (target) is untouched. */
+    timeline.to(columns[0], { xPercent: -22, duration: 1 }, '<');
+    timeline.to(columns[2], { xPercent: 22, duration: 1 }, '<');
+    return timeline;
+  }
+
+  function targetInteractionTimeline() {
+    var timeline = gsap.timeline({ defaults: { ease: 'power2.out' } });
+
+    /* pointer/clickRing live on document.body now (not inside the
+       clipped .gallery__item), so their base position has to be set as
+       real fixed left/top screen coordinates, measured live from the
+       card's current center - not the old left:50% (relative to a
+       card parent) + xPercent/yPercent trick, which only worked while
+       they were nested inside the card. */
+    var cardRect = targetItem.getBoundingClientRect();
+    var cardCenterX = cardRect.left + cardRect.width / 2;
+    var cardCenterY = cardRect.top + cardRect.height / 2;
+    /* The cursor used to inherit the card's 2.4x zoom for free while
+       nested inside it; now that it lives on document.body (to escape
+       the card's overflow:hidden clip), it renders at its raw 46px
+       size, which reads as too small against the now much-bigger
+       zoomed photo. Scaling it up explicitly restores that same
+       visual weight. */
+    timeline.set([pointer, clickRing], { left: cardCenterX, top: cardCenterY, x: 0, y: 0, scale: 1.8 });
+
+    /* Cursor slides in from off-screen (bottom-right) rather than just
+       fading in place, with a beat of held stillness first so its
+       arrival reads as a deliberate move, not an instant pop-in. */
+    timeline.set(pointer, { x: 300, y: 300, opacity: 0 });
+    timeline.to({}, { duration: 0.5 }); // pause before the cursor enters
+    timeline.to(pointer, { x: 0, y: 0, opacity: 0.95, duration: 0.6, ease: 'power2.out' });
+    /* Ring glows, and the card reveals (scrim + stylist overlay)
+       immediately as the cursor arrives - overlapping the tail of the
+       slide-in itself (started 0.2s before it finishes) so the reveal
+       reads as instant on hover, not delayed behind the full cursor
+       travel time. The click that follows is just a small press beat
+       on the pointer; the reveal itself already happened on hover. */
+    timeline.to(targetRing, { boxShadow: '0 0 0 3px rgba(201,154,74,0.85)', duration: 0.2 }, '-=0.2');
+    timeline.call(function () { targetItem.classList.add('is-revealing'); }, null, '<');
+    timeline.to(targetScrim, { opacity: 1, duration: 0.25 }, '<');
+    timeline.to(targetOverlay, { opacity: 1, y: 0, duration: 0.3, ease: 'back.out(1.6)' }, '<');
+    timeline.to({}, { duration: 1.1 }); // longer hover hold before the click
+    /* Move the cursor (and the click-ring that flashes at the same
+       spot) over to the actual Book button right before the click,
+       instead of clicking wherever it happened to be hovering. Both
+       elements now live in real screen coordinates (fixed, on body),
+       so the button's screen position minus the card-center base set
+       above is the plain pixel delta needed - no more dividing by the
+       grid's zoom scale, since neither element inherits that transform
+       anymore. */
+    /* This used to fire the move as a detached gsap.to() from inside a
+       timeline.call(), immediately followed by a plain timeline.to({},
+       {duration: 0.6}) sized to match it - two independent clocks
+       assumed to finish together. They don't always: anything that
+       stalls one but not the other (a throttled/backgrounded tab is
+       the common case) desyncs them, so the cursor could land late or
+       in the wrong spot relative to the rest of the timeline. Folding
+       the actual movement into the timeline itself (a function that
+       returns the vars, read at play-time via a functional value)
+       keeps it on the SAME clock as everything else, so it can never
+       drift - the classic gsap.to()-inside-a-call antipattern this
+       replaces is worth naming so it doesn't come back next edit. */
+    timeline.to([pointer, clickRing], {
+      x: function () {
+        var btnRect = targetItem.querySelector('.book-btn').getBoundingClientRect();
+        return (btnRect.left + btnRect.width / 2) - cardCenterX;
+      },
+      y: function () {
+        var btnRect = targetItem.querySelector('.book-btn').getBoundingClientRect();
+        return (btnRect.top + btnRect.height / 2) - cardCenterY;
+      },
+      duration: 0.6, ease: 'power2.inOut'
+    });
+    timeline.to({}, { duration: 0.5 }); // pause once landed, before the click fires
+    timeline.to(pointer, { scale: 0.85, duration: 0.1 });
+    timeline.set(clickRing, { opacity: 1, scale: 0.4 });
+    timeline.to(clickRing, { opacity: 0, scale: 1.8, duration: 0.4 }, '<');
+    timeline.to(pointer, { opacity: 0, duration: 0.2 }, '<');
+    timeline.to(targetRing, { boxShadow: '0 0 0 3px rgba(201,154,74,0)', duration: 0.3 }, '<');
+    return timeline;
+  }
+
+  /* After the click: the target card itself (already sitting centered
+     at the grid's 2.4x zoom, see gridZoomTimeline) scales up further
+     until it fully covers the viewport, then its photo cuts to black
+     and the Snooty wordmark + tagline fade in on top. Plain transform
+     scale on the card already in place - no reparenting, no Flip. */
+  function bookRevealTimeline() {
+    var timeline = gsap.timeline();
+    /* getBoundingClientRect() here runs at playSequence()'s CONSTRUCTION
+       time - the whole master timeline is built synchronously up front,
+       so none of gridZoomTimeline's animation has actually played yet.
+       Worse, targetItem can still be carrying the PREVIOUS loop's
+       leftover scale(coverScale) transform at this exact instant (same
+       trap measureTargetRestingCenter's own comment describes), so
+       reading the rect naively compounds on top of last loop's already-
+       huge scale. Neutralizing the transform before reading, same fix
+       measureTargetRestingCenter uses, guarantees a true plain-grid
+       size regardless of what the DOM was left carrying. GRID_ZOOM_SCALE
+       then accounts for the 2.4x gridZoomTimeline will have applied to
+       the card's PARENT (.gallery__grid) by the time this timeline
+       actually plays: the additional scale targetItem itself needs is
+       the plain-grid cover-scale, divided down by that inherited 2.4x. */
+    var prevTransform = targetItem.style.transform;
+    targetItem.style.transform = 'none';
+    var r = targetItem.getBoundingClientRect();
+    targetItem.style.transform = prevTransform;
+    var zoomedW = r.width * GRID_ZOOM_SCALE;
+    var zoomedH = r.height * GRID_ZOOM_SCALE;
+    var coverScale = Math.max(window.innerWidth / zoomedW, window.innerHeight / zoomedH) * 1.06 * GRID_ZOOM_SCALE;
+
+    timeline.to(targetItem, { scale: coverScale, duration: 1, ease: 'power3.inOut' });
+    timeline.to(targetItem, { borderRadius: 0, duration: 0.3 }, '-=0.3');
+    /* Stylist card chrome (scrim gradient, ring glow, name/rating/Book
+       button) reads wrong once we're this deep into the zoom - clear it
+       before the cut to black so only the plain photo is on screen. */
+    timeline.to([targetScrim, targetOverlay], { opacity: 0, duration: 0.3 }, '-=0.7');
+    timeline.to(targetRing, { boxShadow: '0 0 0 0 rgba(201,154,74,0)', duration: 0.3 }, '<');
+    timeline.to(heroScrim, { opacity: 1, duration: 0.4 }, '-=0.5');
+    timeline.to(heroWord, { opacity: 1, scale: 1, duration: 0.7, ease: 'power2.out' }, '-=0.2');
+    /* No hold, no fade-out after this: the wordmark landing is the
+       sequence's permanent final state. */
+
+    return timeline;
+  }
+
+  /* ================= One fixed autoplay sequence. Plays through once -
+     search typing, grid reveal/zoom, hover/click, the booked photo
+     filling the screen - and stops permanently on the Snooty wordmark;
+     nothing fades out or resets afterward. No scroll, no scrubbing:
+     scroll position has zero effect on any of this. ================= */
+  function playSequence() {
+    var master = gsap.timeline();
+
+    // Reset both phases to their starting state
+    master.set(searchPhase, { opacity: 1, display: 'flex' });
+    master.set(gridPhase, { opacity: 0 });
+    master.set(typedEl, { text: '' });
+    master.set(resultLine, { opacity: 0 });
+    master.set(galleryGrid, { scale: 1, clearProps: 'transform' });
+    master.set(columns[0], { xPercent: 0 });
+    master.set(columns[2], { xPercent: 0 });
+    master.set([targetScrim, targetOverlay], { opacity: 0 });
+    master.set(targetOverlay, { y: 10 });
+    master.set(targetRing, { boxShadow: '0 0 0 0 rgba(201,154,74,0)' });
+    master.set(pointer, { opacity: 0, scale: 1 });
+    master.set(clickRing, { opacity: 0, scale: 0.4 });
+    master.set(targetItem, { scale: 1, borderRadius: '', clearProps: 'transform,borderRadius' });
+    master.set(items, { opacity: 1 });
+    master.set(heroScrim, { opacity: 0 });
+    master.set(heroWord, { opacity: 0, scale: 0.94 });
+    master.call(function () {
+      targetItem.classList.remove('is-revealing');
+    });
+
+    var QUERY = 'knotless';
+
+    // ---- Phase A: type the search query. Grid does not exist yet. ----
+    master.to({ n: 0 }, {
+      n: QUERY.length, duration: 1.1, ease: 'none', delay: 0.35,
+      onUpdate: function () { typedEl.textContent = QUERY.slice(0, Math.round(this.targets()[0].n)); }
+    });
+    master.to(resultLine, { opacity: 1, duration: 0.3 });
+    master.to({}, { duration: 0.5 }); // hold so the finished query is readable
+
+    // ---- Transition: search phase fades out completely before the
+    // grid phase fades in. Never overlapping. ----
+    master.to(searchPhase, { opacity: 0, duration: 0.45, ease: 'power1.in' });
+    master.set(searchPhase, { display: 'none' });
+    master.to(gridPhase, { opacity: 1, duration: 0.01 });
+
+    // ---- Phase B: grid reveal, zoom, then hover/click on the target ----
+    master.add(gridRevealTimeline());
+    master.add(gridZoomTimeline(), '-=0.6');
+    master.add(targetInteractionTimeline(), '-=0.1');
+
+    // ---- Phase C: the booked photo fills the screen, then the wordmark
+    // lands and stays - this is the sequence's final resting state. ----
+    master.add(bookRevealTimeline());
+  }
+
+  playSequence();
+})();
+</script>
+</body>
+</html>

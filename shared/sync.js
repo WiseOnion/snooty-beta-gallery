@@ -92,33 +92,33 @@
 
   /* Single source of truth for which presenter slide sends a follower's
      phone to which scripted stop. wait.html uses this to make the FIRST
-     jump; every stop page (discover/messages/booking) also calls
+     jump; every stop page (discover/booking/dashboard) also calls
      followStops() below so it keeps listening and hands off to the NEXT
      stop when the presenter advances again. Without that second listener,
      a phone that already landed on a stop has no code left running that
      watches for further slide changes, so advancing past it does nothing. */
   /* 1-indexed slide numbers, matching what show() pushes via
-     SN.sync.setSlide(i+1) in deck-preview.html. Keyed to the 7-chapter
-     restructure's slide order (23 slides total): every "Pause" beat maps
-     back to wait.html (same session), same behavior as the single Q&A
-     pause used to have, followStops()'s own guard below already prevents
-     a phone already on wait.html from self-redirecting when consecutive
-     pauses both point here. */
+     SN.sync.setSlide(i+1) in deck-preview.html. Keyed to the 18-slide
+     "Restarting the Deck" structure: Welcome/Problem/Why
+     Failed/Philosophy/How Tonight Works/Discovery(explain)/STOP
+     1/Booking(explain)/STOP 2/Running Your Business(explain)/STOP
+     3/Who We Work With/Money pt.1/Money pt.2/Why This
+     Matters/What's Next/Questions. Only the 3 numbered "Stop" slides
+     release a phone from wait.html; every other slide (including
+     Welcome, which now carries the QR itself) keeps phones parked on
+     the wait screen so attention stays on the presenter until a Stop
+     slide deliberately releases them. The final Questions slide also
+     maps back to wait.html: phones stay "available to keep exploring"
+     per that slide's own copy, on whatever stop they last visited,
+     rather than being yanked to a new page during open Q&A. */
   const S = '&session=' + encodeURIComponent(SESSION_ID);
   const STOP_MAP = {
-    4: 'discover.html?script=1' + S, /* Ch.1 Discovery: how clients find you */
-    5: 'look.html?i=9&script=1' + S, /* Ch.1 The Look: SEED.feed[9] = "Medium knotless, chocolate brown", $220 (sv2) -- the SAME booking the Money chapter dissects later */
-    6: 'wait.html?' + S.slice(1), /* Ch.1 Discovery, Pause */
-    8: 'profile.html?script=1' + S, /* Ch.2 Your Storefront: profile.html, "why they choose you" */
-    9: 'wait.html?' + S.slice(1), /* Ch.2 Your Storefront, Pause */
-    11: 'booking.html?script=1' + S, /* Ch.3 Booking: starts at step 1 (service selection), the real beginning of the flow */
-    12: 'wait.html?' + S.slice(1), /* Ch.3 Booking, Pause */
-    13: 'messages.html?script=1' + S, /* Ch.4 Communication */
-    14: 'wait.html?' + S.slice(1), /* Ch.4 Communication, Pause */
-    16: 'dashboard.html?script=1' + S, /* Ch.5 Business: dashboard.html, the live Approve tap */
-    17: 'wait.html?' + S.slice(1), /* Ch.5 Business, Pause */
-    19: 'wait.html?' + S.slice(1), /* Ch.6 Your Money, Pause */
-    22: 'wait.html?' + S.slice(1), /* Ch.7 The Future, final Q&A pause */
+    8: 'discover.html?script=1' + S, /* Stop 1: Discovery -- discover.html, tap into a card to see the look overlay */
+    9: 'wait.html?' + S.slice(1), /* Booking (explain), back to wait until Stop 2 */
+    10: 'booking.html?script=1' + S, /* Stop 2: Booking -- starts at step 1 (service selection) */
+    11: 'wait.html?' + S.slice(1), /* Running Your Business (explain), back to wait until Stop 3 */
+    12: 'dashboard.html?script=1' + S, /* Stop 3: Running Your Business -- dashboard.html, the live Approve tap */
+    13: 'wait.html?' + S.slice(1), /* Who We Work With, back to wait for the rest of the close */
   };
 
   /* Call from any scripted stop page: watches the live slide and
@@ -129,13 +129,34 @@
      pressing the phone's back button would flicker back to the PREVIOUS
      stop for an instant before this same listener caught the still-live
      slide and forced it forward again. replace() leaves nothing there
-     to go back to. */
+     to go back to -- which is why the block below pushes exactly ONE
+     entry of its own, so back has a defined, deliberate result (the
+     wait screen) instead of doing nothing or leaking to whatever the
+     iframe's src happened to be before app-shell.html set it. */
   function followStops() {
     watchSlide((slide) => {
       const dest = STOP_MAP[slide];
       if (dest && location.pathname.indexOf(dest.split('?')[0]) === -1) {
         location.replace(dest);
       }
+    });
+    goBackToWait();
+  }
+
+  /* Every scripted stop is meant to feel like a dead end you can only
+     leave by the presenter advancing -- except the phone's own back
+     button, which should always be a safety valve back to the wait
+     screen rather than a no-op or a flicker. history.pushState here
+     (not the location.replace() the rest of this file uses) plants
+     exactly one real entry pointing at THIS SAME URL, so the very
+     first back press fires popstate without changing the address bar,
+     and the handler swaps the iframe to wait.html itself. Skipped on
+     wait.html: it's already the destination, nothing to send back to. */
+  function goBackToWait() {
+    if (location.pathname.indexOf('wait.html') !== -1) return;
+    history.pushState({ snootyStop: true }, '', location.href);
+    window.addEventListener('popstate', () => {
+      location.replace('wait.html?' + S.slice(1));
     });
   }
 

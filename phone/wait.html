@@ -9,7 +9,7 @@
 <title>Snooty · Follow Along</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@1,400;1,500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="shared/snooty.css?d=20260718">
+<link rel="stylesheet" href="../shared/snooty.css?d=20260718">
 <style>
 /* This is the ONLY page the deck's QR code sends people to. It is a
    locked waiting room, not a hub: there is nothing to tap and no menu
@@ -39,16 +39,16 @@ body { background: var(--color-bg-dark); color: var(--color-text-inverse); }
   <div class="w-hint">Watch the screen up front.</div>
 </div>
 
-<script src="shared/seed.js?d=20260718"></script>
-<script src="shared/snooty.js?d=20260719"></script>
-<script src="shared/sync.js?d=20260719"></script>
+<script src="../shared/seed.js?d=20260718"></script>
+<script src="../shared/snooty.js?d=20260719"></script>
+<script src="../shared/sync.js?d=20260720"></script>
 <script>
 (function () {
   'use strict';
   SN.markSeen('wait');
   SN.sync.startHeartbeat(); /* this is the first page every phone lands on, so presence starts counting here */
 
-  /* STOP_MAP (shared/sync.js) is the single source of truth for which
+  /* STOP_MAP (../shared/sync.js) is the single source of truth for which
      presenter slide sends followers to which scripted stop; nothing
      else on this page can be tapped, so it's the only way a phone here
      ever goes anywhere. Some slides (the Q&A pauses) map back to this

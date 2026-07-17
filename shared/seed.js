@@ -99,7 +99,7 @@
     hours: 'Mon to Sat, 9:00 AM to 7:00 PM',
     services: [
       { id: 'sv1', name: 'Knotless Braids - Small', cents: 28000, mins: 390, slug: 'knotless-braids' },
-      { id: 'sv2', name: 'Knotless Braids - Medium', cents: 22000, mins: 300, slug: 'knotless-braids' },
+      { id: 'sv2', name: 'Knotless Braids - Medium', cents: 10000, mins: 300, slug: 'knotless-braids' },
       { id: 'sv3', name: 'Boho Knotless w/ Curls', cents: 34000, mins: 420, slug: 'knotless-braids' },
       { id: 'sv4', name: 'Tribal / Fulani Braids', cents: 27000, mins: 300, slug: 'knotless-braids' },
       { id: 'sv5', name: 'Starter Locs', cents: 38000, mins: 480, slug: 'locs-retwist' },
@@ -130,7 +130,7 @@
       note: 'Loc retwist every 5 weeks. Allergic to tea tree oil. Always on time.' },
     { id: 'imani', name: 'Imani Cole', avatar: AV.imani, visits: 3, spentCents: 68000, tag: 'Regular',
       note: 'Boho knotless with curls. Likes honey blonde 27 mixed in.' },
-    { id: 'keisha', name: 'Keisha Banks', avatar: AV.keisha, visits: 1, spentCents: 22000, tag: 'New',
+    { id: 'keisha', name: 'Keisha Banks', avatar: AV.keisha, visits: 1, spentCents: 10000, tag: 'New',
       note: 'First visit June 14. Found Roots & Ritual through the Discover feed.' },
     { id: 'deja', name: 'Deja Simmons', avatar: AV.deja, visits: 2, spentCents: 47000, tag: 'New',
       note: 'Starter loc consult done. Journey begins this fall.' },
@@ -169,7 +169,7 @@
     { img: IMG.boxBurgundy, caption: 'Box braids, burgundy tips', stylist: 'Camille Osei', business: 'Camille Does Hair', city: 'Fayetteville, NC', slug: 'box-braids', likes: 1200, cents: 20000 },
     { img: IMG.fadeWaves, caption: 'Mid fade, waves on top', stylist: 'Marcus Webb', business: 'Webb Cuts', city: 'Houston, TX', slug: 'cuts-and-fades', likes: 4100, cents: 4500 },
     { img: IMG.washAndGo, caption: 'Wash and go, 4C curl pop', stylist: 'Amara Diallo', business: 'Crown Natural Studio', city: 'Washington, DC', slug: 'natural-styles', likes: 2800, cents: 8000 },
-    { img: IMG.knotlessMedium, caption: 'Medium knotless, rooted caramel', stylist: 'Jabari Timothy', business: 'Roots & Ritual', city: 'Fayetteville, NC', slug: 'knotless-braids', likes: 1400, cents: 22000, heroLook: 'lk3' },
+    { img: IMG.knotlessMedium, caption: 'Medium knotless, rooted caramel', stylist: 'Jabari Timothy', business: 'Roots & Ritual', city: 'Fayetteville, NC', slug: 'knotless-braids', likes: 1400, cents: 10000, heroLook: 'lk3' },
     { img: IMG.butterflyLocs, caption: 'Butterfly locs, 22 inches', stylist: 'Deja Monroe', business: 'Deja Twist', city: 'Fayetteville, NC', slug: 'twists', likes: 990, cents: 22000 },
     { img: IMG.highlights, caption: 'Full highlights, beachy blonde', stylist: 'Jade Rivera', business: 'Jade Color Studio', city: 'Los Angeles, CA', slug: 'hair-color', likes: 3300, cents: 22000 },
     { img: IMG.updoBraided, caption: 'Braided updo for wedding day', stylist: 'Grace Okonkwo', business: 'Grace Bridal Hair', city: 'New York, NY', slug: 'updos-and-wedding', likes: 3100, cents: 28000 },
@@ -194,7 +194,7 @@
   const THREAD = {
     client: 'Maya Reyes',
     avatar: AV.maya,
-    booking: { service: 'Knotless Braids - Medium', when: 'Sat, 11:00 AM', depositCents: 4400 },
+    booking: { service: 'Knotless Braids - Medium', when: 'Sat, 11:00 AM', depositCents: 2000 },
     messages: [
       { from: 'them', text: 'Hi! Just booked for Saturday. Should I come with my hair blown out?', at: '9:02 AM' },
       { from: 'me', text: 'Hey Maya! Yes please, clean and stretched. No product if you can.', at: '9:15 AM' },
