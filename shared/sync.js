@@ -102,16 +102,20 @@
      7-stop route (Discovery/Style Page/Storefront/Booking/Business/
      Messaging/Money), each stop being 3 slides (intro "explain" ->
      phone-preview "Stop N" -> pause) except Money, which has two
-     intro slides back to back and no phone-preview of its own. Only
-     the 6 numbered "Stop N" phone-preview slides release a phone from
-     wait.html; every other slide (intros, pauses, Money, and
-     everything before/after the 7-stop route, including Welcome,
-     which carries the QR itself) keeps phones parked on the wait
-     screen so attention stays on the presenter until a Stop slide
-     deliberately releases them. re-derive these numbers from
-     deck-preview.html's own ENTRY_SLIDE_FOR_STOP/PAUSE_SLIDE_FOR_STOP
-     (1-indexed here vs 0-indexed there) if the slide order ever
-     changes again -- this map does NOT update itself. */
+     intro slides back to back and no phone-preview of its own. The 6
+     numbered "Stop N" phone-preview slides release a phone from
+     wait.html to that stop's real screen; every other slide in the
+     7-stop route (intros, pauses, Money, and Welcome, which carries
+     the opening QR itself) keeps phones parked on wait.html so
+     attention stays on the presenter. One slide AFTER the route also
+     releases a phone: "What We Need From You," which sends phones to
+     add-contact.html so its closing "save Snooty's contact now" line
+     has something for a synced phone to actually do. re-derive these
+     numbers from deck-preview.html's own
+     ENTRY_SLIDE_FOR_STOP/PAUSE_SLIDE_FOR_STOP (1-indexed here vs
+     0-indexed there) plus a manual count for add-contact's slide if
+     the slide order ever changes again -- this map does NOT update
+     itself. */
   const S = '&session=' + encodeURIComponent(SESSION_ID);
   const STOP_MAP = {
     9: 'discover.html?script=1' + S, /* Stop 1: Discovery -- discover.html, tap into a card to see the look overlay */
@@ -126,6 +130,7 @@
     22: 'wait.html?' + S.slice(1), /* Messaging (explain), back to wait until Stop 6 */
     24: 'messages.html?script=1' + S, /* Stop 6: Messaging -- messages.html */
     25: 'wait.html?' + S.slice(1), /* Money pt.1, back to wait for the rest of the close (Money has no phone stop) */
+    31: 'add-contact.html?' + S.slice(1), /* What We Need From You -- closes with "save Snooty's contact now"; phones jump straight to the vcard tap, no separate QR needed since they're already following */
   };
 
   /* Call from any scripted stop page: watches the live slide and
