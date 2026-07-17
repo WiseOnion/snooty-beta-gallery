@@ -199,7 +199,8 @@
   if (params.has('session')) { SN.sync.followStops(); SN.sync.startHeartbeat(); } /* hands off to the next stop when the presenter advances again, and keeps this phone counted as connected */
 
   const i = parseInt(params.get('i'), 10);
-  const feedLook = SEED.feed[!isNaN(i) ? i : 0] || SEED.feed[0];
+  const defaultI = SEED.feed.findIndex((f) => f.heroLook === 'lk3');
+  const feedLook = SEED.feed[!isNaN(i) ? i : defaultI] || SEED.feed[0];
   const heroLook = H.looks.find((l) => l.id === feedLook.heroLook) || H.looks[0];
   const service = H.services.find((s) => s.id === heroLook.serviceId);
 
