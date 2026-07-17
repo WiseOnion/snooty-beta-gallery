@@ -38,16 +38,71 @@ p { font-size: 16px; line-height: 1.55; max-width: 60ch; margin: 0 0 1.5em; }
 -->
 <a class="btn" href="../snooty-support.vcf" id="add-contact-link">Add to contacts</a>
 <div class="status" id="status"></div>
+<div class="confirm" id="confirm" style="display:none; margin-top: 1.2em;">
+  <p style="margin-bottom: 0.8em;">Did that save to your contacts?</p>
+  <button class="btn" id="confirm-yes" type="button" style="background:#1a7a3d; border-color:#1a7a3d;">Yes, saved</button>
+  <button class="btn" id="confirm-no" type="button" style="background:#fff; color:#000;">Didn't work</button>
+</div>
 
 <script>
 (function () {
   'use strict';
-  /* No JS is required for the link above to work; this only adds a
-     one-time on-screen hint after the tap, since a successful contact
-     import navigates the tab away and there's nothing else to confirm
-     client-side. */
-  document.getElementById('add-contact-link').addEventListener('click', function () {
-    document.getElementById('status').textContent = 'Opening the contact card. If a preview screen appears, tap "Add Contact" or "Create New Contact."';
+  /* The .vcf link itself needs no JS -- the OS handles the import.
+     What JS CAN do: notice the user tapped it, then surface a "did
+     that work?" prompt once they're plausibly done, since there's no
+     API that reports whether the import actually succeeded.
+
+     Getting "plausibly done" right takes three signals, not one,
+     because the vCard hand-off behaves differently per platform:
+     - Android's native contact-picker intent backgrounds the browser
+       tab, so visibilitychange/pageshow fire reliably on return.
+     - iOS Safari (confirmed via Apple Developer Forums thread 124193)
+       opens the vCard as an in-page PREVIEW SHEET on top of Safari --
+       the tab is never actually hidden, so visibilitychange never
+       fires there at all. Relying on it alone would mean the prompt
+       silently never appears for iOS users, which is most of them.
+     - A plain fixed delay covers iOS (and anything else that doesn't
+       fire a visibility/focus event) without depending on any of
+       this platform-specific behavior holding true on every device.
+     Whichever fires first wins; the other two are then no-ops via
+     the shown/cleared-timer guards below. */
+  var tappedAt = null;
+  var promptShown = false;
+  var fallbackTimer = null;
+  var link = document.getElementById('add-contact-link');
+  var status = document.getElementById('status');
+  var confirmBox = document.getElementById('confirm');
+
+  function showPrompt() {
+    if (promptShown || !tappedAt) return;
+    promptShown = true;
+    if (fallbackTimer) { clearTimeout(fallbackTimer); fallbackTimer = null; }
+    confirmBox.style.display = 'block';
+  }
+
+  link.addEventListener('click', function () {
+    tappedAt = Date.now();
+    promptShown = false;
+    status.textContent = 'Opening the contact card. If a preview screen appears, tap "Add Contact" or "Create New Contact."';
+    if (fallbackTimer) clearTimeout(fallbackTimer);
+    fallbackTimer = setTimeout(showPrompt, 4000);
+  });
+
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'visible') showPrompt();
+  });
+  window.addEventListener('focus', showPrompt);
+  window.addEventListener('pageshow', showPrompt);
+
+  document.getElementById('confirm-yes').addEventListener('click', function () {
+    confirmBox.style.display = 'none';
+    tappedAt = null;
+    status.textContent = 'Saved. Snooty is in your contacts.';
+  });
+  document.getElementById('confirm-no').addEventListener('click', function () {
+    confirmBox.style.display = 'none';
+    tappedAt = null;
+    status.textContent = 'Tap "Add to contacts" again, or save this manually: Snooty Support, +1-910-302-7019, hisisnooty@gmail.com.';
   });
 })();
 </script>
